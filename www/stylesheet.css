@@ -1,0 +1,143 @@
+body {
+	background: #fefefe;
+	font-family: "Roboto";
+	font-size: 12pt;
+	}
+
+a:link, a:active, a:visited {
+	color: #FF0000;
+	text-transform: underline;
+	}
+
+a:hover {
+	color: #FF0000;
+	text-transform: none;
+	}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #000;
+	background: #fefefe;
+    z-index: 1;
+    overflow: hidden;
+    text-align:center;
+	}
+
+.header h1 {
+	font-size:25px;
+    font-weight:normal;
+	margin:0 auto;
+	}
+
+.header h2 {
+	font-size:15px;
+    font-weight:normal;
+	margin:0 auto;
+	}
+
+.wrapper {
+	max-width: 920px;
+	position: relative;
+	margin: 30px auto 30px auto;
+	padding-top: 20px;
+	}
+
+.clear {
+	clear: both;
+	}
+
+.banner {
+	width: 100%;
+	}
+
+.headlinks {
+	max-width: 720px;
+	position:relative;
+	margin: 0px auto;
+	}
+
+.headlinkwidth {
+	width: 100%;
+	min-width: 300px;
+	position:relative;
+	margin: 0 auto;
+	}
+
+.headlinks a:link, a:active, a:visited {
+	color: #FF0000;
+	text-transform: underline;
+	}
+
+.headlinks a:hover {
+	color: #FF0000;
+	text-transform: none;
+	}
+
+.section {
+	padding: 5px 0 15px 0;
+	margin: 0;
+	}
+
+.section h2 {
+	font-size:16px;
+    font-weight:bold;
+	text-align:left;
+	}
+
+.section h3 {
+	font-size:16px;
+    font-weight:bold;
+	}
+
+.secleft {
+	float: left;
+	width: 50%;
+	}
+
+.secright {
+	float: right;
+	width: 50%;
+	}
+
+table.section {
+	border-collapse: collapse;
+	border: 1px solid black;
+	width: 100%;
+	font-size: 10pt;
+	}
+	
+table.section th, table.section td {
+	border: 1px solid black;
+	}
+
+.footer {
+	width: 100%;
+	text-align: center;
+	}
+	
+ul {
+	list-style-type: none;
+	padding: 0;
+	}
+
+li {
+	padding: 0;
+	display: inline;
+	}
+	
+@media only screen and (max-width: 629px) {
+	.secleft {
+		float: none ;
+		width: 100% ;
+		padding: 0 0 10px 0;
+		text-align: left;
+	}
+	.secright {
+		float: none ;
+		width: 100% ;
+	}
+
+}	
