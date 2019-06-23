@@ -8,9 +8,9 @@
 
 ## Optional Components
 
-RvdH's DNS resolver (if you want to lookup & reject based on zen.spamhaus.org). 
-Download & run the exe as installer: https://d-fault.nl/files/DNSResolverComponent_1.3.exe.zip
-Note: If direct download doesn't work, use folder address: https://d-fault.nl/files/
+a) RvdH's DNS resolver (if you want to lookup & reject based on zen.spamhaus.org). 
+b) Download & run the exe as installer: https://d-fault.nl/files/DNSResolverComponent_1.3.exe.zip
+c) Note: If direct download doesn't work, use folder address: https://d-fault.nl/files/
 
 
 ## DB SQL Create Table
@@ -26,51 +26,49 @@ CREATE TABLE hm_fwban (
 	PRIMARY KEY (id)
 ); 
    
-::::::::::::::::::::::::::::::::
-::: Files                    :::
-::::::::::::::::::::::::::::::::
+## Files
 
 /FWBan/			
-	readme.txt
-	hmsFirewallBan.ps1 (powershell search db and add/delete firewall rules)
-	/Events/
-		EventHandlers.vbs (hMailServer event handler - contains functions and goodies)
-		VbsJson.vbs (required for json response on geoip lookup)
-	/www/
-		head.php
-		history-abottom.php
-		history-atop.php
-		history-cc.php
-		history-country.php
-		history-del.php
-		history-ID.php
-		history-ip.php
-		history-reason.php
-		history.php
-		index.php
-		month-2ma.php
-		month-3ma.php
-		month-4ma.php
-		month-abottom.php
-		month-atop.php
-		month-curr.php
-		month-last.php
-		reban-br.php
-		reban-country.php
-		reban-date-view.php
-		reban-date.php
-		reban-iprange.php
-		reban.php
-		rel-ip.php
-		rel.php
-		release-br.php
-		release-country.php
-		release-date-view.php
-		release-date.php
-		release-iprange.php
-		release.php
-		search.php
-		stylesheet.css
+-readme.txt
+-hmsFirewallBan.ps1 (powershell search db and add/delete firewall rules)
+-/Events/
+--EventHandlers.vbs (hMailServer event handler - contains functions and goodies)
+--VbsJson.vbs (required for json response on geoip lookup)
+-/www/
+--head.php
+--history-abottom.php
+--history-atop.php
+--history-cc.php
+--history-country.php
+--history-del.php
+--history-ID.php
+--history-ip.php
+--history-reason.php
+--history.php
+--index.php
+--month-2ma.php
+--month-3ma.php
+--month-4ma.php
+--month-abottom.php
+--month-atop.php
+--month-curr.php
+--month-last.php
+--reban-br.php
+--reban-country.php
+--reban-date-view.php
+--reban-date.php
+--reban-iprange.php
+--reban.php
+--rel-ip.php
+--rel.php
+--release-br.php
+--release-country.php
+--release-date-view.php
+--release-date.php
+--release-iprange.php
+--release.php
+--search.php
+--stylesheet.css
 		
 
 ::::::::::::::::::::::::::::::::
