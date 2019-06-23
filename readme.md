@@ -26,54 +26,7 @@ CREATE TABLE hm_fwban (
 	PRIMARY KEY (id)
 ); 
    
-## Files
-
-/FWBan/			
--readme.txt
--hmsFirewallBan.ps1 (powershell search db and add/delete firewall rules)
--/Events/
---EventHandlers.vbs (hMailServer event handler - contains functions and goodies)
---VbsJson.vbs (required for json response on geoip lookup)
--/www/
---head.php
---history-abottom.php
---history-atop.php
---history-cc.php
---history-country.php
---history-del.php
---history-ID.php
---history-ip.php
---history-reason.php
---history.php
---index.php
---month-2ma.php
---month-3ma.php
---month-4ma.php
---month-abottom.php
---month-atop.php
---month-curr.php
---month-last.php
---reban-br.php
---reban-country.php
---reban-date-view.php
---reban-date.php
---reban-iprange.php
---reban.php
---rel-ip.php
---rel.php
---release-br.php
---release-country.php
---release-date-view.php
---release-date.php
---release-iprange.php
---release.php
---search.php
---stylesheet.css
-		
-
-::::::::::::::::::::::::::::::::
-::: Instructions             :::
-::::::::::::::::::::::::::::::::
+## Instructions
 
 1) Copy everything from EventHandlers.vbs into your EventHandlers.vbs (C:\Program Files (x86)\hMailServer\Events\EventHandlers.vbs)
 2) Copy vbsjson.vbs to hMailServer Events folder (C:\Program Files (x86)\hMailServer\Events)
@@ -86,9 +39,7 @@ CREATE TABLE hm_fwban (
 8) Sit back and watch your firewall rule count grow.
 
 
-::::::::::::::::::::::::::::::::
-::: Flag Logic               :::
-::::::::::::::::::::::::::::::::
+## Flag Logic
 
 Flag	Meaning
 ====	=======
