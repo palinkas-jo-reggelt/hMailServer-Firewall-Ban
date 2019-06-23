@@ -1,31 +1,19 @@
-# hMS-Firewall-Ban
+# hMailServer Firewall Ban
 
-::::::::::::::::::::::::::::::::
-::: hMailServer Firewall Ban :::
-:::        by palinka        :::
-:::       version 0.08       :::
-::::::::::::::::::::::::::::::::
-
-
-
-::::::::::::::::::::::::::::::::
-::: Prerequisites            :::
-::::::::::::::::::::::::::::::::
+## Prerequisites
 
 1) working hMailServer
 2) MySQL (queries may work in other databases - I don't know one way or the other)
 
 
-::::::::::::::::::::::::::::::::
-::: Optional Components      :::
-::::::::::::::::::::::::::::::::
+## Optional Components
 
-1) RvdH's DNS resolver (if you want to lookup & reject based on zen.spamhaus.org). 
-   Download & run the exe as installer: https://d-fault.nl/files/DNSResolverComponent_1.3.exe.zip
-   Note: If direct download doesn't work, use folder address: https://d-fault.nl/files/
+RvdH's DNS resolver (if you want to lookup & reject based on zen.spamhaus.org). 
+Download & run the exe as installer: https://d-fault.nl/files/DNSResolverComponent_1.3.exe.zip
+Note: If direct download doesn't work, use folder address: https://d-fault.nl/files/
 
 
-::: DB SQL Create Table :::
+## DB SQL Create Table
 
 CREATE TABLE hm_fwban (
 	id int NOT NULL AUTO_INCREMENT UNIQUE,
