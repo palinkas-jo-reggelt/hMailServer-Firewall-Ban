@@ -13,6 +13,7 @@
 
 ## DB SQL Create Table
 
+```
 CREATE TABLE hm_fwban (
 	id int NOT NULL AUTO_INCREMENT UNIQUE,
 	ipaddress VARCHAR (192) NOT NULL,
@@ -23,7 +24,7 @@ CREATE TABLE hm_fwban (
 	flag INT (1) NULL DEFAULT,
 	PRIMARY KEY (id)
 ); 
-
+```
    
 ## Instructions
 
