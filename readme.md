@@ -33,8 +33,9 @@ CREATE TABLE hm_fwban (
 3) Install RvdH's DNS resolver (https://d-fault.nl/files/)
 4) Edit db variables in hmsFirewallBan.ps1
 5) Using phpMyAdmin or whatever you want, add table "hm_fwban" to hmailserver database.
-6) Create scheduled task to run every 5 minutes with action: powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1
-	!!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
+6) Create scheduled task to run every 5 minutes with action: 
+```powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1```
+!!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 7) Copy the files in /www/ to your webserver and edit the db info in cred.php.
 8) Sit back and watch your firewall rule count grow.
 
