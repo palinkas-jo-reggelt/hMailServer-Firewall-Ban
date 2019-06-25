@@ -24,9 +24,9 @@
 	if (isset($_GET['dateTo'])) {$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));} else {$dateFrom = "";}
 
 	if (empty($dateFrom)){
-		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "<br /><br />You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
 	} elseif (empty($dateTo)){
-		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "<br /><br />You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -41,7 +41,7 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "No previously released results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
+			echo "<br /><br />No previously released results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
 		} else {
 			echo "<h2>What would you like to ban?</h2>";
 			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
@@ -70,18 +70,17 @@
 		echo "</tr>";
 		}
 		echo "</table>";
+
+		echo "<ul>";
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".$total_pages."\">Last</a></li>";}
+		echo "</ul>";
 		}
 		mysqli_close($con);
 	}
 	echo "<br />";
 ?>
-
-<ul>
-	<li><?php if($page <= 1){ echo 'First'; } else { echo "<a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=1\">First</a>"; } ?></li>
-	<li><?php if($page <= 1){ echo 'Prev'; } else {	echo "<a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page - 1)."\">Prev</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Next'; } else { echo "<a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page + 1)."\">Next</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Last'; } else { echo "<a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".$total_pages."\">Last</a>"; } ?></li>
-</ul>
 </div>
-
 <?php include("foot.php") ?>

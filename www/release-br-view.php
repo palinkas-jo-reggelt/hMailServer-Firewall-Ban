@@ -37,7 +37,7 @@
 			echo "Click \"NO\" under column \"RS\" to release a single address.<br /><br />";
 			echo "<a href=\"./release-br.php?ban_reason=".$ban_reason."&submit=Release\">Click here</a> to release all.<br />";
 			echo "<br /><br />";
-			echo "Results for ban reason \"<b>".$ban_reason."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($total_pages).")<br />";
+			echo "Results for ban reason \"<b>".$ban_reason."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -60,6 +60,13 @@
 			echo "</tr>";
 			}
 			echo "</table>";
+
+		echo "<ul>";
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".$total_pages."\">Last</a></li>";}
+		echo "</ul>";
 		}
 		mysqli_close($con);
 	}

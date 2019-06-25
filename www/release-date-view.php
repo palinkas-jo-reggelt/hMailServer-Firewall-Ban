@@ -36,13 +36,13 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "No unreleased results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
+			echo "<br /><br />No unreleased results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
 		} else {
 			echo "<h2>What would you like to release?</h2>";
 			echo "Click \"NO\" under column \"RS\" to release a single address.<br /><br />";
 			echo "<a href=\"./release-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Release\">Click here</a> to release all.<br />";
 			echo "<br /><br />";
-			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($total_pages).")<br />";
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -65,19 +65,20 @@
 			echo "</tr>";
 			}
 			echo "</table>";
-			mysqli_close($con);
-		}
-	}
 
+		echo "<ul>";
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".$total_pages."\">Last</a></li>";}
+		echo "</ul>";
+
+		}
+		mysqli_close($con);
+	}
 	echo "<br />";
 ?>
 
-<ul>
-	<li><?php if($page <= 1){ echo 'First'; } else { echo "<a href=\"?submit=Search&ipRange=".$ipRange."&page=1\">First</a>"; } ?></li>
-	<li><?php if($page <= 1){ echo 'Prev'; } else {	echo "<a href=\"?submit=Search&ipRange=".$ipRange."&page=".($page - 1)."\">Prev</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Next'; } else { echo "<a href=\"?submit=Search&ipRange=".$ipRange."&page=".($page + 1)."\">Next</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Last'; } else { echo "<a href=\"?submit=Search&ipRange=".$ipRange."&page=".$total_pages."\">Last</a>"; } ?></li>
-</ul>
 </div>
 
 <?php include("foot.php") ?>

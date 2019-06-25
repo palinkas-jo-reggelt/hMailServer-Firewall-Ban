@@ -16,20 +16,21 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Release a date range:</h2>
+		Enter start & end dates and click to review.<br /><br />
 		<form autocomplete="off" action='release-date-view.php' method='GET'>
 			<table>
 				<tr>
 				<tr><td>Starting Date: </td><td><input type="text" id="dateFrom" name="dateFrom" /></td></tr>
 				<tr><td>Ending Date: </td><td><input type="text" id="dateTo" name="dateTo" /></td></tr>
-				<tr><td><input type='submit' name='submit' value='Release' onclick="return confirm('Are you sure you want to release this date range?')" /></td></tr>
+				<tr><td><input type='submit' name='submit' value='Release' /></td></tr>
 			</table>
 		</form>
-		Note: Range can be a single day, but start and end dates must both be filled in.
+		<br />Note: Range can be a single day, but start and end dates must both be filled in.<br />
 	</div>
 
 	<div class="secright">
 		<h2>Release a recent day:</h2>
-		Unreleased IPs over the past five days. Click below to review and/or release.<br /><br />
+		Unreleased IPs over the past five days. Click below to review.<br /><br />
 		
 <?php
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$today} 00:00:00' AND '{$today} 23:59:59' AND (flag=3 OR flag IS NULL)";
@@ -74,7 +75,7 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Release a Ban Reason:</h2>
-		Unreleased IPs for the following ban reasons. Click to view and/or re-ban.<br /><br />
+		Unreleased IPs for the following ban reasons. Click to review.<br /><br />
 <?php
 	$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=3 OR flag IS NULL GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
 	$res_data = mysqli_query($con,$sql);
@@ -87,6 +88,7 @@
 
 	<div class="secright">
 		<h2>Release a Country:</h2>
+		Will search for matching unreleased IPs.<br /><br />
 		<form autocomplete="off" action='release-country-view.php' method='GET'>
 			<input type="text" id="country" name="country">
 			<input type='submit' name='submit' value='Release' />
@@ -98,8 +100,9 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Release an IP range:</h2>
+		Will search for matching unreleased IPs.<br /><br />
 		<form autocomplete="off" action='release-iprange.php' method='GET'>
-			<input type="text" pattern="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1,3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$" title="255.255.255 OR 255.255" id="ipRange" name="ipRange">
+			<input type="text" pattern="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1,3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$" title="255.255.255.255 OR 255.255.255 OR 255.255" id="ipRange" name="ipRange">
 			<input type='submit' name='submit' value='Release' />
 		</form>
 		<br />IP Ranges MUST be in <br />

@@ -17,7 +17,7 @@
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ban_reason'])){$ban_reason = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ban_reason'])));} else {$ban_reason = "";}
 
-	if (empty($ban_reason)){echo "Error: No IP entries for ban reason ".$ban_reason."<br /><br />";} else {
+	if (empty($ban_reason)){echo "<br /><br />Error: No IP entries for ban reason ".$ban_reason."<br /><br />";} else {
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
@@ -31,7 +31,7 @@
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "No previously released results for ban reason \"<b>".$ban_reason."</b>\"";
+		echo "<br /><br />No previously released results for ban reason \"<b>".$ban_reason."</b>\"";
 	} else {
 		echo "<h2>What would you like to ban?</h2>";
 		echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
@@ -59,18 +59,18 @@
 	echo "</tr>";
 	}
 	echo "</table>";
-	}
-	mysqli_close($con);
+
+		echo "<ul>";
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".$total_pages."\">Last</a></li>";}
+		echo "</ul>";
+		}
+		mysqli_close($con);
 	}
 	echo "<br />";
 ?>
-
-<ul>
-	<li><?php if($page <= 1){ echo 'First'; } else { echo "<a href=\"?submit=Search&ban_reason=".$ban_reason."&page=1\">First</a>"; } ?></li>
-	<li><?php if($page <= 1){ echo 'Prev'; } else {	echo "<a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page - 1)."\">Prev</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Next'; } else { echo "<a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page + 1)."\">Next</a>"; } ?></li>
-	<li><?php if($page >= $total_pages){ echo 'Last'; } else { echo "<a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".$total_pages."\">Last</a>"; } ?></li>
-</ul>
 </div>
 
 <?php include("foot.php") ?>
