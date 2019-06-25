@@ -38,7 +38,7 @@
 		} else {
 			echo "<h2>What would you like to ban?</h2>";
 			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
-			echo "<a href=\"./reban-country.php?country=".$country."&submit=Reban\">Click here</a> to re-ban all.<br />";
+			echo "<a href=\"./reban-country.php?country=".$country."&submit=Reban\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$country."?')\">Click here</a> to re-ban all.<br />";
 			echo "<br /><br />";
 			echo "Results for released IPs for \"<b>".$country."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>

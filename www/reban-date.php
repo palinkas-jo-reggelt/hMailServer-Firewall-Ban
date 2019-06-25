@@ -39,7 +39,7 @@
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for date range <a href=\"release-date-view.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=NO\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been marked for re-BAN to the firewall.<br />";
+			echo "<br />".number_format($total_rows)." hits for date range <a href=\"search-date.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=NO\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been marked for re-BAN to the firewall.<br />";
 			$sql = "SELECT `id` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59' AND (flag=1 OR flag=2)";
 			$res_data = mysqli_query($con,$sql);
 			while($row = mysqli_fetch_array($res_data)){

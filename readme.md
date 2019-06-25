@@ -2,6 +2,7 @@
 
 ## Changelog
 
+- 0.18 bug fixes; added dropdown select for release status on search page
 - 0.17 bug fixes; reban single IP rebans ALL matching IPs, not just an individual record; release single IP releases all matching IPs, not just a single record
 - 0.16 bug fixes
 - 0.15 Added review before release/reban

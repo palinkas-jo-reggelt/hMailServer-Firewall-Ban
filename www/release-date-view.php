@@ -40,7 +40,7 @@
 		} else {
 			echo "<h2>What would you like to release?</h2>";
 			echo "Click \"NO\" under column \"RS\" to release a single address.<br /><br />";
-			echo "<a href=\"./release-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Release\">Click here</a> to release all.<br />";
+			echo "<a href=\"./release-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Release\" onclick=\"return confirm('Are you sure you want to release all IPs for date range ".$dateFrom." to ".$dateTo."?')\">Click here</a> to release all.<br />";
 			echo "<br /><br />";
 			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
@@ -59,7 +59,7 @@
 			echo "<td><a href=\"search.php?submit=Search&search=" . $row['ipaddress'] . "\">" . $row['ipaddress'] . "</a></td>";
 			echo "<td>" . $row['ban_reason'] . "</td>";
 			echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress'] . "\"  target=\"_blank\">" . $row['country'] . "</a></td>";
-			if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Search&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
+			if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 			else echo "<td>YES</td>";
 
 			echo "</tr>";

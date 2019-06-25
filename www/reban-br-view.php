@@ -35,7 +35,7 @@
 	} else {
 		echo "<h2>What would you like to ban?</h2>";
 		echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
-		echo "<a href=\"./reban-br.php?submit=Reban&ban_reason=".$ban_reason."\">Click here</a> to re-ban all.<br />";
+		echo "<a href=\"./reban-br.php?submit=Reban&ban_reason=".$ban_reason."\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$ban_reason."?')\">Click here</a> to re-ban all.<br />";
 		echo "<br /><br />";
 		echo "Results for released IPs for ban reason \"<b>".$ban_reason."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>

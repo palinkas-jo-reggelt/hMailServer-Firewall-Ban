@@ -22,7 +22,9 @@
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$ban_reason."\">".$ban_reason."</a> have been released from the firewall.<br />";
+			if($total_rows == 1){$singular="";}else{$singular="s";}
+			if($total_rows == 1){$singpos="has";}else{$singpos="have";}
+			echo "<br />".number_format($total_rows)." hit".$singular." for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a> ".$singpos." been released from the firewall.<br />";
 			$sql = "SELECT `id` FROM `hm_fwban` WHERE `ban_reason` LIKE '{$ban_reason}' AND (flag IS NULL OR flag=3)";
 			$res_data = mysqli_query($con,$sql);
 			while($row = mysqli_fetch_array($res_data)){
