@@ -39,7 +39,7 @@
 				if(!$result){ die('Could not update data: ' . mysqli_error()); }
 			}
 		} else {
-			echo "<br />Error: No released records for \"<b>".$ban_reason."</b>\". Please <a href=\"search.php?submit=Search&search=".$ban_reason."\">search release status</a> or check the spelling and try again.";
+			echo "<br />Error: No previously released records for \"<b>".$ban_reason."</b>\". Try searching for released records for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a>.";
 		}
 	}
 ?>

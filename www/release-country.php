@@ -18,13 +18,10 @@
 	} else {
 		$button = "";
 	}
-	if (isset($_GET['country'])) {
-	$country = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['country'])));
-	} else {
-		$country = "";
-	}
+	if (isset($_GET['country'])){$country=mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['country'])));}else{$country = "";}
 
-	if (empty($country)){echo "Error: No country selected.<br /><br />";} else {
+	if (empty($country)){echo "Error: No country selected.<br /><br />";} 
+	else {
 
 		$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `country` LIKE '%{$country}%' AND (flag IS NULL OR flag=3)";
 		$res_count = mysqli_query($con,$sqlcount);

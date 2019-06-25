@@ -13,33 +13,18 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
-	if (isset($_GET['dateFrom'])) {
-	$dateFrom = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateFrom'])));
-	} else {
-		$dateFrom = "";
-	}
-	if (isset($_GET['dateTo'])) {
-	$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));
-	} else {
-		$dateFrom = "";
-	}
+	if (isset($_GET['submit'])){$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['dateFrom'])){$dateFrom = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateFrom'])));}else{$dateFrom = "";}
+	if (isset($_GET['dateTo'])){$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));}else{$dateFrom = "";}
 
-	if (empty($dateFrom)){
-		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
-	} elseif (empty($dateTo)){
-			echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
-	} else {
-		
+	if (empty($dateFrom)){echo "Error: Date range empty. Please see administrator.<br /><br />";}
+	elseif (empty($dateTo)){echo "Error: Date range empty. Please see administrator.<br /><br />";}
+	else {
 		$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59' AND flag IS NULL";
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for date range <a href=\"release-date-view.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been released from the firewall.<br />";
+			echo "<br />".number_format($total_rows)." hits for date range <a href=\"release-date-view.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=YES\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been released from the firewall.<br />";
 			$sql = "SELECT `id` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59' AND flag IS NULL";
 			$res_data = mysqli_query($con,$sql);
 			while($row = mysqli_fetch_array($res_data)){
@@ -52,6 +37,7 @@
 		}
 	}
 	mysqli_close($con);
+	
 ?>
 </div>
 

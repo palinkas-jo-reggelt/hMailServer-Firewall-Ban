@@ -15,26 +15,26 @@ a:hover {
 	}
 
 .header {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	color: #000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #000;
 	background: #fefefe;
-	z-index: 1;
-	overflow: hidden;
-	text-align:center;
+    z-index: 1;
+    overflow: hidden;
+    text-align:center;
 	}
 
 .header h1 {
 	font-size:25px;
-	font-weight:normal;
+    font-weight:normal;
 	margin:0 auto;
 	}
 
 .header h2 {
 	font-size:15px;
-	font-weight:normal;
+    font-weight:normal;
 	margin:0 auto;
 	}
 
@@ -83,13 +83,13 @@ a:hover {
 
 .section h2 {
 	font-size:16px;
-	font-weight:bold;
+    font-weight:bold;
 	text-align:left;
 	}
 
 .section h3 {
 	font-size:16px;
-	font-weight:bold;
+    font-weight:bold;
 	}
 
 .secleft {

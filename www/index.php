@@ -9,6 +9,7 @@
 	$twodaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-2, date("Y")));
 	$threedaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-3, date("Y")));
 	$fourdaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-4, date("Y")));
+	$fourdaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-4, date("Y")));
 	$thismonth = date('Y-m-1');
 	$lastmonth = date('Y-m-1', mktime(0, 0, 0, date("m")-1, date("d"), date("Y")));
 	$twomonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-2, date("d"), date("Y")));
@@ -133,7 +134,7 @@
 	echo "<h2>Special: IP Ranges banned:</h2>";
 	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$row['value_occurrence']."</a> hits for 255.255.255.0/24 IP ranges.<br />";}
+	while($row = mysqli_fetch_array($res_data)){echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$row['value_occurrence']." hits</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";}
 	
 
 	echo "<br />";

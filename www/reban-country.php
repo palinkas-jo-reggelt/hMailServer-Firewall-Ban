@@ -13,19 +13,11 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
-	if (isset($_GET['country'])) {
-	$country = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['country'])));
-	} else {
-		$country = "";
-	}
+	if (isset($_GET['submit'])){$button = $_GET['submit'];}else{$button = "";}
+	if (isset($_GET['country'])){$country=mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['country'])));}else{$country="";}
 
-	if (empty($country)){echo "Error: No country selected.<br /><br />";} else {
-
+	if (empty($country)){echo "Error: No country selected. Please see administrator.<br /><br />";} 
+	else {
 		$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `country` LIKE '%{$country}%' AND (flag=1 OR flag=2)";
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];

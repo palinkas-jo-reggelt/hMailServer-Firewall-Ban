@@ -16,12 +16,14 @@
 $(function () {
     $("#dateFrom").datepicker({
         dateFormat: "yy-mm-dd",
+		maxDate: new Date,
         onSelect: function (selected) {
             $("#dateTo").datepicker("option", "minDate", selected);
         }
     });
     $("#dateTo").datepicker({
         dateFormat: "yy-mm-dd",
+		maxDate: new Date,
         onSelect: function (selected) {
             $("#dateFrom").datepicker("option", "maxDate", selected);
         }

@@ -13,11 +13,7 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ipRange'])) {
 		if(preg_match("/^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))$/", ($_GET['ipRange']))) {
 			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange'])))).".0/24";

@@ -20,16 +20,9 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
-	if (isset($_GET['search'])) {
-	$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));
-	} else {
-		$search = "";
-	}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['RS'])) {$RS = $_GET ['RS'];} else {$RS = "";}
+	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
   
 	$min_length = 2;
     if(strlen($search) < $min_length){
@@ -38,12 +31,19 @@
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
-	$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%' OR flag LIKE '%{$search}%'";
+	
+	if ($RS=="NO"){$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%') AND (flag IS NULL OR flag=3)";}
+	elseif ($RS=="YES"){$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%') AND (flag=1 OR flag=2)";}
+	else {$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%'";}
+
 	$result = mysqli_query($con,$total_pages_sql);
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%' OR flag LIKE '%{$search}%' ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+	if ($RS=="NO"){$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%') AND (flag IS NULL OR flag=3) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
+	elseif ($RS=="YES"){$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%') AND (flag=1 OR flag=2) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
+	else {$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%' ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
+
 	$res_data = mysqli_query($con,$sql);
 
 	if ($total_rows == 1){
@@ -69,10 +69,10 @@
 	echo "<tr>";
 
 	echo "<td>" . $row['TimeStamp'] . "</td>";
-	echo "<td><a href=\"search.php?submit=Search&search=" . $row['ipaddress'] . "\">" . $row['ipaddress'] . "</a></td>";
+	echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 	echo "<td>" . $row['ban_reason'] . "</td>";
-	echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress'] . "\"  target=\"_blank\">" . $row['country'] . "</a></td>";
-	if($row['flag'] === NULL) echo "<td><a href=\"./release-ip.php?submit=Search&search=".$row['id']."\" onclick=\"return confirm('Are you sure you want to release this IP?')\">No</a></td>";
+	echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+	if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Search&search=".$row['id']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 	else echo "<td>YES</td>";
 
 	echo "</tr>";
