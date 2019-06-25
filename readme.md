@@ -10,6 +10,7 @@
 
 1) Working hMailServer
 2) Working MySQL with hmailserver database
+3) Working Apache
 
 
 ## Optional Components
@@ -43,7 +44,7 @@ CREATE TABLE hm_fwban (
 7) Create scheduled task to run every 5 minutes with action: 
 ```powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-8) Copy the files in /www/ to your webserver and edit the db info in cred.php.
+8) Copy the files in /www/ to your webserver and edit the db info in cred.php then edit .htaccess tup modify your subnet, if needed.
 9) Sit back and watch your firewall rule count grow.
 
 
