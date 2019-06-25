@@ -2,9 +2,9 @@
 
 ## Changelog
 
-0.16 bug fixes
-0.15 Added review before release/reban
-0.14 & before:  too many to list/forgot
+- 0.16 bug fixes
+- 0.15 Added review before release/reban
+- 0.14 & before:  too many to list/forgot
 
 ## Prerequisites
 
