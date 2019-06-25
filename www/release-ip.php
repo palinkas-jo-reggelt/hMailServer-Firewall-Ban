@@ -24,14 +24,15 @@
 		$ipRange = "";
 	}
 
-	if (empty($ipRange)){echo "Error: IP range empty. Please see administrator.<br /><br />";}
+	if (empty($ipRange)){echo "<br /><br />Error: IP range empty. Please see administrator.<br /><br />";}
 	else {
 		$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '{$ipRange}%' AND (flag IS NULL OR flag=3)";
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];
 		if ($total_rows > 0) { 
 			if($total_rows == 1){$singular="";}else{$singular="s";}
-			echo "<br />".number_format($total_rows)." hit".$singular." for IP range <a href=\"./search.php?submit=Search&search=".$ipRange."&RS=YES\">\"<b>".$ipRange."</b>\"</a> have been released from the firewall.<br />";
+			if($total_rows == 1){$singpos="has";}else{$singpos="have";}
+			echo "<br />".number_format($total_rows)." hit".$singular." for IP range <a href=\"./search.php?submit=Search&search=".$ipRange."&RS=YES\">\"<b>".$ipRange."</b>\"</a> ".$singpos." been released from the firewall.<br />";
 			$sql = "SELECT `id` FROM `hm_fwban` WHERE `ipaddress` LIKE '{$ipRange}%' AND (flag IS NULL OR flag=3)";
 			$res_data = mysqli_query($con,$sql);
 			while($row = mysqli_fetch_array($res_data)){
@@ -40,7 +41,7 @@
 				if(!$result){ die('Could not update data: ' . mysqli_error()); }
 			}
 		} else {
-			echo "<br />Error: No matches for IP range \"<b>".$ipRange."</b>\" in database. Please try again.";
+			echo "<br /><br />Error: No unreleased matches for IP range \"<b>".$ipRange."</b>\" in database. Please try again.";
 		}
 	}
 	mysqli_close($con);

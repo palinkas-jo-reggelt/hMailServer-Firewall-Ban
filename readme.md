@@ -2,6 +2,7 @@
 
 ## Changelog
 
+- 0.17 bug fixes; reban single IP rebans ALL matching IPs, not just an individual record; release single IP releases all matching IPs, not just a single record
 - 0.16 bug fixes
 - 0.15 Added review before release/reban
 - 0.14 & before:  too many to list/forgot
