@@ -1,5 +1,11 @@
 # hMailServer Firewall Ban
 
+## Changelog
+
+0.15 Added review before release/reban
+
+0.14 & before:  too many to list/forgot
+
 ## Prerequisites
 
 1) Working hMailServer
