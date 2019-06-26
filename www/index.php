@@ -102,10 +102,17 @@
 
 	echo "<div class=\"secright\">";
 	echo "<h2>IPs Released From Firewall:</h2>";
-	$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=1 GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){
-	echo "<a href=\"./rel.php?submit=Search&search=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IPs</a> triggered by ".$row['ban_reason']." released.<br />";
+	$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE (flag=1 OR flag=2)";
+	$res_count = mysqli_query($con,$sqlcount);
+	$total_rows = mysqli_fetch_array($res_count)[0];
+	if ($total_rows > 0) { 
+		$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` WHERE (flag=1 OR flag=2) GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
+		$res_data = mysqli_query($con,$sql);
+		while($row = mysqli_fetch_array($res_data)){
+		echo "<a href=\"./rel.php?submit=Search&search=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IPs</a> triggered by ".$row['ban_reason']." released.<br />";
+		}
+	} else {
+		echo "There are no released IPs to report.";
 	}
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
@@ -134,7 +141,8 @@
 	echo "<h2>Special: IP Ranges banned:</h2>";
 	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$row['value_occurrence']." hits</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";}
+	$total_rows = mysqli_fetch_array($res_data)[0];
+	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hits</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
 	
 
 	echo "<br />";

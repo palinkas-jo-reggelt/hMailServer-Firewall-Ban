@@ -31,7 +31,6 @@
 	echo "<tr><td><input type='submit' name='submit' value='Search' /></td></tr>";
 	echo "</table>";
 	echo "</form>";
-	//echo "<br />Note: Range can be a single day, but start and end dates must both be filled in.<br />";
 	echo "</div>";
 	echo "<div class='section'>";
 
@@ -58,12 +57,14 @@
 
 		$res_data = mysqli_query($con,$sql);
 
+		if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
+		elseif ($RS=="NO"){$RSres=" with release status \"<b>NO</b>\"";} 
+		else {$RSres = "";} 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
+			echo "<br /><br />No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
 		} else {
-			if (empty($RS)){echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";}
-			else {echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\" with release status \"".$RS."\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";}
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>

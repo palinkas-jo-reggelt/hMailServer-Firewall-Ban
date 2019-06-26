@@ -55,13 +55,15 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	else {$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%' ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
 
 	$res_data = mysqli_query($con,$sql);
-
+	
+	if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
+	elseif ($RS=="NO"){$RSres=" with release status \"<b>NO</b>\"";} 
+	else {$RSres = "";} 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "No results for \"<b>".$search."</b>\"";
+		echo "No results for \"<b>".$search."</b>\"".$RSres;
 	} else {
-		if (empty($RS)){echo "Results for \"<b>".$search."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";}
-		else {echo "Results for \"<b>".$search."</b>\" with release status \"".$RS."\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";}
+		echo "Results for \"<b>".$search."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>
 			<tr>
 				<th>Timestamp</th>
