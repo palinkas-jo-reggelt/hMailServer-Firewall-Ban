@@ -77,6 +77,7 @@
 			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page + 1)."\">Next </a></li>";}
 			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".$total_pages."\">Last</a></li>";}
 		echo "</ul>";
+		echo "<br />RS = Released Status (removal from firewall). Clicking on \"YES\" will re-ban the IP.<br /><br />";
 		}
 		mysqli_close($con);
 	}

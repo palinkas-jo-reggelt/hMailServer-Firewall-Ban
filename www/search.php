@@ -4,18 +4,6 @@
 To search for a date range <a href="./search-date.php">click here</a>.
 </div>
 
-<div class="section">
-<form action='search.php' method='GET'>
-	<table>
-		<tr><td>Search Input: </td><td><input type='text' size='30' name='search'></td></tr>
-		<tr><td>Release Status: </td><td><select name="RS"><option value="">Both</option><option value="YES">YES</option><option value="NO">NO</option></select></td></tr>
-		<tr><td></td><td><input type='submit' name='submit' value='Search' ></td></tr>
-	</table>
-</form>
-</div>
-
-<div class="section">
-
 <?php include("cred.php") ?>
 <?php
 
@@ -28,8 +16,23 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		$display_pagination = 0;
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['RS'])) {$RS = $_GET ['RS'];} else {$RS = "";}
 	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
+	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
+
+	echo "<div class='section'>";
+	echo "<form action='search.php' method='GET'> ";
+	echo	"<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
+	echo	" ";
+	echo	"<select name='RS'>";
+	echo		"<option value=''>RS</option>";
+	echo		"<option value='YES'>YES</option>";
+	echo		"<option value='NO'>NO</option>";
+	echo	"</select>";
+	echo	" ";
+	echo	"<input type='submit' name='submit' value='Search' >";
+	echo "</form>";
+	echo "</div>";
+	echo "<div class='section'>";
   
 	$min_length = 2;
     if(strlen($search) < $min_length){
@@ -81,26 +84,21 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	echo "</tr>";
 	}
 	echo "</table>";
-	echo "<br />";
 	if ($total_pages == 1){echo "";}
 	else {
 		echo "<ul>";
-		if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=1\">First </a><li>";}
-		if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".($page - 1)."\">Prev </a></li>";}
-		if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".($page + 1)."\">Next </a></li>";}
-		if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".$total_pages."\">Last</a></li>";}
+		if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=1\">First </a><li>";}
+		if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=".($page - 1)."\">Prev </a></li>";}
+		if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=".($page + 1)."\">Next </a></li>";}
+		if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=".$total_pages."\">Last</a></li>";}
 		echo "</ul>";
 	}
+	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP.<br /><br />";
 	mysqli_close($con);
 	}
 	}
 
 	echo "<br />";
+	echo "</div>";
 ?>
-</div>
-
-<div class="section">
-RS = Released Status (removal from firewall). Clicking on "NO" will release the IP.<br />
-</div>
-
 <?php include("foot.php") ?>

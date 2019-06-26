@@ -1,7 +1,10 @@
 # hMailServer Firewall Ban
 
+Ban hMailServer rejects to Windows Defender Firewall.
+
 ## Changelog
 
+- 0.19 bug fixes; fixed up search pages
 - 0.18 bug fixes; added dropdown select for release status on search page
 - 0.17 bug fixes; reban single IP rebans ALL matching IPs, not just an individual record; release single IP releases all matching IPs, not just a single record
 - 0.16 bug fixes

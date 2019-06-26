@@ -1,21 +1,4 @@
 <?php include("head-r.php") ?>
-
-<div class="section">
-	<h2>Search a date range:</h2>
-	Enter start & end dates and click to search.<br /><br />
-	<form autocomplete="off" action='search-date.php' method='GET'>
-		<table>
-			<tr><td>Starting Date: </td><td><input type="text" id="dateFrom" name="dateFrom" /></td></tr>
-			<tr><td>Ending Date: </td><td><input type="text" id="dateTo" name="dateTo" /></td></tr>
-			<tr><td>Release Status: </td><td><select name="RS"><option value="">Both</option><option value="YES">YES</option><option value="NO">NO</option></select></td></tr>
-			<tr><td><input type='submit' name='submit' value='Search' /></td></tr>
-		</table>
-	</form>
-	<br />Note: Range can be a single day, but start and end dates must both be filled in.<br />
-</div>
-
-<div class="section">
-
 <?php include("cred.php") ?>
 <?php
 
@@ -28,13 +11,32 @@
 		$display_pagination = 0;
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['RS'])) {$RS = $_GET ['RS'];} else {$RS = "";}
-	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
 	if (isset($_GET['dateFrom'])) {$dateFrom = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateFrom'])));} else {$dateFrom = "";}
-	if (isset($_GET['dateTo'])) {$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));} else {$dateFrom = "";}
+	if (isset($_GET['dateTo'])) {$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));} else {$dateTo = "";}
+	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
   
+	echo "<div class='section'>";
+	echo "<h2>Search a date range:</h2>";
+	echo "Enter start & end dates and click to search.<br /><br />";
+	echo "<form autocomplete='off' action='search-date.php' method='GET'>";
+	echo "<table>";
+	echo "<tr><td>Starting Date: </td><td><input type='text' id='dateFrom' name='dateFrom' placeholder='Starting Date...' value='".$dateFrom."' /></td></tr>";
+	echo "<tr><td>Ending Date: </td><td><input type='text' id='dateTo' name='dateTo' placeholder='Ending Date...' value='".$dateTo."' /></td></tr>";
+	echo "<tr><td>Release Status: </td><td>
+			<select name='RS'>
+			<option value=''>Both</option>
+			<option value='YES'>YES</option>
+			<option value='NO'>NO</option>
+			</select></td></tr>";
+	echo "<tr><td><input type='submit' name='submit' value='Search' /></td></tr>";
+	echo "</table>";
+	echo "</form>";
+	//echo "<br />Note: Range can be a single day, but start and end dates must both be filled in.<br />";
+	echo "</div>";
+	echo "<div class='section'>";
+
 	if (empty($dateFrom)){
-		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "Note: Range can be a single day, but start and end dates must both be filled in.<br /><br />";
 	} elseif (empty($dateTo)){
 		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
 	} else {
@@ -81,24 +83,21 @@
 				echo "</tr>";
 			}
 			echo "</table>";
-			echo "<br />";
 			if ($total_pages == 1){echo "";}
 			else {
 				echo "<ul>";
-				if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=1\">First </a><li>";}
-				if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".($page - 1)."\">Prev </a></li>";}
-				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".($page + 1)."\">Next </a></li>";}
-				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&page=".$total_pages."\">Last</a></li>";}
+				if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=1\">First </a><li>";}
+				if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=".($page - 1)."\">Prev </a></li>";}
+				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=".($page + 1)."\">Next </a></li>";}
+				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=".$total_pages."\">Last</a></li>";}
 				echo "</ul>";
 			}
+		echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP.<br /><br />";
 		}
 	mysqli_close($con);
 	}
 	echo "<br />";
+	echo "</div>";
 ?>
-
-<div class="section">
-RS = Released Status (removal from firewall). Clicking on "NO" will release the IP.<br />
-</div>
 
 <?php include("foot.php") ?>
