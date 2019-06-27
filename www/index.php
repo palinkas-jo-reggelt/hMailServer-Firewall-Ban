@@ -1,4 +1,10 @@
-<?php include("head.php") ?>
+<?php include("head-g.php") ?>
+
+<div class="section">
+	<h2>Hits per day from inception:</h2>
+	<div id="chart_hitsperday" style="width:100%;height:250px;">
+	</div>
+</div>
 
 <div class="section">
 

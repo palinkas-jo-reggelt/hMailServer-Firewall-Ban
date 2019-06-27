@@ -4,6 +4,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.21 added chart to stats page
 - 0.20 minor tweaks
 - 0.19 bug fixes; fixed up search pages
 - 0.18 bug fixes; added dropdown select for release status on search page
