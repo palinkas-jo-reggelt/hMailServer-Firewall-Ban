@@ -22,7 +22,7 @@
 		$res_count = mysqli_query($con,$sqlcount);
 		$total_rows = mysqli_fetch_array($res_count)[0];
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$country."\">".$country."</a> have been re-banned the firewall.<br />";
+			echo "<br />".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$country."&RS=NO\">".$country."</a> have been re-banned the firewall.<br />";
 			$sql = "SELECT `id` FROM `hm_fwban` WHERE `country` LIKE '%{$country}%' AND (flag=1 OR flag=2)";
 			$res_data = mysqli_query($con,$sql);
 			while($row = mysqli_fetch_array($res_data)){

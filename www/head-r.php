@@ -16,6 +16,7 @@
 $(function () {
     $("#dateFrom").datepicker({
         dateFormat: "yy-mm-dd",
+		minDate: <?php include("mindate.php") ?>
 		maxDate: new Date,
         onSelect: function (selected) {
             $("#dateTo").datepicker("option", "minDate", selected);
@@ -23,6 +24,7 @@ $(function () {
     });
     $("#dateTo").datepicker({
         dateFormat: "yy-mm-dd",
+		minDate: <?php include("mindate.php") ?>
 		maxDate: new Date,
         onSelect: function (selected) {
             $("#dateFrom").datepicker("option", "maxDate", selected);

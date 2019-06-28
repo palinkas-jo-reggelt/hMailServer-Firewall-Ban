@@ -4,6 +4,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.22 minor tweaks; added minDate to jquery datepicker to match oldest record in database
 - 0.21 added chart to stats page
 - 0.20 minor tweaks
 - 0.19 bug fixes; fixed up search pages
