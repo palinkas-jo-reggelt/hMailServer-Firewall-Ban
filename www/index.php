@@ -6,7 +6,7 @@
 		<div id="chart_hitsperday"></div>
 	</div>
 	<div class="secleft">
-		<h2>Hits per hour from inception:</h2>
+		<h2>Average hits per hour from inception:</h2>
 		<div id="chart_hitsperhour"></div>
 	</div>
 </div>
