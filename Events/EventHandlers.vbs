@@ -13,6 +13,7 @@ Private Const PASSWORD = "supersecretpassword"
 '********** Functions                                                                                                **********
 '******************************************************************************************************************************
 
+'	Function Include - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function Include(sInstFile)
    Dim f, s, oFSO
    Set oFSO = CreateObject("Scripting.FileSystemObject")
@@ -26,6 +27,7 @@ Function Include(sInstFile)
    On Error Goto 0
 End Function
 
+'	Function Wait - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function Wait(sec)
    With CreateObject("WScript.Shell")
 '     .Run "timeout /T " & Int(sec), 0, True                                     ' Windows 7/2003/2008 or later
@@ -34,6 +36,7 @@ Function Wait(sec)
    End With
 End Function
 
+'	Function Lookup - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function Lookup(strRegEx, strMatch) : Lookup = False
    With CreateObject("VBScript.RegExp")
       .Pattern = strRegEx
@@ -44,6 +47,7 @@ Function Lookup(strRegEx, strMatch) : Lookup = False
    End With
 End Function
 
+'	Function IsInSpamHausZEN - http://hmailserver.com/forum/viewtopic.php?f=7&t=34058
 Function IsInSpamHausZEN(strIP) : IsInSpamHausZEN = false
 	Dim a : a = Split(strIP, ".")
 	With CreateObject("DNSLibrary.DNSResolver")
@@ -53,12 +57,52 @@ Function IsInSpamHausZEN(strIP) : IsInSpamHausZEN = false
 	IsInSpamHausZEN = Lookup(strRegEx, strIP)
 End Function
 
+'	Function GetDatabaseObject - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function GetDatabaseObject()
    Dim oApp : Set oApp = CreateObject("hMailServer.Application")
    Call oApp.Authenticate(ADMIN, PASSWORD)
    Set GetDatabaseObject = oApp.Database
 End Function
 
+'	Function AutoBan - https://www.hmailserver.com/forum/viewtopic.php?p=212052
+Function AutoBan(sIPAddress, sReason, iDuration, sType) : AutoBan = False
+   '
+   '   sType can be one of the following;
+   '   "yyyy" Year, "m" Month, "d" Day, "h" Hour, "n" Minute, "s" Second
+   '
+   Dim oApp : Set oApp = CreateObject("hMailServer.Application")
+   Call oApp.Authenticate(ADMIN, PASSWORD)
+   With LockFile(TEMPDIR & "\autoban.lck")
+      On Error Resume Next
+      Dim oSecurityRange : Set oSecurityRange = oApp.Settings.SecurityRanges.ItemByName("(" & sReason & ") " & sIPAddress)
+      If Err.Number = 9 Then
+         With oApp.Settings.SecurityRanges.Add
+            .Name = "(" & sReason & ") " & sIPAddress
+            .LowerIP = sIPAddress
+            .UpperIP = sIPAddress
+            .Priority = 20
+            .Expires = True
+            .ExpiresTime = DateAdd(sType, iDuration, Now())
+            .Save
+         End With
+         AutoBan = True
+      End If
+      On Error Goto 0
+      .Close
+   End With
+   Set oApp = Nothing
+End Function
+
+'	Function Disconnect - http://hmailserver.com/forum/viewtopic.php?f=7&t=34058
+'	Download disconnect.exe from: https://d-fault.nl/files/Disconnect.zip
+Function Disconnect(sIPAddress)
+	With CreateObject("WScript.Shell")
+		.Run """C:\Program Files (x86)\hMailServer\Events\Disconnect.exe"" " & sIPAddress & "", 0, True
+		REM EventLog.Write("Disconnect.exe " & sIPAddress & "")
+	End With
+End Function
+
+'	Function FWBan - http://hmailserver.com/forum/viewtopic.php?f=9&t=34082
 Function FWBan(sIPAddress, sReason)
    Include("C:\Program Files (x86)\hMailServer\Events\VbsJson.vbs")
    Dim ReturnCode, Json, oGeoip, oXML
@@ -96,7 +140,9 @@ Sub OnClientConnect(oClient)
    '   Spamhaus Zen detection
    If IsInSpamHausZEN(oClient.IPAddress) Then
       Result.Value = 1
-      Call FWBan(oClient.IPAddress, "Spamhaus")
+       Call Disconnect(oClient.IPAddress)
+       Call FWBan(oClient.IPAddress, "Spamhaus")
+       Call AutoBan(oClient.IPAddress, "Spamhaus - " & oClient.IpAddress, 1, "h")
 	  EventLog.Write(strPort & " " & oClient.Port & " OnHELO REJECTED zen.spamhaus.org " & oClient.IPAddress)
       Exit Sub
    End If
@@ -127,7 +173,9 @@ Sub OnClientConnect(oClient)
 	   End If
    ' Disconnect all others connecting to port 25.
 	   Result.Value = 1
+       Call Disconnect(oClient.IPAddress)
        Call FWBan(oClient.IPAddress, "GeoIP")
+       Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
 	   EventLog.Write(strPort & " " & oClient.Port & " OnClientConnect REJECTED GeoIP-Lookup " & oClient.IPAddress & " " & oGeoip("countryCode") & " " & oGeoip("country"))
 	   Exit Sub
    Else
@@ -139,7 +187,9 @@ Sub OnClientConnect(oClient)
 	   End If
    ' Disconnect all others connecting to any port except 25.
 	   Result.Value = 1
+       Call Disconnect(oClient.IPAddress)
        Call FWBan(oClient.IPAddress, "GeoIP")
+       Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
 	   EventLog.Write(strPort & " Port " & oClient.Port & vbTab & " Connection REJECTED by GeoIP Lookup" & vbTab & vbTab & Chr(34) & oClient.IPAddress & Chr(34) & vbTab & Chr(34) & oGeoip("countryCode") & Chr(34) & vbTab & Chr(34) & oGeoip("country"))
 	   Exit Sub
    End If

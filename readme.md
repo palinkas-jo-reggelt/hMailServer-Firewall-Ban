@@ -4,6 +4,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.23 proper credits for hmailserver functions and logic update to reduce redundant IPs.
 - 0.22 minor tweaks; added minDate to jquery datepicker to match oldest record in database
 - 0.21 added chart to stats page
 - 0.20 minor tweaks
@@ -22,8 +23,9 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Optional Components
 
-1) RvdH's DNS resolver if you want to lookup & reject based on zen.spamhaus.org. https://d-fault.nl/files/
-2) VbsJson.vbs in order to lookup GeoIP listings. https://github.com/eklam/VbsJson/blob/master/VbsJson.vbs
+1) RvdH's DNS resolver if you want to lookup & reject based on zen.spamhaus.org. https://d-fault.nl/files/ - DNSResolverComponent_1.3.exe.zip - unzip and run installer.
+2) RvdH's Disconnector to immediately disconnect spammer connections. https://d-fault.nl/files/ - Disconnect.zip - unzip into hms/Events folder.
+3) VbsJson.vbs in order to lookup GeoIP listings. https://github.com/eklam/VbsJson/blob/master/VbsJson.vbs
 
 ## MySQL Create Table
 
@@ -69,3 +71,14 @@ NULL	Default - has been added to firewall rule
 ## Security Notes
 
 Security is provided by Apache. You will not want the web admin to be publicly available. The .htaccess restricts access to localhost and your LAN subnet only. If you want to allow access to the WAN, I strongly suggest you password protect the directory or something else that will keep outsiders out as they will have the ability to control your firewall.
+
+
+## Other Notes
+
+I ran across an issue where a single IP hammered my server enough times to cause ip-api.com to rate limit me (150/minute). Besides that, since firewall rules get added on an interval (via scheduled task / powershell), many connections between the interval can add redundant IPs to the rule list. To get around both of these issues I setup RvdH's disconnect and SorenR's autoban. On each trigger now, three functions are called:
+
+1) Disconnect
+2) Firewall Ban
+3) Autoban
+
+This way, autoban will prevent the same IP from getting to any of my filters and thereby prevent calling firewall ban multiple times for the same IP. This will drastically reduce the number of redundant IP firewall rules and redundant IP entries in the database. If you setup your EventHandlers.vbs this way from the very beginning, you will only possibly have duplicate IPs in the database after an IP has been released. 
