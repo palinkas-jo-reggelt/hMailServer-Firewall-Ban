@@ -1,4 +1,3 @@
-<?php include("cred.php") ?>
 <!DOCTYPE html> 
 <html>
 <head>
@@ -16,69 +15,46 @@
 google.load("visualization", "1", {packages:["corechart", "line"]});
 google.setOnLoadCallback(drawChart);
 function drawChart() {
-	var data = google.visualization.arrayToDataTable([
-	['Date','Hits'],
-<?php 
-	$query = "SELECT DATE(timestamp) Date, COUNT(id) AS ipperday FROM hm_fwban GROUP BY DATE(timestamp)";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
-		echo "['".$row['Date']."',".$row['ipperday']."],";
-	}
-?> 
-
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn('number', 'Hits');
+	data.addRows([
+<?php include("charthitsperday.php") ?>
 	]);
 
-	  var options = {
-		hAxis: {
-		  title: 'Date'
-		},
-		vAxis: {
-		  title: 'Hits/Day'
-		},
-		series: {
-		  1: {curveType: 'function'}
-		}
-	  };
 	var chart = new google.visualization.LineChart(document.getElementById('chart_hitsperday'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,
-		colors: ['#ff0000']  
+		colors: ['#ff0000'],
+		legend: 'none',
+		trendlines: { 0: { 
+             type: 'polynomial',
+             degree: 3,
+             visibleInLegend: false,
+			}
+		}
 	  });
 }	
 </script>
 <script type="text/javascript">
-google.load("visualization", "1", {packages:["corechart", "bar"]});
-google.setOnLoadCallback(drawChart);
-function drawChart() {
-	var data = google.visualization.arrayToDataTable([
-	['Date','Hits'],
-<?php 
-	$query = "SELECT Hour(timestamp) Hour, COUNT(id) AS ipperhour FROM hm_fwban GROUP BY Hour(timestamp) ORDER BY Hour(timestamp)";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
-		echo "['".$row['Hour']."',".$row['ipperhour']."],";
-	}
-?> 
+google.charts.load('current', {packages: ['corechart', 'bar']});
+google.charts.setOnLoadCallback(drawChart);
 
+function drawChart() {
+	var data = new google.visualization.DataTable();
+	data.addColumn('timeofday', 'Hour');
+	data.addColumn('number', 'Hits');
+	data.addRows([
+<?php include("charthitsperhour.php") ?>
 	]);
 
-	  var options = {
-		hAxis: {
-		  title: 'Hour of Day'
-		},
-		vAxis: {
-		  title: 'Hits/Hour'
-		},
-		series: {
-		  1: {curveType: 'function'}
-		}
-	  };
 	var chart = new google.visualization.ColumnChart(document.getElementById('chart_hitsperhour'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,
-		colors: ['#ff0000']  
+		legend: 'none',
+		colors: ['#ff0000']
 	  });
 }	
 </script>

@@ -4,7 +4,8 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
-- 0.23 proper credits for hmailserver functions and logic update to reduce redundant IPs.
+- 0.24 converted chart data from strings to 'number', 'date' & 'timeofday' for better formatting; added regression to hits per day chart
+- 0.23 proper credits for hmailserver functions and logic update to reduce redundant IPs
 - 0.22 minor tweaks; added minDate to jquery datepicker to match oldest record in database
 - 0.21 added chart to stats page
 - 0.20 minor tweaks
