@@ -65,7 +65,7 @@ function drawChart() {
 	<div class="banner"><h1>hMailServer Firewall Ban</h1></div>
 	<div class="headlinks">
 		<div class="headlinkswidth">
-			<a href="./">stats</a> | <a href="search.php">search</a> | <a href="history.php">history</a> | <a href="release.php">release</a> | <a href="reban.php">reban</a>
+			<a href="./">stats</a> | <a href="search.php">search</a> | <a href="release.php">release</a> | <a href="reban.php">reban</a>
 		</div>
 	</div>
 </div>

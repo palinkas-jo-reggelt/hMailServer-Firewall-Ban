@@ -113,7 +113,7 @@
 
 	echo "<div class=\"secright\">";
 	echo "<h2>IPs Released From Firewall:</h2>";
-	$sqlcount = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE (flag=1 OR flag=2)";
+	$sqlcount = "SELECT COUNT(*) FROM `hm_fwban` WHERE (flag=1 OR flag=2)";
 	$res_count = mysqli_query($con,$sqlcount);
 	$total_rows = mysqli_fetch_array($res_count)[0];
 	if ($total_rows > 0) { 

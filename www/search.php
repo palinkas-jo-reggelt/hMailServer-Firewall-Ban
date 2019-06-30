@@ -34,10 +34,10 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	echo "</div>";
 	echo "<div class='section'>";
   
-	$min_length = 2;
-    if(strlen($search) < $min_length){
-		echo "Please enter a search term of at least 2 characters.";
-	} else {
+	// $min_length = 2;
+    // if(strlen($search) < $min_length){
+		// echo "Please enter a search term of at least 2 characters.";
+	// } else {
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
@@ -63,7 +63,12 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	if ($total_rows == 0){
 		echo "No results for \"<b>".$search."</b>\"".$RSres;
 	} else {
+		if(strlen($search)==''){
+		echo "Please enter a search term. <br /><br />";
+		echo "All results".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		} else {
 		echo "Results for \"<b>".$search."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		}
 		echo "<table class='section'>
 			<tr>
 				<th>Timestamp</th>
@@ -98,8 +103,6 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP.<br /><br />";
 	mysqli_close($con);
 	}
-	}
-
 	echo "<br />";
 	echo "</div>";
 ?>
