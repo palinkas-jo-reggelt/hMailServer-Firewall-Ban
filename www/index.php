@@ -16,16 +16,15 @@
 <?php include("cred.php") ?>
 <?php
 	$today = date('Y-m-d');
-	$yesterday = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
-	$twodaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-2, date("Y")));
-	$threedaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-3, date("Y")));
-	$fourdaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-4, date("Y")));
-	$fourdaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-4, date("Y")));
-	$thismonth = date('Y-m-1');
-	$lastmonth = date('Y-m-1', mktime(0, 0, 0, date("m")-1, date("d"), date("Y")));
-	$twomonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-2, date("d"), date("Y")));
-	$threemonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-3, date("d"), date("Y")));
-	$fourmonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-4, date("d"), date("Y")));
+	$yesterday = date('Y-m-d', strtotime(date('Y-m-d')." -1 day"));
+	$twodaysago = date('Y-m-d', strtotime(date('Y-m-d')." -2 day"));
+	$threedaysago = date('Y-m-d', strtotime(date('Y-m-d')." -3 day"));
+	$fourdaysago = date('Y-m-d', strtotime(date('Y-m-d')." -4 day"));
+	$thismonth = date('Y-m');
+	$lastmonth = date('Y-m', strtotime(date('Y-m')." -1 month"));
+	$twomonthsago = date('Y-m', strtotime(date('Y-m')." -2 month"));
+	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
+	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
 
 	echo "<div class=\"secleft\">";
 	echo "<h2>This Week's Daily Hits:</h2>";
@@ -57,25 +56,25 @@
 
 	echo "<h2>This Year's Monthly Hits:</h2>";
 
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$thismonth} 00:00:00' AND NOW()";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$thismonth}-01 00:00:00' AND NOW()";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./month-curr.php\">".number_format($row['value_occurrence'])." Hits</a> so far this month<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$thismonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> so far this month<br />"; }
 	
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$lastmonth} 00:00:00' AND '{$thismonth} 00:00:00'";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./month-last.php\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($lastmonth))."<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$lastmonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($lastmonth))."<br />"; }
 	
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$twomonthsago} 00:00:00' AND '{$lastmonth} 00:00:00'";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./month-2ma.php\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($twomonthsago))."<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$twomonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($twomonthsago))."<br />"; }
 
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$threemonthsago} 00:00:00' AND '{$twomonthsago} 00:00:00'";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./month-3ma.php\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($threemonthsago))."<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$threemonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($threemonthsago))."<br />"; }
 	
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$fourmonthsago} 00:00:00' AND '{$threemonthsago} 00:00:00'";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./month-4ma.php\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br />"; }
 
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";

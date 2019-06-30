@@ -2,15 +2,15 @@
 <?php include("cred.php") ?>
 <?php
 	$today = date('Y-m-d');
-	$yesterday = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
-	$twodaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-2, date("Y")));
-	$threedaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-3, date("Y")));
-	$fourdaysago = date('Y-m-d', mktime(0, 0, 0, date("m"), date("d")-4, date("Y")));
-	$thismonth = date('Y-m-1');
-	$lastmonth = date('Y-m-1', mktime(0, 0, 0, date("m")-1, date("d"), date("Y")));
-	$twomonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-2, date("d"), date("Y")));
-	$threemonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-3, date("d"), date("Y")));
-	$fourmonthsago = date('Y-m-1', mktime(0, 0, 0, date("m")-4, date("d"), date("Y")));
+	$yesterday = date('Y-m-d', strtotime(date('Y-m-d')." -1 day"));
+	$twodaysago = date('Y-m-d', strtotime(date('Y-m-d')." -2 day"));
+	$threedaysago = date('Y-m-d', strtotime(date('Y-m-d')." -3 day"));
+	$fourdaysago = date('Y-m-d', strtotime(date('Y-m-d')." -4 day"));
+	$thismonth = date('Y-m');
+	$lastmonth = date('Y-m', strtotime(date('Y-m')." -1 month"));
+	$twomonthsago = date('Y-m', strtotime(date('Y-m')." -2 month"));
+	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
+	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
 ?>
 
 <div class="section">
