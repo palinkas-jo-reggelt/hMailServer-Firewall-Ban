@@ -1,9 +1,11 @@
+
 # hMailServer Firewall Ban
 
 Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.28 added plural function for "hit"/"hits"; rounded avg hits per hour data to 1 decimal; changed db queries in hmsFirewallBan.ps1 from "WHERE something =" to "WHERE something LIKE"
 - 0.27 removed "months" pages as redundant; search handles month views now
 - 0.26 removed current day from "hits per day" chart so as not to skew the trendline with low number of hits early in the day; removed "history" pages because they're useless after accumulating thousands of hits (there's no point to it); in place of "history", search page defaults to ALL records
 - 0.25 changed "Hits per hour" chart from total hits per hour to average hits per hour
@@ -35,7 +37,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ```
 CREATE TABLE hm_fwban (
-	id int NOT NULL AUTO_INCREMENT UNIQUE,
+	id INT NOT NULL AUTO_INCREMENT UNIQUE,
 	ipaddress VARCHAR (192) NOT NULL,
 	timestamp TIMESTAMP,
 	ban_reason VARCHAR (192),
@@ -49,9 +51,9 @@ CREATE TABLE hm_fwban (
 ## Instructions
 
 1) Copy everything from EventHandlers.vbs into your EventHandlers.vbs (C:\Program Files (x86)\hMailServer\Events\EventHandlers.vbs)
-2) Copy vbsjson.vbs to hMailServer Events folder (C:\Program Files (x86)\hMailServer\Events)
+2) Copy vbsjson.vbs to hMailServer Events folder (C:\Program Files (x86)\hMailServer\Events is default location)
 3) Install RvdH's DNS resolver (https://d-fault.nl/files/)
-4) Copy VbsJson to hMailServer Events folder.
+4) Copy RvdH's Disconnect.exe to hMailServer Events folder.
 5) Edit db variables in hmsFirewallBan.ps1
 6) Using phpMyAdmin or whatever you want, add table "hm_fwban" to hmailserver database.
 7) Create scheduled task to run every 5 minutes with action: 

@@ -5,4 +5,4 @@
 	while($row = mysqli_fetch_array($exec)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
 	}
-?> 
+?>

@@ -85,7 +85,8 @@
 	echo "<div class=\"secleft\">";
 	echo "<h2>Top 5 spammer countries:</h2>";
 	while($row = mysqli_fetch_array($res_data)){
-	echo "<a href=\"./search.php?submit=Search&search=".$row['country']."\">".$row['country']."</a> with ".number_format($row['value_occurrence'])." hits.<br />";
+		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
+		echo "<a href=\"./search.php?submit=Search&search=".$row['country']."\">".$row['country']."</a> with ".number_format($row['value_occurrence'])." hit".$singular.".<br />";
 	}
 	echo "<br />";
 	echo "</div>";
@@ -95,7 +96,8 @@
 	echo "<div class=\"secright\">";
 	echo "<h2>Top 5 spammer IP's:</h2>";
 	while($row = mysqli_fetch_array($res_data)){
-	echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$row['country']." with ".$row['value_occurrence']." hits.<br />";
+		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
+		echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$row['country']." with ".$row['value_occurrence']." hit".$singular.".<br />";
 	}
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
@@ -105,7 +107,8 @@
 	$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){
-	echo number_format($row['value_occurrence'])." hits for <a href=\"./search.php?submit=Search&search=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br />";
+		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
+		echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./search.php?submit=Search&search=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br />";
 	}
 	echo "<br />";
 	echo "</div>";
@@ -119,7 +122,8 @@
 		$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` WHERE (flag=1 OR flag=2) GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
 		$res_data = mysqli_query($con,$sql);
 		while($row = mysqli_fetch_array($res_data)){
-		echo "<a href=\"./rel.php?submit=Search&search=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IPs</a> triggered by ".$row['ban_reason']." released.<br />";
+		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
+		echo "<a href=\"./rel.php?submit=Search&search=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
 		}
 	} else {
 		echo "There are no released IPs to report.";
@@ -152,7 +156,8 @@
 	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
 	$res_data = mysqli_query($con,$sql);
 	$total_rows = mysqli_fetch_array($res_data)[0];
-	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hits</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hit".$singular."</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
 	
 
 	echo "<br />";

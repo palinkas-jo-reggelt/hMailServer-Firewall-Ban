@@ -96,7 +96,7 @@ foreach ($IPAddress in $IPList) {
 #	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason = '$Ban_Reason' AND flag IS NULL"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
 MySQLQuery $Query
 $regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
 $regexID = '(\s{0,}[0-9]+\s{0,}$)'
@@ -114,7 +114,7 @@ foreach ($IPAddress in $IPList) {
 #	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country = '$Country' AND flag IS NULL"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
 MySQLQuery $Query
 $regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
 $regexID = '(\s{0,}[0-9]+\s{0,}$)'

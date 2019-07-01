@@ -44,7 +44,7 @@ google.charts.setOnLoadCallback(drawChart);
 function drawChart() {
 	var data = new google.visualization.DataTable();
 	data.addColumn('timeofday', 'Hour');
-	data.addColumn('number', 'Hits');
+	data.addColumn('number', 'Avg Hits');
 	data.addRows([
 <?php include("charthitsperhour.php") ?>
 	]);
