@@ -91,13 +91,12 @@
 	echo "<br />";
 	echo "</div>";
 
-	$sql = "SELECT `ipaddress`, `country`, COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` GROUP BY `ipaddress` ORDER BY `value_occurrence` DESC LIMIT 5";
+	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%y/%c/%e') AS dupdate, country FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT 5";
 	$res_data = mysqli_query($con,$sql);
 	echo "<div class=\"secright\">";
-	echo "<h2>Top 5 spammer IP's:</h2>";
+	echo "<h2>Last 5 duplicate IPs:</h2>";
 	while($row = mysqli_fetch_array($res_data)){
-		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$row['country']." with ".$row['value_occurrence']." hit".$singular.".<br />";
+		echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
 	}
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
