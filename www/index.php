@@ -98,7 +98,10 @@
 	while($row = mysqli_fetch_array($res_data)){
 		echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
 	}
-	echo "<br />";
+	$num_dups_sql = "SELECT count(*) AS duplicate_count FROM ( SELECT ipaddress FROM hm_fwban GROUP BY ipaddress HAVING COUNT(ipaddress) > 1 ) AS t";
+	$result = mysqli_query($con,$num_dups_sql);
+	$num_dups = mysqli_fetch_array($result)[0];
+	if ($num_dups > 5){echo "<br />Full list of <a href=\"./duplicates.php\">Duplicate Entries</a>.";}
 	echo "</div><div class=\"clear\"></div>";
 
 	echo "<div class=\"secleft\">";
