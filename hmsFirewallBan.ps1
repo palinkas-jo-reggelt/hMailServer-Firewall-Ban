@@ -49,7 +49,11 @@ Function MySQLQueryUpdate($Query) {
 }
 
 #	Look for new entries and add them to firewall
-$Query = "SELECT ipaddress FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
+#	First delete any duplicate IP entries in the database since the last run
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= now() - interval 5 minute"
+MySQLQueryUpdate $Query
+#	Now find all new (non-duplicated) IP entries and add firewall rule
+$Query = "SELECT DISTINCT(ipaddress) FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
 MySQLQuery $Query
 $timestamp = Get-Date -format 'yy/MM/dd HH:mm'
 $regex = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
@@ -78,7 +82,11 @@ foreach ($IPAddress in $IPList) {
 }
 
 #	Pickup entries marked for REBAN through webadmin
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag=3"
+#	First delete any duplicate IP entries to be rebanned to prevent duplicate firewall rules
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.flag=3"
+MySQLQueryUpdate $Query
+#	Now find all new (non-duplicated) IP entries and add firewall rule
+$Query = "SELECT DISTINCT(ipaddress), id FROM hm_fwban WHERE flag=3"
 MySQLQuery $Query
 $regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
 $regexID = '(\s{0,}[0-9]+\s{0,}$)'

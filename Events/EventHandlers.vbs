@@ -36,6 +36,35 @@ Function Wait(sec)
    End With
 End Function
 
+'	Function LockFile - https://www.hmailserver.com/forum/viewtopic.php?p=212052
+Function LockFile(strPath)
+   Const Append = 8
+   Const Unicode = -1
+   Dim i
+   On Error Resume Next
+   With CreateObject("Scripting.FileSystemObject")
+      For i = 0 To 30
+         Err.Clear
+         Set LockFile = .OpenTextFile(strPath, Append, True, Unicode)
+         If (Not Err.Number = 70) Then Exit For
+         Wait(1)
+      Next
+   End With
+   If (Err.Number = 70) Then
+      EventLog.Write( "ERROR: EventHandlers.vbs" )
+      EventLog.Write( "File " & strPath & " is locked and timeout was exceeded." )
+      Err.Clear
+   ElseIf (Err.Number <> 0) Then
+      EventLog.Write( "ERROR: EventHandlers.vbs : Function LockFile" )
+      EventLog.Write( "Error       : " & Err.Number )
+      EventLog.Write( "Error (hex) : 0x" & Hex(Err.Number) )
+      EventLog.Write( "Source      : " & Err.Source )
+      EventLog.Write( "Description : " & Err.Description )
+      Err.Clear
+   End If
+   On Error Goto 0
+End Function
+
 '	Function Lookup - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function Lookup(strRegEx, strMatch) : Lookup = False
    With CreateObject("VBScript.RegExp")

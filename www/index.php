@@ -91,18 +91,23 @@
 	echo "<br />";
 	echo "</div>";
 
+	$num_dups_sql = "SELECT count(*) AS duplicate_count FROM ( SELECT ipaddress FROM hm_fwban GROUP BY ipaddress HAVING COUNT(ipaddress) > 1 ) AS t";
+	$result = mysqli_query($con,$num_dups_sql);
+	$num_dups = mysqli_fetch_array($result)[0];
 	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%y/%c/%e') AS dupdate, country FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT 5";
 	$res_data = mysqli_query($con,$sql);
 	echo "<div class=\"secright\">";
 	echo "<h2>Last 5 duplicate IPs:</h2>";
-	while($row = mysqli_fetch_array($res_data)){
-		echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
+	if ($num_dups == 0){
+		echo "There are no duplicate IPs to report.<br /><br />";
+	}else{
+		while($row = mysqli_fetch_array($res_data)){
+			echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
+		}
+		if ($num_dups > 5){echo "<br />Full list of <a href=\"./duplicates.php\">Duplicate Entries</a>.<br /><br />";}
 	}
-	$num_dups_sql = "SELECT count(*) AS duplicate_count FROM ( SELECT ipaddress FROM hm_fwban GROUP BY ipaddress HAVING COUNT(ipaddress) > 1 ) AS t";
-	$result = mysqli_query($con,$num_dups_sql);
-	$num_dups = mysqli_fetch_array($result)[0];
-	if ($num_dups > 5){echo "<br />Full list of <a href=\"./duplicates.php\">Duplicate Entries</a>.";}
 	echo "</div><div class=\"clear\"></div>";
+	
 
 	echo "<div class=\"secleft\">";
 	echo "<h2>Ban Reasons:</h2>";

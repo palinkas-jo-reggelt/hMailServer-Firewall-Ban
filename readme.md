@@ -5,6 +5,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.31 added delete duplicate entries control to powershell script; tweaked index.php for duplicate entries; added LockFile function to EventHandlers.vbs
 - 0.30 added duplicate entries table
 - 0.29 changed "Top 5 spammer IPs" to "Last 5 duplicate IPs" which is far more informative, I think. Ultimately, you don't want duplicates at all, unless its a return after expiring a firewall rule. Its a good way to see if your hMailServer filters/triggers are working like a finely tuned machine.
 - 0.28 added plural function for "hit"/"hits"; rounded avg hits per hour data to 1 decimal; changed db queries in hmsFirewallBan.ps1 from "WHERE something =" to "WHERE something LIKE"
