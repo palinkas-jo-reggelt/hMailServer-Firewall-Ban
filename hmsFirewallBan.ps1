@@ -53,15 +53,19 @@ Function MySQLQueryUpdate($Query) {
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= now() - interval 5 minute"
 MySQLQueryUpdate $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress) FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
 MySQLQuery $Query
 $timestamp = Get-Date -format 'yy/MM/dd HH:mm'
-$regex = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
+$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
+$regexID = '(\s{0,}[0-9]+\s{0,}$)'
 $IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
 foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regex){
-		$IP = $IPAddress -replace '\s|\n|\r|\n\r', ''
+	if ($IPAddress -match $regexIP){
+		$IP = [regex]::matches($IPAddress, $regexIP)
 		& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp" dir=in interface=any action=block remoteip=$IP
+		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
+		$Query = "UPDATE hm_fwban SET flag=NULL WHERE id='$ID'"
+		MySQLQueryUpdate $Query
 	}
 }
 

@@ -51,7 +51,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
 	if ($RS=="NO"){$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%') AND (flag IS NULL OR flag=3) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
-	elseif ($RS=="YES"){$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%') AND (flag=1 OR flag=2) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
+	elseif ($RS=="YES"){$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%') AND (flag=1 OR flag=2 OR flag=4) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
 	else {$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%'OR countrycode LIKE '%{$search}%'OR country LIKE '%{$search}%' ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";}
 
 	$res_data = mysqli_query($con,$sql);
@@ -86,6 +86,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	echo "<td>" . $row['ban_reason'] . "</td>";
 	echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 	if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
+	elseif($row['flag'] == 4) echo "<td>NP</td>";
 	else echo "<td>YES</td>";
 
 	echo "</tr>";
@@ -100,7 +101,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=".$total_pages."\">Last</a></li>";}
 		echo "</ul>";
 	}
-	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP.<br /><br />";
+	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP. \"NP\" = Not Processed yet.<br /><br />";
 	mysqli_close($con);
 	}
 	echo "<br />";
