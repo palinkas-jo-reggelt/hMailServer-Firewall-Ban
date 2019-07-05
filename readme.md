@@ -72,10 +72,11 @@ CREATE TABLE hm_fwban (
 ```
 Flag	Meaning
 ====	=======
-NULL	Default - has been added to firewall rule
-1   	Marked as released by auto expire after removing firewall rule
-2   	Marked for release by manual release (release.php), after firewall rule deleted, reset flag to 1
-3   	Marked for reban by manual reban (reban.php), after firewall rule added, reset flag to NULL
+NULL	Has been added as a firewall rule
+1   	Has been released from firewall (firewall rule deleted)
+2   	Marked for release by manual release (release.php) but not firewall rule not yet deleted - after firewall rule deleted, reset flag to 1
+3   	Marked for reban by manual reban (reban.php) but firewall rule not yet added - after firewall rule added, reset flag to NULL
+4   	NEW default entry - signifies IP has been added to database but firewall rule has not yet been added - after firewall rule added, reset flag to NULL
 ```
 
 ## Security Notes
