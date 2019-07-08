@@ -5,6 +5,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.33 minor formatting changes; added stats.php which is the same as index.php except with a) no links and b) no includes except cred.php and is meant as a public information page
 - 0.33 added "stats.php": an information only (no links) page for public view; rename to index and drop anywhere with cred.php for public viewing of stats
 - 0.32 added NEW FLAG = "4"; EventHandlers.vbs must be changed to reflect this change as all new hits are recorded into the database with flag=4; the reason for this is to distinguish and count IPs that are new/newly released/rebanned/manually banned; if you upgrade, you must change function fwban in EventHandlers.vbs to insert flag value = 4; added np.php (not yet processed) to view new/newly released/rebanned/manually banned entries; added count new/newly released/rebanned/manually banned entries on index.php; changes to hmsFirewallBan.ps1 to process these other changes
 - 0.31 added delete duplicate entries control to powershell script; tweaked index.php for duplicate entries; added LockFile function to EventHandlers.vbs

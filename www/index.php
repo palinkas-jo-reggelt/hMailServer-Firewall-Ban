@@ -140,21 +140,22 @@
 
 	echo "<div class=\"secleft\">";
 	echo "<h2>Ban Enforcement:</h2>";
-	
+	echo "<table>";
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban`WHERE flag IS NULL OR flag=1";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo number_format($row['value_occurrence'])." Total number of IPs banned<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Total number of IPs banned</td></tr>"; }
 
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=1";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "-".number_format($row['value_occurrence'])." Number of IPs released from firewall<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">-".number_format($row['value_occurrence'])."</td><td>Number of IPs released from firewall</td></tr>"; }
 
-	echo "--------<br />";
+	echo "<tr><td style=\"text-align:right\">--------</td><td></td></tr>";
 
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag IS NULL";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo number_format($row['value_occurrence'])." Number of IPs currently banned by firewall rule<br />"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Number of IPs currently banned by firewall rule</td></tr>"; }
 	
+	echo "</table>";
 	echo "<br />";
 	echo "</div>";
 
