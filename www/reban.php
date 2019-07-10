@@ -111,9 +111,9 @@
 	<div class="secleft">
 		<h2>Manually ban an IP range:</h2>
 		Enter an IP or IP range. Will search for matches and if found will reban. If no matches found will add IP to firewall ban list with reason: "Manual". Not dependent on previous bans/releases.<br /><br />
-		<form autocomplete="off" action='reban-iprange.php' method='GET'>
-			<input type="text" pattern="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2,3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$" title="255.255.255.255 OR 255.255.255" id="ipRange" name="ipRange">
-			<input type='submit' name='submit' value='Ban' onclick="return confirm('Are you sure you want to BAN this IP range?')" />
+		<form autocomplete="off" action="reban-iprange.php" method="GET">
+			<input type="text" pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2,3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" title="255.255.255.255 OR 255.255.255" id="ipRange" name="ipRange">
+			<input type="submit" name="submit" value="Ban">
 		</form>
 		<br />IP Ranges MUST be in: <br />
 		<b>255.255.255.255</b> OR <br />

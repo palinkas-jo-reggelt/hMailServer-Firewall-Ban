@@ -102,7 +102,7 @@
 		<h2>Release an IP range:</h2>
 		Will search for matching unreleased IPs.<br /><br />
 		<form autocomplete="off" action='release-iprange.php' method='GET'>
-			<input type="text" pattern="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1,3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$" title="255.255.255.255 OR 255.255.255 OR 255.255" id="ipRange" name="ipRange">
+			<input type="text" pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2,3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" title="255.255.255.255 OR 255.255.255 OR 255.255" id="ipRange" name="ipRange">
 			<input type='submit' name='submit' value='Release' />
 		</form>
 		<br />IP Ranges MUST be in <br />
