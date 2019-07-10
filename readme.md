@@ -5,6 +5,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.35 changed Hits Per Day chart from polynomial regression to plain after crazy out of whack result line appeared (google says to beware of skewing); moved all of chart javascript into chart php files for housekeeping purposes
 - 0.34 improved reban IP elements
 - 0.33 minor formatting changes; added stats.php which is the same as index.php except with a) no links and b) no includes except cred.php and is meant as a public information page
 - 0.33 added "stats.php": an information only (no links) page for public view; rename to index and drop anywhere with cred.php for public viewing of stats
