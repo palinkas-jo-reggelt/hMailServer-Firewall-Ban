@@ -69,8 +69,10 @@ CREATE TABLE `hm_fwban_rh` (
 5) Edit db variables in hmsFirewallBan.ps1
 6) Using phpMyAdmin or whatever you want, add table "hm_fwban" to hmailserver database.
 7) Change group policy for firewall log to log dropped connections. Set log location to match with path in hmsFirewallBan.ps1 (or change path in hmsFirewallBan.ps1). From cmd/administrator:
-```	netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
-	netsh advfirewall set allprofiles logging droppedconnections enable```
+```
+	netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
+	netsh advfirewall set allprofiles logging droppedconnections enable
+```
 You may need to edit this with Group Policy Editor.
 8) Create scheduled task to run every 5 minutes with action: 
 ```powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1```
