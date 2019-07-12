@@ -5,10 +5,10 @@ google.setOnLoadCallback(drawChart);
 function drawChart() {
 	var data = new google.visualization.DataTable();
 	data.addColumn('date', 'Date');
-	data.addColumn('number', 'Hits');
+	data.addColumn('number', 'Blocks');
 	data.addRows([
 <?php 
-	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday FROM hm_fwban WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
+	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(ipaddress) AS ipperday FROM hm_fwban_rh WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
 	$exec = mysqli_query($con,$query);
 	while($row = mysqli_fetch_array($exec)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
@@ -16,7 +16,7 @@ function drawChart() {
 ?>
 	]);
 
-	var chart = new google.visualization.LineChart(document.getElementById('chart_hitsperday'));
+	var chart = new google.visualization.LineChart(document.getElementById('chart_blocksperday'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,

@@ -158,3 +158,28 @@ foreach ($IPAddress in $IPList) {
 	}
 }
 
+#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1
+$FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"
+$MinuteSpan = 5 # Should match interval of scheduled task
+$EndTime = (get-date).ToString("HH:mm:ss")
+$StartTime = ((get-date) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("HH:mm:ss")
+$DateEnd = (get-date).ToString("yyyy-MM-dd")
+$DateStart = ((get-date) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("yyyy-MM-dd")
+
+$FirewallLogObjects = import-csv -Path $FirewallLog -Delimiter " " -Header Date, Time, Action, Protocol, SourceIP, `
+    DestinationIP, SourcePort, DestinationPort, Size, tcpflags, tcpsyn, tcpack, tcpwin, icmptype, icmpcode, info, path | `
+    Where-Object {$_.date -match "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"}
+$FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Date -ge $DateStart -and $_.Date -le $DateEnd}
+$FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Time -ge $StartTime -and $_.Time -le $EndTime}
+
+$FirewallLogObjects | foreach-object {
+	if ($_.DestinationPort -match "25|465|587|110|993|143|995") {
+		if ($_.SourceIP -notmatch "192.168.99.1"){
+			$IP = ($_.SourceIP).trim()
+			$DateTime = (($_.Date).trim()+" "+($_.Time).trim())
+			$Query = "INSERT INTO hm_fwban_rh (timestamp, ipaddress) VALUES ('$DateTime', '$IP')"
+			MySQLQueryUpdate $Query
+		}
+	}
+}
+

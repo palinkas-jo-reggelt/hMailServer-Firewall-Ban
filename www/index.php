@@ -2,13 +2,14 @@
 
 <div class="section">
 	<div class="secleft">
-		<h2>Hits per day from inception:</h2>
-		<div id="chart_hitsperday"></div>
+		<h2>IPs added and blocked from inception:</h2>
+		<div id="chart_combined"></div>
 	</div>
-	<div class="secleft">
+	<div class="secright">
 		<h2>Average hits per hour from inception:</h2>
 		<div id="chart_hitsperhour"></div>
 	</div>
+	<div class="clear"></div>
 </div>
 
 <div class="section">
@@ -94,7 +95,7 @@
 	$num_dups_sql = "SELECT count(*) AS duplicate_count FROM ( SELECT ipaddress FROM hm_fwban GROUP BY ipaddress HAVING COUNT(ipaddress) > 1 ) AS t";
 	$result = mysqli_query($con,$num_dups_sql);
 	$num_dups = mysqli_fetch_array($result)[0];
-	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%y/%c/%e') AS dupdate, country FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT 5";
+	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, MAX(DATE_FORMAT(timestamp, '%y/%c/%e')) AS dupdate, country FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT 5";
 	$res_data = mysqli_query($con,$sql);
 	echo "<div class=\"secright\">";
 	echo "<h2>Last 5 duplicate IPs:</h2>";
@@ -196,8 +197,30 @@
 	echo "<br />";
 	echo "</div>";
 
+	$num_repeats_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh";
+	$result = mysqli_query($con,$num_repeats_sql);
+	$num_repeats = mysqli_fetch_array($result)[0];
+	$sql_repeats = "SELECT COUNT(ipaddress) AS countip, ipaddress FROM hm_fwban_rh GROUP BY ipaddress ORDER BY countip DESC LIMIT 5";
+	$res_data = mysqli_query($con,$sql_repeats);
 	echo "<div class=\"secright\">";
-	echo "<h2></h2>";
+	echo "<h2>Top 5 Repeat Spammers:</h2>";
+	echo "Parsed from the firewall log dropped connections: IPs that knocked on the door but couldn't get in.<br /><br />";
+	if ($num_repeats == 0){
+		echo "There are no repeat firewall drops to report.<br /><br />";
+	}else{
+		while($row = mysqli_fetch_array($res_data)){
+			if ($row['countip']==1){$singular="";}else{$singular="s";}
+			$sql_country = "SELECT country FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'";
+			$res_country = mysqli_query($con,$sql_country);
+			$country = mysqli_fetch_array($res_country)[0];
+			echo number_format($row['countip'])." knock".$singular." by <a href=\"./repeats-ip.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$country."<br />";
+		}
+		if ($num_repeats > 5){
+			$res_total_repeat_count = mysqli_query($con,"SELECT COUNT(ipaddress) FROM hm_fwban_rh");
+			$total_repeats = mysqli_fetch_array($res_total_repeat_count)[0];
+			echo "<a href=\"./repeats.php\"><br />".number_format($num_repeats)." IPs</a> have repeatedly attempted to gain access unsuccessfully a total of ".number_format($total_repeats)." times.<br /><br />";}
+	}
+
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
 

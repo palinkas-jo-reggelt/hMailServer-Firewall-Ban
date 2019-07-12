@@ -1,10 +1,10 @@
-
 # hMailServer Firewall Ban
 
 Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.36 added read firewall log to see how many "repeat customers" there are; added pages to handle firewall log entries; changed hits per day chart to add blocked IPs and now 2 trendlines
 - 0.35 changed Hits Per Day chart from polynomial regression to plain after crazy out of whack result line appeared (google says to beware of skewing); moved all of chart javascript into chart php files for housekeeping purposes
 - 0.34 improved reban IP elements
 - 0.33 minor formatting changes; added stats.php which is the same as index.php except with a) no links and b) no includes except cred.php and is meant as a public information page
@@ -44,16 +44,21 @@ Ban hMailServer rejects to Windows Defender Firewall.
 ## MySQL Create Table
 
 ```
-CREATE TABLE hm_fwban (
-	id INT NOT NULL AUTO_INCREMENT UNIQUE,
-	ipaddress VARCHAR (192) NOT NULL,
-	timestamp TIMESTAMP,
-	ban_reason VARCHAR (192),
-	countrycode VARCHAR (4),
-	country VARCHAR (192),
-	flag INT (1) NULL DEFAULT,
-	PRIMARY KEY (id)
-); 
+CREATE TABLE `hm_fwban` (
+  `id` int(11) NOT NULL,
+  `ipaddress` varchar(192) NOT NULL,
+  `timestamp` timestamp NULL DEFAULT NULL,
+  `ban_reason` varchar(192) NOT NULL,
+  `countrycode` varchar(4) NOT NULL,
+  `country` varchar(192) NOT NULL,
+  `flag` int(1) DEFAULT NULL,
+  `returnIPs` int(20) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `hm_fwban_rh` (
+  `timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `ipaddress` varchar(15) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
    
 ## Instructions
@@ -64,11 +69,15 @@ CREATE TABLE hm_fwban (
 4) Copy RvdH's Disconnect.exe to hMailServer Events folder.
 5) Edit db variables in hmsFirewallBan.ps1
 6) Using phpMyAdmin or whatever you want, add table "hm_fwban" to hmailserver database.
-7) Create scheduled task to run every 5 minutes with action: 
+7) Change group policy for firewall log to log dropped connections. Set log location to match with path in hmsFirewallBan.ps1 (or change path in hmsFirewallBan.ps1). From cmd/administrator:
+```	netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
+	netsh advfirewall set allprofiles logging droppedconnections enable```
+You may need to edit this with Group Policy Editor.
+8) Create scheduled task to run every 5 minutes with action: 
 ```powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-8) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
-9) Sit back and watch your firewall rule count grow.
+9) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
+10) Sit back and watch your firewall rule count grow.
 
 
 ## Flag Logic

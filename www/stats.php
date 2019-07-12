@@ -21,7 +21,7 @@ function drawChart() {
 	data.addColumn('number', 'Hits');
 	data.addRows([
 <?php 
-	$query = "SELECT DATE_FORMAT(timestamp, '%Y, %c, %e') AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday FROM hm_fwban WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
+	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday FROM hm_fwban WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
 	$exec = mysqli_query($con,$query);
 	while($row = mysqli_fetch_array($exec)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
@@ -37,7 +37,7 @@ function drawChart() {
 		legend: 'none',
 		trendlines: { 0: { 
              type: 'polynomial',
-             degree: 3,
+             degree: 2,
              visibleInLegend: false,
 			}
 		}
@@ -226,17 +226,17 @@ function drawChart() {
 	
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban`WHERE flag IS NULL OR flag=1";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])." Total number of IPs banned</td></tr>"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Total number of IPs banned</td></tr>"; }
 
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=1";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">-".number_format($row['value_occurrence'])." Number of IPs released from firewall</td></tr>"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">-".number_format($row['value_occurrence'])."</td><td>Number of IPs released from firewall</td></tr>"; }
 
 	echo "<tr><td style=\"text-align:right\">--------</td><td></td></tr>";
 
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag IS NULL";
 	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])." Number of IPs currently banned by firewall rule</td></tr>"; }
+	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Number of IPs currently banned by firewall rule</td></tr>"; }
 	
 	echo "</table>";
 	echo "<br />";

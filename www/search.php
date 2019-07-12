@@ -81,9 +81,9 @@ To search for a date range <a href="./search-date.php">click here</a>.
 
 	echo "<tr>";
 
-	echo "<td>" . $row['TimeStamp'] . "</td>";
+	echo "<td>".$row['TimeStamp']."</td>";
 	echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-	echo "<td>" . $row['ban_reason'] . "</td>";
+	echo "<td>".$row['ban_reason']."</td>";
 	echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 	if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 	elseif($row['flag'] == 4) echo "<td>NP</td>";
@@ -101,7 +101,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&search=".$search."&RS=".$RS."&page=".$total_pages."\">Last</a></li>";}
 		echo "</ul>";
 	}
-	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP. \"NP\" = Not Processed yet.<br /><br />";
+	echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP. \"NP\" = Not Processed yet.<br /><br />RC = \"Return Customers\": hits scraped from the firewall log to see how many IPs have returned with connection dropped and how many times.";
 	mysqli_close($con);
 	}
 	echo "<br />";

@@ -94,12 +94,14 @@ a:hover {
 
 .secleft {
 	float: left;
-	width: 50%;
+	width: 49%;
+	padding-right: 3px;
 	}
 
 .secright {
 	float: right;
-	width: 50%;
+	width: 49%;
+	padding-left: 3px;
 	}
 
 table.section {
