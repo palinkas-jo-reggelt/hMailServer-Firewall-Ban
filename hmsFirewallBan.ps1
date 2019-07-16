@@ -1,34 +1,16 @@
-Function MySQLQuery($Query) {
-	$MySQLAdminUserName = 'root'
-	$MySQLAdminPassword = 'supersecretpassword'
-	$MySQLDatabase = 'hmailserver'
-	$MySQLHost = 'localhost'
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database="+$MySQLDatabase
-	Try {
-	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-	  $Connection.ConnectionString = $ConnectionString
-	  $Connection.Open()
-	  $Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-	  $DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-	  $DataSet = New-Object System.Data.DataSet
-	  $RecordCount = $dataAdapter.Fill($dataSet, "data")
-	  $DataSet.Tables[0] | Out-File C:\scripts\hmailserver\FWBan\IP.txt
-	  }
-	Catch {
-	  Write-Host "ERROR : Unable to run query : $query `n$Error[0]"
-	 }
-	Finally {
-	  $Connection.Close()
-	  }
-}
+# ~~~~~~~ BEGIN USER VARIABLES ~~~~~~~
+$LANSubnet = '192.168.99' # <-- 3 octets only, please
+$MailPorts = '25|465|587|110|995|143|993' # <-- add custom ports if in use
+$MySQLAdminUserName = 'root'
+$MySQLAdminPassword = 'supersecretpassword'
+$MySQLDatabase = 'hmailserver'
+$MySQLHost = 'localhost'
+$DBErrorLog = 'C:\scripts\hmailserver\FWBan\DBError.log'
+$FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'
+# ~~~~~~~ END USER VARIABLES ~~~~~~~
 
-Function MySQLQueryUpdate($Query) {
-	$MySQLAdminUserName = 'root'
-	$MySQLAdminPassword = 'supersecretpassword'
-	$MySQLDatabase = 'hmailserver'
-	$MySQLHost = 'localhost'
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database="+$MySQLDatabase
+Function MySQLQuery($Query) {
+	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
@@ -41,7 +23,7 @@ Function MySQLQueryUpdate($Query) {
 	  $DataSet.Tables[0]
 	  }
 	Catch {
-	  Write-Host "ERROR : Unable to run query : $query `n$Error[0]"
+	  Write-Output "ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
 	 }
 	Finally {
 	  $Connection.Close()
@@ -51,114 +33,72 @@ Function MySQLQueryUpdate($Query) {
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= now() - interval 5 minute"
-MySQLQueryUpdate $Query
-#	Now find all new (non-duplicated) IP entries and add firewall rule
+MySQLQuery $Query
+#	Now find all new (non-duplicated) IP entries
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
-MySQLQuery $Query
-$timestamp = Get-Date -format 'yy/MM/dd HH:mm'
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	#	Check each against previous entries marked safe
+	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress='$IP' AND timestamp < now() - interval 5 minute"
+	MySQLQuery $Query | foreach {
+		$FlagSafe = $_.flag
+	}
+	#	If newly marked safe, delete firewall rule and update flag to safe
+	If ($FlagSafe -match 5){
+		& netsh advfirewall firewall delete rule name=`"$IP`"
+		$Query = "UPDATE hm_fwban SET flag = 6 WHERE id='$ID'"	
+		MySQLQuery $Query
+	}
+	#	If previously marked safe (firewall rule already removed), update flag to safe
+	ElseIf ($FlagSafe -match 6){
+		$Query = "UPDATE hm_fwban SET flag = 6 WHERE id='$ID'"	
+		MySQLQuery $Query
+	}
+	#	All others (not marked safe) add firewall rule and update flag
+	Else {
 		& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp" dir=in interface=any action=block remoteip=$IP
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=NULL WHERE id='$ID'"
-		MySQLQueryUpdate $Query
+		$Query = "UPDATE hm_fwban SET flag = NULL WHERE id='$ID'"
+		MySQLQuery $Query
 	}
 }
 
-#	Pickup entries marked for release through webadmin
+#	Pickup entries marked SAFE through webadmin
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag=5"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall delete rule name=`"$IP`"
+	$Query = "UPDATE hm_fwban SET flag=6 WHERE id='$ID'"
+	MySQLQuery $Query
+}
+
+#	Pickup entries marked for RELEASE through webadmin
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag=2"
-MySQLQuery $Query
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
-		MySQLQueryUpdate $Query
-	}
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall delete rule name=`"$IP`"
+	$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
+	MySQLQuery $Query
 }
 
-#	Pickup entries marked for REBAN through webadmin
+#	Pickup entries marked for REBAN or UNSAFE through webadmin
 #	First delete any duplicate IP entries to be rebanned to prevent duplicate firewall rules
-$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.flag=3"
-MySQLQueryUpdate $Query
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND (t1.flag=3 OR t1.flag=7)"
+MySQLQuery $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress), id FROM hm_fwban WHERE flag=3"
-MySQLQuery $Query
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
-		& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp - REBAN" dir=in interface=any action=block remoteip=$IP
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=NULL WHERE id='$ID'"
-		MySQLQueryUpdate $Query
-	}
-}
-
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus
-$Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
-$Days = "30" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
-MySQLQuery $Query
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
-		MySQLQueryUpdate $Query
-	}
-}
-
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary
-$Country = "Hungary" 		#<-- Country name (check spelling!)
-$Days = "10" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
-MySQLQuery $Query
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
-		MySQLQueryUpdate $Query
-	}
-}
-
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs
-$Days = "365" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND flag IS NULL"
-MySQLQuery $Query
-$regexIP = '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
-$regexID = '(\s{0,}[0-9]+\s{0,}$)'
-$IPList = Get-Content C:\scripts\hmailserver\FWBan\IP.txt
-foreach ($IPAddress in $IPList) {
-	if ($IPAddress -match $regexIP){
-		$IP = [regex]::matches($IPAddress, $regexIP)
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-		$ID = (([regex]::matches($IPAddress, $regexID)) -replace '\s','')
-		$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
-		MySQLQueryUpdate $Query
-	}
+$Query = "SELECT DISTINCT(ipaddress), id FROM hm_fwban WHERE flag=3 OR flag=7"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp - REBAN" dir=in interface=any action=block remoteip=$IP
+	$Query = "UPDATE hm_fwban SET flag = NULL WHERE id='$ID'"
+	MySQLQuery $Query
 }
 
 #	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1
+$LSRegex = "$LANSubnet\.\d{1,3}"
 $FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"
 $MinuteSpan = 5 # Should match interval of scheduled task
 $EndTime = (get-date).ToString("HH:mm:ss")
@@ -173,13 +113,47 @@ $FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Date -ge $DateStart
 $FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Time -ge $StartTime -and $_.Time -le $EndTime}
 
 $FirewallLogObjects | foreach-object {
-	if ($_.DestinationPort -match "25|465|587|110|993|143|995") {
-		if ($_.SourceIP -notmatch "192.168.99.1"){
+	if ($_.DestinationPort -match $MailPorts) {
+		if ($_.SourceIP -notmatch $LSRegex){
 			$IP = ($_.SourceIP).trim()
 			$DateTime = (($_.Date).trim()+" "+($_.Time).trim())
 			$Query = "INSERT INTO hm_fwban_rh (timestamp, ipaddress) VALUES ('$DateTime', '$IP')"
-			MySQLQueryUpdate $Query
+			MySQLQuery $Query
 		}
 	}
 }
 
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus
+$Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
+$Days = "30" 				#<-- Days until expires
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall delete rule name=`"$IP`"
+	$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
+	MySQLQuery $Query
+}
+
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary
+$Country = "Hungary" 		#<-- Country name (check spelling!)
+$Days = "10" 				#<-- Days until expires
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall delete rule name=`"$IP`"
+	$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
+	MySQLQuery $Query
+}
+
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs
+$Days = "365" 				#<-- Days until expires
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND flag IS NULL"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall delete rule name=`"$IP`"
+	$Query = "UPDATE hm_fwban SET flag=1 WHERE id='$ID'"
+	MySQLQuery $Query
+}

@@ -8,31 +8,7 @@
 <link rel="stylesheet" type="text/css" media="all" href="stylesheet.css">
 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet"> 
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="/resources/demos/style.css">
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script type="text/javascript">
-$(function () {
-    $("#dateFrom").datepicker({
-        dateFormat: "yy-mm-dd",
-		minDate: <?php include("mindate.php") ?>
-		maxDate: new Date,
-        onSelect: function (selected) {
-            $("#dateTo").datepicker("option", "minDate", selected);
-        }
-    });
-    $("#dateTo").datepicker({
-        dateFormat: "yy-mm-dd",
-		minDate: <?php include("mindate.php") ?>
-		maxDate: new Date,
-        onSelect: function (selected) {
-            $("#dateFrom").datepicker("option", "maxDate", selected);
-        }
-    });
-});
-</script>
-
+<?php include("datepicker.php") ?>
 </head>
 <body>
 
@@ -40,7 +16,7 @@ $(function () {
 	<div class="banner"><h1>hMailServer Firewall Ban</h1></div>
 	<div class="headlinks">
 		<div class="headlinkswidth">
-			<a href="./">stats</a> | <a href="search.php">search</a> | <a href="release.php">release</a> | <a href="reban.php">reban</a>
+			<a href="./">stats</a> | <a href="search.php">search</a> | <a href="release.php">release</a> | <a href="reban.php">reban</a> | <a href="repeats.php">repeats</a>
 		</div>
 	</div>
 </div>

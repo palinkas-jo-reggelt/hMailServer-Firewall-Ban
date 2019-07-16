@@ -35,8 +35,8 @@ function drawChart() {
 				type: 'polynomial',
 				degree: 2,
 				visibleInLegend: false,
-				}
-		}
+				},
+		},
 	  });
 }	
 </script>

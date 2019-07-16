@@ -16,18 +16,12 @@
 	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
   
 	echo "<div class='section'>";
-	echo "<h2>Search a date range:</h2>";
+	echo "<h2>Search a date range for connections blocked by firewall:</h2>";
 	echo "Enter start & end dates and click to search.<br /><br />";
-	echo "<form autocomplete='off' action='search-date.php' method='GET'>";
+	echo "<form autocomplete='off' action='repeats-date.php' method='GET'>";
 	echo "<table>";
 	echo "<tr><td>Starting Date: </td><td><input type='text' id='dateFrom' name='dateFrom' placeholder='Starting Date...' value='".$dateFrom."' /></td></tr>";
 	echo "<tr><td>Ending Date: </td><td><input type='text' id='dateTo' name='dateTo' placeholder='Ending Date...' value='".$dateTo."' /></td></tr>";
-	echo "<tr><td>Release Status: </td><td>
-			<select name='RS'>
-			<option value=''>Both</option>
-			<option value='YES'>YES</option>
-			<option value='NO'>NO</option>
-			</select></td></tr>";
 	echo "<tr><td><input type='submit' name='submit' value='Search' /></td></tr>";
 	echo "</table>";
 	echo "</form>";
@@ -43,26 +37,19 @@
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
 		
-		if ($RS=="NO"){$RS_SQL = " AND (flag IS NULL OR flag=3)";}
-		elseif ($RS=="YES"){$RS_SQL = " AND (flag=1 OR flag=2)";}
-		else {$RS_SQL = "";}
-	
-		$total_pages_sql = "SELECT Count(*) AS count FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL."";
+		$total_pages_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh";
 		$result = mysqli_query($con,$total_pages_sql);
 		$total_rows = mysqli_fetch_array($result)[0];
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+		$sql = "SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp FROM hm_fwban_rh GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
 		$res_data = mysqli_query($con,$sql);
 
-		if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
-		elseif ($RS=="NO"){$RSres=" with release status \"<b>NO</b>\"";} 
-		else {$RSres = "";} 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
 			echo "<br /><br />No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
 		} else {
-			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -73,19 +60,21 @@
 					<th>RS</th>
 				</tr>";
 			while($row = mysqli_fetch_array($res_data)){
-				$res_repeat = mysqli_query($con,"SELECT COUNT(ipaddress) FROM hm_fwban_rh WHERE ipaddress='".$row['ipaddress']."'");
-				$repeats = mysqli_fetch_array($res_repeat)[0];
+				$res_country = mysqli_query($con,"SELECT country FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
+				$country = mysqli_fetch_array($res_country)[0];
+				$res_ban_reason = mysqli_query($con,"SELECT ban_reason FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
+				$ban_reason = mysqli_fetch_array($res_ban_reason)[0];
+				$res_flag = mysqli_query($con,"SELECT flag FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
+				$flag = mysqli_fetch_array($res_flag)[0];
 				echo "<tr>";
-				echo "<td>" . $row['TimeStamp'] . "</td>";
-				echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-				echo "<td>" . $row['ban_reason'] . "</td>";
-				echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
-				echo "<td style=\"text-align:right;\">".number_format($repeats)."</td>";
-				if($row['flag'] === NULL || $row['flag'] == 3 || $row['flag'] == 7) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
-				elseif($row['flag'] == 1 || $row['flag'] == 2) echo "<td style=\"text-align:center;\">YES</td>";
-				elseif($row['flag'] == 4) echo "<td style=\"text-align:center;\">NEW</td>";
-				elseif($row['flag'] == 6 || $row['flag'] == 5) echo "<td style=\"text-align:center;\">SAF</td>";
-				else echo "<td style=\"text-align:center;\">ERR</td>";
+				echo "<td>".$row['TimeStamp']."</td>";
+				echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+				echo "<td>".$ban_reason."</td>";
+				echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$country."</a></td>";
+				echo "<td style=\"text-align:right;\">".number_format($row['countip'])."</td>";
+				if($flag === NULL || $flag == 3) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
+				elseif($flag == 4) echo "<td style=\"text-align:center;\">NP</td>";
+				else echo "<td style=\"text-align:center;\">YES</td>";
 				echo "</tr>";
 			}
 			echo "</table>";
@@ -98,11 +87,7 @@
 				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=".$total_pages."\">Last</a></li>";}
 				echo "</ul>";
 			}
-			if ($total_pages > 0){
-				echo "<br />
-				RH = Repeat Hits<br />
-				RS = Release Status<br /><br />";
-			}
+			echo "<br />RS = Released Status (removal from firewall). Clicking on \"NO\" will release the IP. \"NP\" = Not Processed yet.<br />RH = Repeat Hits: hits scraped from the firewall log to see how many IPs have returned, had their connection dropped and how many times.";
 		}
 	mysqli_close($con);
 	}

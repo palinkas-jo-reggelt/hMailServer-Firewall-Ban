@@ -61,7 +61,7 @@
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 			echo "<td>".$row['ban_reason']."</td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
-			if($row['flag'] == 1 || $row['flag'] == 1) echo "<td><a href=\"./reban-ip.php?submit=Reban&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to reban ".$row['ipaddress']."?')\">YES</a></td>";
+			if($row['flag'] == 1 || $row['flag'] == 2) echo "<td><a href=\"./reban-ip.php?submit=Reban&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to reban ".$row['ipaddress']."?')\">YES</a></td>";
 			else echo "<td>NO</td>";
 
 			echo "</tr>";
