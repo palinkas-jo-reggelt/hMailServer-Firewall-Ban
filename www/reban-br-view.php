@@ -26,7 +26,7 @@
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE `ban_reason` LIKE '{$ban_reason}' AND (flag=1 OR flag=2) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+	$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag, helo FROM hm_fwban WHERE `ban_reason` LIKE '{$ban_reason}' AND (flag=1 OR flag=2) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
 	$res_data = mysqli_query($con,$sql);
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
@@ -44,6 +44,7 @@
 				<th>IP Address</th>
 				<th>Reason</th>
 				<th>Country</th>
+				<th>HELO</th>
 				<th>RS</th>
 			</tr>";
 	while($row = mysqli_fetch_array($res_data)){
@@ -53,6 +54,7 @@
 	echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 	echo "<td>".$row['ban_reason']."</td>";
 	echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress'] . "\"  target=\"_blank\">" . $row['country'] . "</a></td>";
+	echo "<td>".$row['helo']."</td>";
 	if($row['flag'] == 1 || $row['flag'] == 2) echo "<td><a href=\"./reban-ip.php?submit=Reban&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to re-ban IP ".$row['ipaddress']."?')\">YES</a></td>";
 	else echo "<td>NO</td>";
 

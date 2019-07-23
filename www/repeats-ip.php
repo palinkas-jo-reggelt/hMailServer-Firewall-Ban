@@ -79,7 +79,7 @@
 		echo "</table>";
 
 		if ($total_pages < 2){
-			echo "";
+			echo "<br /><br />";
 		} else {
 			echo "<ul>";
 			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=1\">First </a><li>";}
@@ -89,19 +89,8 @@
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
-			echo "<br />
-			RH = Repeat Hits: hits scraped from the firewall log to see how many IPs have returned, had their connection dropped and how many times.<br />
-			RS = Released Status (removal from firewall). <br /><br />
-			Key:<br />
-			\"NO\" = Ban in force. Click to release. <br />
-			\"YES\" = IP successfully released.<br />
-			\"NEW\" = New IP not processed yet.<br />
-			\"NPR\" = Recently released IP no processed yet.<br />
-			\"NPB\" = Recently re-banned IP not processed yet.<br />
-			\"NPS\" = IP marked safe but not processed yet.<br />
-			\"SAF\" = IP successfully marked safe.<br />
-			\"SLR\" = IP marked for removal from safe list but not processed yet.<br />
-			\"ERR\" = Not Processed yet.<br />";
+			echo	"RH = Repeat Hits<br />
+					RS = Released Status<br />";
 		}
 	}
 

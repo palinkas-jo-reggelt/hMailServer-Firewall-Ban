@@ -83,7 +83,7 @@
 
 	echo "<div class=\"secleft\">";
 	echo "<h2>Search for Repeat Blocks by IP:</h2>";
-	echo "<form action='repeats-view.php' method='GET'> ";
+	echo "<form autocomplete='off' action='repeats-view.php' method='GET'> ";
 	echo	"<input type='text' size='20' name='search' pattern='^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){1,3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' title='255.255.255.255 OR 255.255.255 OR 255.255' placeholder='255.255.255.255...'>";
 	echo	" ";
 	echo	"<input type='submit' name='submit' value='Search-IP' >";
@@ -107,7 +107,7 @@
 	echo "<div class=\"secleft\">";
 	echo "<h2>Mark an IP Safe:</h2>";
 	echo "Permanently release an IP and mark it safe from future bans.<br /><br />";
-	echo "<form action='./safe-mark.php' method='GET'> ";
+	echo "<form autocomplete='off' action='./safe-mark.php' method='GET'> ";
 	echo	"<input type='text' size='20' name='ipRange' pattern='^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' title='255.255.255.255' placeholder='255.255.255.255...'>";
 	echo	" ";
 	echo	"<input type='submit' name='submit' value='SafeIP' >";
@@ -118,7 +118,7 @@
 	echo "<div class=\"secright\">";
 	echo "<h2>Disable IP Safe Status:</h2>";
 	echo "Remove safe status from an IP and reban.<br /><br />";
-	echo "<form action='./safe-unmark.php' method='GET'> ";
+	echo "<form autocomplete='off' action='./safe-unmark.php' method='GET'> ";
 	echo	"<input type='text' size='20' name='search' pattern='^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' title='255.255.255.255' placeholder='255.255.255.255...'>";
 	echo	" ";
 	echo	"<input type='submit' name='submit' value='UnSafeIP' >";

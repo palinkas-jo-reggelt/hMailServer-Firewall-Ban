@@ -52,7 +52,7 @@
 		$total_rows = mysqli_fetch_array($result)[0];
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag, helo FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
 		$res_data = mysqli_query($con,$sql);
 
 		if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
@@ -69,6 +69,7 @@
 					<th>IP Address</th>
 					<th>Reason</th>
 					<th>Country</th>
+					<th>HELO</th>
 					<th>RH</th>
 					<th>RS</th>
 				</tr>";
@@ -80,6 +81,7 @@
 				echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 				echo "<td>" . $row['ban_reason'] . "</td>";
 				echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+				echo "<td>".$row['helo']."</td>";
 				echo "<td style=\"text-align:right;\">".number_format($repeats)."</td>";
 				if($row['flag'] === NULL || $row['flag'] == 3 || $row['flag'] == 7) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 				elseif($row['flag'] == 1 || $row['flag'] == 2) echo "<td style=\"text-align:center;\">YES</td>";

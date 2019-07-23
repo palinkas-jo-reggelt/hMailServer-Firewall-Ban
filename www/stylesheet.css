@@ -111,6 +111,10 @@ table.section {
 	font-size: 10pt;
 	}
 	
+table.section tr:nth-child(even) {
+    background-color: #F8F8F8;
+	}
+
 table.section th, table.section td {
 	border: 1px solid black;
 	}

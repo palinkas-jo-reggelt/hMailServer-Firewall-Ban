@@ -15,7 +15,7 @@
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%Y/%m/%d %T') AS dupdate, country FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT $offset, $no_of_records_per_page";
+	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%Y/%m/%d %T') AS dupdate, country, helo FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT $offset, $no_of_records_per_page";
 	$res_data = mysqli_query($con,$sql);
 
 	if ($total_rows == 0){
@@ -27,6 +27,7 @@
 				<th>Last Seen</th>
 				<th>IP Address</th>
 				<th>Country</th>
+				<th>HELO</th>
 				<th>Duplicates</th>
 			</tr>";
 		while($row = mysqli_fetch_array($res_data)){
@@ -34,6 +35,7 @@
 			echo "<td>" . $row['dupdate'] . "</td>";
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+			echo "<td>".$row['helo']."</td>";
 			echo "<td style=\"text-align:center;\">" . $row['dupip'] . "</td>";
 			echo "</tr>";
 		}

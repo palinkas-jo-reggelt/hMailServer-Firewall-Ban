@@ -4,6 +4,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.38 minor formatting changes 
 - 0.37 added more pages to handle repeats; refined existing pages; added new flags to handle marking IPs SAFE (permanently released); cleaned up hmsFirewallBan.ps1; new charts for IPs blocked
 - 0.36 added read firewall log to see how many "repeat customers" there are; added pages to handle firewall log entries; changed hits per day chart to add blocked IPs and now 2 trendlines
 - 0.35 changed Hits Per Day chart from polynomial regression to plain after crazy out of whack result line appeared (google says to beware of skewing); moved all of chart javascript into chart php files for housekeeping purposes
@@ -45,7 +46,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ```
 CREATE TABLE `hm_fwban` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `ipaddress` varchar(192) NOT NULL,
   `timestamp` timestamp NULL DEFAULT NULL,
   `ban_reason` varchar(192) NOT NULL,

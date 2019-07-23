@@ -131,7 +131,7 @@
 		$res_data = mysqli_query($con,$sql);
 		while($row = mysqli_fetch_array($res_data)){
 		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./rel.php?submit=Search&search=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
+		echo "<a href=\"./search.php?submit=Search&search=".$row['ban_reason']."&RS=YES\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
 		}
 	} else {
 		echo "There are no released IPs to report.";
@@ -161,12 +161,22 @@
 	echo "</div>";
 
 	echo "<div class=\"secright\">";
-	echo "<h2>Special: IP Ranges banned:</h2>";
+	echo "<h2>Special:</h2>";
+	echo "<h2>IP Ranges banned:</h2>";
 	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
 	$res_data = mysqli_query($con,$sql);
 	$total_rows = mysqli_fetch_array($res_data)[0];
 	if ($total_rows==1){$singular="";}else{$singular="s";}
 	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hit".$singular."</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
+
+	echo "<br />";
+
+	echo "<h2>IPs Marked Safe:</h2>";
+	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `flag`=5 OR `flag`=6";
+	$res_data = mysqli_query($con,$sql);
+	$total_rows = mysqli_fetch_array($res_data)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&RS=SAF\">".$total_rows." hit".$singular."</a> for permanently released (SAFE) IPs.<br />";
 	
 
 	echo "<br />";
@@ -180,19 +190,31 @@
 	$res_data_new = mysqli_query($con,$sql_new);
 	$total_rows = mysqli_fetch_array($res_data_new)[0];
 	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./np.php?submit=Search&flag=4\">".number_format($total_rows)." IP".$singular."</a> recently added<br />";
+	echo "<a href=\"./search.php?submit=Search&RS=NEW\">".number_format($total_rows)." IP".$singular."</a> recently added<br />";
 
 	$sql_rel = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=2";
 	$res_data_rel = mysqli_query($con,$sql_rel);
 	$total_rows = mysqli_fetch_array($res_data_rel)[0];
 	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./np.php?submit=Search&flag=2\">".number_format($total_rows)." IP".$singular."</a> marked for release<br />";
+	echo "<a href=\"./search.php?submit=Search&RS=2\">".number_format($total_rows)." IP".$singular."</a> marked for release<br />";
 
 	$sql_reb = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=3";
 	$res_data_reb = mysqli_query($con,$sql_reb);
 	$total_rows = mysqli_fetch_array($res_data_reb)[0];
 	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./np.php?submit=Search&flag=3\">".number_format($total_rows)." IP".$singular."</a> marked for reban<br />";
+	echo "<a href=\"./search.php?submit=Search&RS=3\">".number_format($total_rows)." IP".$singular."</a> marked for reban<br />";
+
+	$sql_reb = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=5";
+	$res_data_reb = mysqli_query($con,$sql_reb);
+	$total_rows = mysqli_fetch_array($res_data_reb)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&RS=5\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list<br />";
+
+	$sql_reb = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=7";
+	$res_data_reb = mysqli_query($con,$sql_reb);
+	$total_rows = mysqli_fetch_array($res_data_reb)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&RS=7\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list removal<br />";
 
 	echo "<br />";
 	echo "</div>";
