@@ -119,7 +119,7 @@
 	echo "<h2>Disable IP Safe Status:</h2>";
 	echo "Remove safe status from an IP and reban.<br /><br />";
 	echo "<form autocomplete='off' action='./safe-unmark.php' method='GET'> ";
-	echo	"<input type='text' size='20' name='search' pattern='^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' title='255.255.255.255' placeholder='255.255.255.255...'>";
+	echo	"<input type='text' size='20' name='ipRange' pattern='^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' title='255.255.255.255' placeholder='255.255.255.255...'>";
 	echo	" ";
 	echo	"<input type='submit' name='submit' value='UnSafeIP' >";
 	echo "</form>";
