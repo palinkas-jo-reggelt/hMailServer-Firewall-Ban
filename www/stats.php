@@ -50,7 +50,7 @@ function drawChart() {
 				GROUP BY DATE(timestamp)
 				ORDER BY DATE(timestamp) ASC
 		) AS a
-		INNER JOIN
+		LEFT JOIN
 		(
 			SELECT DATE(timestamp) AS daily, COUNT(DISTINCT(ipaddress)) AS blockperday  
 				FROM hm_fwban_rh 
@@ -62,7 +62,8 @@ function drawChart() {
 	";
 	$exec = mysqli_query($con,$query);
 	while($row = mysqli_fetch_array($exec)){
-		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday'].", ".$row['blockperday']."],";
+		if (is_null($row['blockperday'])){$blockperday = 0;} else {$blockperday = $row['blockperday'];}
+		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday'].", ".$blockperday."],";
 	}
 ?>
 
