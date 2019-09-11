@@ -72,7 +72,8 @@
 			echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 			echo "<td>".$ban_reason."</td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$country."</a></td>";
-			echo "<td style=\"text-align:right;\">".number_format($row['countip'])."</td>";
+			if($row['countip']==0){echo "<td style=\"text-align:right;\">0</td>";}
+			else{echo "<td style=\"text-align:right;\"><a href=\"repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".number_format($row['countip'])."</a></td>";}
 			if($flag === NULL) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 			elseif($flag == 1) echo "<td style=\"text-align:center;\">YES</td>";
 			elseif($flag == 2) echo "<td style=\"text-align:center;\">NPR</td>";

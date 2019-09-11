@@ -95,7 +95,8 @@ To search for a date range <a href="./search-date.php">click here</a>.
 			echo "<td>".$row['ban_reason']."</td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 			echo "<td>".$row['helo']."</td>";
-			echo "<td style=\"text-align:right;\">".number_format($repeats)."</td>";
+			if ($repeats==0){echo "<td style=\"text-align:right;\">0</td>";}
+			else {echo "<td style=\"text-align:right;\"><a href=\"repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".number_format($repeats)."</a></td>";}
 			if($row['flag'] === NULL || $row['flag'] == 3 || $row['flag'] == 7) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 			elseif($row['flag'] == 1 || $row['flag'] == 2) echo "<td style=\"text-align:center;\">YES</td>";
 			elseif($row['flag'] == 4) echo "<td style=\"text-align:center;\">NEW</td>";

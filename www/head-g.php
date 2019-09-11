@@ -12,7 +12,9 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <?php include("charthitsperdaycombined.php") ?>
+<?php include("charttotalblocksperday.php") ?>
 <?php include("charthitsperhour.php") ?>
+<?php include("chartblocksperhour.php") ?>
 </head>
 <body>
 

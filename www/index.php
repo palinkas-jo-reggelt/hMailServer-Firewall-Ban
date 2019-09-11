@@ -1,15 +1,26 @@
 <?php include("head-g.php") ?>
 
+<div class="wrapper">
 <div class="section">
 	<div class="secleft">
-		<h2>IPs added and blocked from inception:</h2>
+		<h2>Hits per day from inception:</h2>
 		<div id="chart_combined"></div>
 	</div>
-	<div class="secright">
+	<div class="secleft">
+		<h2>Total blocks per day (block frequency):</h2>
+		<div id="chart_totalblocksperday"></div>
+	</div>
+</div>
+
+<div class="section">
+	<div class="secleft">
 		<h2>Average hits per hour from inception:</h2>
 		<div id="chart_hitsperhour"></div>
 	</div>
-	<div class="clear"></div>
+	<div class="secleft">
+		<h2>Average blocks per hour from inception:</h2>
+		<div id="chart_blocksperhour"></div>
+	</div>
 </div>
 
 <div class="section">

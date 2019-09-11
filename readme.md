@@ -4,6 +4,7 @@ Ban hMailServer rejects to Windows Defender Firewall.
 
 ## Changelog
 
+- 0.40 streamlined chart SQL; updated stats.php; added repeats links to search.php; minor housekeeping  
 - 0.39 bug fixes 
 - 0.38 minor formatting changes 
 - 0.37 added more pages to handle repeats; refined existing pages; added new flags to handle marking IPs SAFE (permanently released); cleaned up hmsFirewallBan.ps1; new charts for IPs blocked

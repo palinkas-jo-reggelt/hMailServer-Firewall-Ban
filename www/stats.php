@@ -1,4 +1,16 @@
-<?php include("cred.php") ?>
+<?php
+// Fill in variables
+$m_host="localhost";
+$m_dbuser="root";
+$m_dbpass="supersecretpassword";
+$m_db="hmailserver";
+
+	$con=mysqli_connect($m_host,$m_dbuser,$m_dbpass,$m_db);
+	if (mysqli_connect_errno()){
+		echo "Failed to connect to MySQL: " . mysqli_connect_error();
+		die();
+	}
+?>
 <!DOCTYPE html> 
 <html>
 <head>
@@ -18,29 +30,62 @@ google.setOnLoadCallback(drawChart);
 function drawChart() {
 	var data = new google.visualization.DataTable();
 	data.addColumn('date', 'Date');
-	data.addColumn('number', 'Hits');
+	data.addColumn('number', 'IPs Added');
+	data.addColumn('number', 'IPs Blocked');
 	data.addRows([
 <?php 
-	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday FROM hm_fwban WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
+	$query = "
+		SELECT 
+			a.daily,
+			a.year,
+			a.month,
+			a.day,
+			a.ipperday,
+			b.blockperday
+		FROM
+		(
+			SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday 
+				FROM hm_fwban 
+				WHERE DATE(timestamp) < DATE(NOW())
+				GROUP BY DATE(timestamp)
+				ORDER BY DATE(timestamp) ASC
+		) AS a
+		INNER JOIN
+		(
+			SELECT DATE(timestamp) AS daily, COUNT(DISTINCT(ipaddress)) AS blockperday  
+				FROM hm_fwban_rh 
+				WHERE DATE(timestamp) < DATE(NOW()) 
+				GROUP BY DATE(timestamp)
+		) AS b
+		ON a.daily = b.daily
+		ORDER BY a.daily
+	";
 	$exec = mysqli_query($con,$query);
 	while($row = mysqli_fetch_array($exec)){
-		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
+		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday'].", ".$row['blockperday']."],";
 	}
 ?>
+
 	]);
 
-	var chart = new google.visualization.LineChart(document.getElementById('chart_hitsperday'));
+	var chart = new google.visualization.LineChart(document.getElementById('chart_combined'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,
-		colors: ['#ff0000'],
-		legend: 'none',
-		trendlines: { 0: { 
-             type: 'polynomial',
-             degree: 2,
-             visibleInLegend: false,
-			}
-		}
+		colors: ['#ff0000','#000000'],
+		legend: { position: 'bottom' },
+		trendlines: { 
+			0: { 
+				type: 'polynomial',
+				degree: 2,
+				visibleInLegend: false,
+				},
+			1: { 
+				type: 'polynomial',
+				degree: 2,
+				visibleInLegend: false,
+				},
+		},
 	  });
 }	
 </script>
@@ -71,27 +116,92 @@ function drawChart() {
 	  });
 }	
 </script>
+<script type="text/javascript">
+google.charts.load('current', {packages: ['corechart', 'bar']});
+google.charts.setOnLoadCallback(drawChart);
+
+function drawChart() {
+	var data = new google.visualization.DataTable();
+	data.addColumn('timeofday', 'Hour');
+	data.addColumn('number', 'Blocks');
+	data.addRows([
+<?php 
+	$query = "SELECT hour, ROUND(AVG(numhits), 1) AS avghits FROM (SELECT DATE(`timestamp`) AS day, HOUR(`timestamp`) AS hour, COUNT(*) as numhits FROM hm_fwban_rh GROUP BY day, hour) d GROUP BY hour ORDER BY hour ASC";
+	$exec = mysqli_query($con,$query);
+	while($row = mysqli_fetch_array($exec)){
+		echo "[[".$row['hour'].", 0, 0], ".$row['avghits']."],";
+	}
+?>
+	]);
+
+	var chart = new google.visualization.ColumnChart(document.getElementById('chart_blocksperhour'));
+	  chart.draw(data, {
+		width: 350,
+		height: 200,
+		legend: 'none',
+		colors: ['#000000']
+	  });
+}	
+</script>
+<script type="text/javascript">
+google.load("visualization", "1", {packages:["corechart", "line"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+	var data = new google.visualization.DataTable();
+	data.addColumn('date', 'Date');
+	data.addColumn('number', 'Blocks');
+	data.addRows([
+<?php 
+	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(ipaddress) AS ipperday FROM hm_fwban_rh WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ORDER BY daily ASC";
+	$exec = mysqli_query($con,$query);
+	while($row = mysqli_fetch_array($exec)){
+		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
+	}
+?>
+	]);
+
+	var chart = new google.visualization.LineChart(document.getElementById('chart_totalblocksperday'));
+	  chart.draw(data, {
+		width: 350,
+		height: 200,
+		colors: ['#000000'],
+		legend: 'none',
+		trendlines: { 0: { 
+			type: 'polynomial',
+			degree: 2,
+			visibleInLegend: true,
+			},
+		},
+	  });
+}	
+</script>
 </head>
 <body>
 
 <div class="header">
 	<div class="banner"><h1>hMailServer Firewall Ban</h1></div>
-	<div class="headlinks">
-		<div class="headlinkswidth">
-			<a href="./">stats</a> | <a href="search.php">search</a> | <a href="release.php">release</a> | <a href="reban.php">reban</a>
-		</div>
-	</div>
 </div>
 
 <div class="wrapper">
 <div class="section">
 	<div class="secleft">
 		<h2>Hits per day from inception:</h2>
-		<div id="chart_hitsperday"></div>
+		<div id="chart_combined"></div>
 	</div>
+	<div class="secleft">
+		<h2>Total blocks per day (block frequency):</h2>
+		<div id="chart_totalblocksperday"></div>
+	</div>
+</div>
+
+<div class="section">
 	<div class="secleft">
 		<h2>Average hits per hour from inception:</h2>
 		<div id="chart_hitsperhour"></div>
+	</div>
+	<div class="secleft">
+		<h2>Average blocks per hour from inception:</h2>
+		<div id="chart_blocksperhour"></div>
 	</div>
 </div>
 
@@ -243,12 +353,22 @@ function drawChart() {
 	echo "</div>";
 
 	echo "<div class=\"secright\">";
-	echo "<h2>Special: IP Ranges banned:</h2>";
+	echo "<h2>Special:</h2>";
+	echo "<h2>IP Ranges banned:</h2>";
 	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
 	$res_data = mysqli_query($con,$sql);
 	$total_rows = mysqli_fetch_array($res_data)[0];
 	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo $total_rows." hit".$singular." for CIDR bans (255.255.255.0/24 IP ranges).<br />";
+	echo $total_rows." hit".$singular." for CIDR bans (0.0.255.0/24 IP ranges).<br />";
+
+	echo "<br />";
+
+	echo "<h2>IPs Marked Safe:</h2>";
+	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `flag`=5 OR `flag`=6";
+	$res_data = mysqli_query($con,$sql);
+	$total_rows = mysqli_fetch_array($res_data)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo $total_rows." hit".$singular." for permanently released (SAFE) IPs.<br />";
 	
 
 	echo "<br />";
@@ -276,11 +396,45 @@ function drawChart() {
 	if ($total_rows==1){$singular="";}else{$singular="s";}
 	echo number_format($total_rows)." IP".$singular." marked for reban<br />";
 
+	$sql_reb = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=5";
+	$res_data_reb = mysqli_query($con,$sql_reb);
+	$total_rows = mysqli_fetch_array($res_data_reb)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo number_format($total_rows)." IP".$singular." marked for SAFE list<br />";
+
+	$sql_reb = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=7";
+	$res_data_reb = mysqli_query($con,$sql_reb);
+	$total_rows = mysqli_fetch_array($res_data_reb)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo number_format($total_rows)." IP".$singular." marked for SAFE list removal<br />";
+
 	echo "<br />";
 	echo "</div>";
 
+	$num_repeats_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh";
+	$result = mysqli_query($con,$num_repeats_sql);
+	$num_repeats = mysqli_fetch_array($result)[0];
+	$sql_repeats = "SELECT COUNT(ipaddress) AS countip, ipaddress FROM hm_fwban_rh GROUP BY ipaddress ORDER BY countip DESC LIMIT 5";
+	$res_data = mysqli_query($con,$sql_repeats);
 	echo "<div class=\"secright\">";
-	echo "<h2></h2>";
+	echo "<h2>Top 5 Repeat Spammers:</h2>";
+	echo "Parsed from the firewall log dropped connections: IPs that knocked on the door but couldn't get in.<br /><br />";
+	if ($num_repeats == 0){
+		echo "There are no repeat firewall drops to report.<br /><br />";
+	}else{
+		while($row = mysqli_fetch_array($res_data)){
+			if ($row['countip']==1){$singular="";}else{$singular="s";}
+			$sql_country = "SELECT country FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'";
+			$res_country = mysqli_query($con,$sql_country);
+			$country = mysqli_fetch_array($res_country)[0];
+			echo number_format($row['countip'])." knock".$singular." by ".$row['ipaddress']." from ".$country."<br />";
+		}
+		if ($num_repeats > 5){
+			$res_total_repeat_count = mysqli_query($con,"SELECT COUNT(ipaddress) FROM hm_fwban_rh");
+			$total_repeats = mysqli_fetch_array($res_total_repeat_count)[0];
+			echo "<br />".number_format($num_repeats)." IPs have repeatedly attempted to gain access unsuccessfully a total of ".number_format($total_repeats)." times.<br /><br />";}
+	}
+
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
 
