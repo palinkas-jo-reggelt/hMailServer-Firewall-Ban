@@ -23,12 +23,16 @@ Function MySQLQuery($Query) {
 	  $DataSet.Tables[0]
 	  }
 	Catch {
-	  Write-Output "ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
+	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
 	 }
 	Finally {
 	  $Connection.Close()
 	  }
 }
+
+#	Check to see if hMailServer is running. If not, quit. MySQL is a dependency of hMailServer service so you're actually checking both.
+#	Prevents scheduled task failures at bootup.
+If ((get-service hMailServer).Status -ne 'Running'){exit}
 
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
@@ -57,10 +61,20 @@ MySQLQuery $Query | foreach {
 	}
 	#	All others (not marked safe) add firewall rule and update flag
 	Else {
-		& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp" dir=in interface=any action=block remoteip=$IP
+		& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy'))" dir=in interface=any action=block remoteip=$IP
 		$Query = "UPDATE hm_fwban SET flag = NULL WHERE id='$ID'"
 		MySQLQuery $Query
 	}
+}
+
+#	Pick up any missed NEW entries (out of interval)
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag=4"
+MySQLQuery $Query | foreach {
+	$ID = $_.id
+	$IP = $_.ipaddress
+	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy'))" dir=in interface=any action=block remoteip=$IP
+	$Query = "UPDATE hm_fwban SET flag = NULL WHERE id='$ID'"
+	MySQLQuery $Query
 }
 
 #	Pickup entries marked SAFE through webadmin
@@ -92,8 +106,31 @@ $Query = "SELECT DISTINCT(ipaddress), id FROM hm_fwban WHERE flag=3 OR flag=7"
 MySQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
-	& netsh advfirewall firewall add rule name="$IP" description="Rule added $timestamp - REBAN" dir=in interface=any action=block remoteip=$IP
+	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - REBAN" dir=in interface=any action=block remoteip=$IP
 	$Query = "UPDATE hm_fwban SET flag = NULL WHERE id='$ID'"
+	MySQLQuery $Query
+}
+
+#	Pickup entries from IDS 
+$Query = "SELECT ipaddress, country, helo FROM hm_ids WHERE hits > 2"
+MySQLQuery $Query | foreach {
+	$IP = $_.ipaddress
+	$Country = $_.country
+	$HELO = $_.helo
+	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - IDS" dir=in interface=any action=block remoteip=$IP
+	# Insert IP record into firewall ban table
+	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag,helo) VALUES (NOW(),'$IP','IDS','$Country','NULL','$HELO');"
+	MySQLQuery $Query
+	# Delete IP from IDS
+	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
+	MySQLQuery $Query
+}
+
+#	Delete IDS entries that are already banned
+$Query = "SELECT ipaddress FROM hm_fwban"
+MySQLQuery $Query | foreach {
+	$IP = $_.ipaddress
+	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
 	MySQLQuery $Query
 }
 
@@ -122,6 +159,13 @@ $FirewallLogObjects | foreach-object {
 		}
 	}
 }
+
+#######################################
+#                                     #
+#       EXAMPLE AUTO EXPIRATION       #
+#  Comment out or delete if unwanted  #
+#                                     #
+#######################################
 
 #	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger

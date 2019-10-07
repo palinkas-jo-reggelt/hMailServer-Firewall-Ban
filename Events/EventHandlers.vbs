@@ -93,6 +93,20 @@ Function GetDatabaseObject()
    Set GetDatabaseObject = oApp.Database
 End Function
 
+Function idsAddIP(sIPAddress, sCountry, sHELO)
+    Dim strSQL, oDB : Set oDB = GetDatabaseObject
+    strSQL = "INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country,helo) VALUES (NOW(),'" & sIPAddress & "',1,'" & sCountry & "','" & sHELO & "') ON DUPLICATE KEY UPDATE hits=(hits+1),timestamp=NOW();"
+    Call oDB.ExecuteSQL(strSQL)
+    Set oDB = Nothing
+End Function
+
+Function idsDelIP(sIPAddress)
+    Dim strSQL, oDB : Set oDB = GetDatabaseObject
+    strSQL = "DELETE FROM " & idsTable & " WHERE ipaddress = '" & sIPAddress & "';"
+    Call oDB.ExecuteSQL(strSQL)
+    Set oDB = Nothing
+End Function
+
 '	Function AutoBan - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function AutoBan(sIPAddress, sReason, iDuration, sType) : AutoBan = False
    '
@@ -154,72 +168,154 @@ End Function
 '******************************************************************************************************************************
 
 Sub OnClientConnect(oClient)
-   
-   ' Exclude Backup-MX & local LAN from test
-   If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
-   If (Left(oClient.IPAddress, 10) = "192.168.1.") Then Exit Sub
-   If oClient.IPAddress = "127.0.0.1" Then Exit Sub
-
-   ' Filter out "impatient" servers. Alternative to GreyListing.
-   If (oClient.Port = 25) Then Wait(20)
-
-   Dim strPort
-   strPort = Trim(Mid("SMTP POP  IMAP SMTPSSUBM IMAPSPOPS ", InStr("25   110  143  465  587  993  995  ", oClient.Port), 5))
-
-   '   Spamhaus Zen detection
-   If IsInSpamHausZEN(oClient.IPAddress) Then
-      Result.Value = 1
-       Call Disconnect(oClient.IPAddress)
-       Call FWBan(oClient.IPAddress, "Spamhaus")
-       Call AutoBan(oClient.IPAddress, "Spamhaus - " & oClient.IpAddress, 1, "h")
-	  EventLog.Write(strPort & " " & oClient.Port & " OnHELO REJECTED zen.spamhaus.org " & oClient.IPAddress)
-      Exit Sub
-   End If
-
-	'	GEOIP Lookup
-   Dim ReturnCode, Json, oGeoip, oXML, strPort, strBase
-   Include("C:\Program Files (x86)\hMailServer\Events\VbsJson.vbs")
-   Set Json = New VbsJson
-   On Error Resume Next
-   Set oXML = CreateObject ("Msxml2.XMLHTTP.3.0")
-   oXML.Open "GET", "http://ip-api.com/json/" & oClient.IPAddress, False
-   oXML.Send
-   Set oGeoip = Json.Decode(oXML.responseText)
-   ReturnCode = oXML.Status
-   On Error Goto 0
-
-   If (ReturnCode <> 200 ) Then
-      EventLog.Write("<OnClientConnect.error> ip-api.com lookup failed, error code: " & ReturnCode & " on IP address " & oClient.IPAddress)
-      Exit Sub
-   End If
-
-   ' ALLOWED COUNTRIES - Port 25 only... Check Alpha-2 Code here -> https://en.wikipedia.org/wiki/ISO_3166-1
-   If (oClient.Port = 25) Then
-	   strBase = "^(US|CA|AT|BE|CH|CZ|DE|DK|ES|FI|FR|GB|GL|GR|HR|HU|IE|IS|IT|LI|MC|NL|NO|PL|PT|RO|RS|SE|SI|SK|SM|AU|NZ)$"
-	   If Lookup(strBase, oGeoip("countryCode")) Then
-	   EventLog.Write(strPort & " " & oClient.Port & " OnClientConnect Accepted GeoIP-Lookup " & oClient.IPAddress & " " & oGeoip("countryCode") & " " & oGeoip("country"))
-	      Exit Sub
-	   End If
-   ' Disconnect all others connecting to port 25.
-	   Result.Value = 1
-       Call Disconnect(oClient.IPAddress)
-       Call FWBan(oClient.IPAddress, "GeoIP")
-       Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
-	   EventLog.Write(strPort & " " & oClient.Port & " OnClientConnect REJECTED GeoIP-Lookup " & oClient.IPAddress & " " & oGeoip("countryCode") & " " & oGeoip("country"))
-	   Exit Sub
-   Else
-   ' ALLOWED COUNTRIES - All ports except 25... Check Alpha-2 Code here -> https://en.wikipedia.org/wiki/ISO_3166-1
-	   strBase = "^(US)$"
-	   If Lookup(strBase, oGeoip("countryCode")) Then
-		  EventLog.Write(strPort & " Port " & oClient.Port & vbTab & " Connection accepted by GeoIP Lookup" & vbTab & vbTab & Chr(34) & oClient.IPAddress & Chr(34) & vbTab & Chr(34) & oGeoip("countryCode") & Chr(34) & vbTab & Chr(34) & oGeoip("country"))
-		  Exit Sub
-	   End If
-   ' Disconnect all others connecting to any port except 25.
-	   Result.Value = 1
-       Call Disconnect(oClient.IPAddress)
-       Call FWBan(oClient.IPAddress, "GeoIP")
-       Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
-	   EventLog.Write(strPort & " Port " & oClient.Port & vbTab & " Connection REJECTED by GeoIP Lookup" & vbTab & vbTab & Chr(34) & oClient.IPAddress & Chr(34) & vbTab & Chr(34) & oGeoip("countryCode") & Chr(34) & vbTab & Chr(34) & oGeoip("country"))
-	   Exit Sub
-   End If
+	' Exclude Backup-MX & local LAN from test
+	' If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
+	' If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
+	' If oClient.IPAddress = "127.0.0.1" Then Exit Sub
 End Sub
+
+Sub OnHELO(oClient)
+
+	Dim strRegEx, Match, Matches
+	Dim strPort
+	Dim ReturnCode, Json, oGeoip, oXML, strBase
+	Dim bolGeoIP : bolGeoIP = False
+
+	strPort = Trim(Mid("SMTP POP  IMAP SMTPSSUBM IMAPSPOPS ", InStr("25   110  143  465  587  993  995  ", oClient.Port), 5))
+
+	'	Exclude local LAN & Backup from test after recording connection
+	If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
+	If (Left(oClient.IPAddress, 9) = "127.0.0.1") Then Exit Sub
+	If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
+
+	'   GEOIP Lookup
+	Include("C:\Program Files (x86)\hMailServer\Events\VbsJson.vbs")
+	Set Json = New VbsJson
+
+	On Error Resume Next
+	Set oXML = CreateObject ("Msxml2.XMLHTTP.3.0")
+	oXML.Open "GET", "http://ip-api.com/json/" & oClient.IPAddress, False
+	oXML.Send
+	Set oGeoip = Json.Decode(oXML.responseText)
+	ReturnCode = oXML.Status
+	On Error Goto 0
+
+	If (ReturnCode <> 200 ) Then
+		EventLog.Write("<OnClientConnect.error> ip-api.com lookup failed, error code: " & ReturnCode & " on IP address " & oClient.IPAddress)
+		Exit Sub
+	End If
+
+	' Call IDS on all non-local SMTP connections
+    If (InStr("|25|587|465|", oClient.Port) > 0) Then Call idsAddIP(oClient.IPAddress, oGeoip("country"), oClient.HELO)
+
+	If (oClient.Port = 25) Then
+		'  ALLOWED COUNTRIES - Port 25 only... Check Alpha-2 Code here -> https://en.wikipedia.org/wiki/ISO_3166-1
+		strBase = "^(US|CA|AT|BE|CH|CZ|DE|DK|ES|FI|FR|GB|GL|GR|HR|HU|IE|IS|IT|LI|MC|NL|NO|PL|PT|RO|RS|SE|SI|SK|SM|AU|NZ)$"
+		If Lookup(strBase, oGeoip("countryCode")) Then bolGeoIP = True
+	Else
+		'  ALLOWED COUNTRIES - All ports except 25... Check Alpha-2 Code here -> https://en.wikipedia.org/wiki/ISO_3166-1
+		strBase = "^(US)$"
+		If Lookup(strBase, oGeoip("countryCode")) Then bolGeoIP = True
+	End If
+
+	If bolGeoIP Then
+		'  Connection PASSED examination
+		Call AccRejDB(strPort, oClient.Port, "OnHELO", "Accepted", "GeoIP", oClient.IPAddress, oClient.HELO)
+	Else
+		'  Disconnect all others.
+		Result.Value = 2
+		Result.Message = ". 01 This mail server does not accept connections from " & oGeoip("country") &". If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "GeoIP", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
+		Exit Sub
+	End If
+
+	'   Spamhaus Zen detection
+	If IsInSpamHausZEN(oClient.IPAddress) Then
+		Result.Value = 2
+		Result.Message = ". 02 This server does not accept connections blacklisted by Spamhaus.org. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "Spamhaus", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "Spamhaus - " & oClient.IpAddress, 1, "h")
+		Exit Sub
+	End If
+
+	'   Deny servers with specific HELO/EHLO greetings
+	strRegEx = GetXMLNode(XMLDATA, "//Reject/HELO")
+	Set Matches = oLookup(strRegEx, oClient.HELO, False)
+	For Each Match In Matches
+		Result.Value = 2
+		Result.Message = ". 03 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "HELO-Rej", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "//Reject/HELO - " & Match.Value, 1, "h")
+		Exit Sub
+	Next
+
+	'	Validate HELO/EHLO greeting
+	Const strFQDN = "^(?=^.{1,254}$)(^(?:(?!\.|-)([a-z0-9\-\*]{1,63}|([a-z0-9\-]{1,62}[a-z0-9]))\.)+(?:[a-z]{2,})$)$"
+	Const strIPv4 = "^\[(?:[0-9]{1,3}\.){3}[0-9]{1,3}\]$"
+	Const strIPv6 = "^\[(IPv6)((?:[0-9A-Fa-f]{0,4}:){1,7}(?:(?:(>25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|[0-9A-Fa-f]{1,4}))\]$"
+	strRegEx = strFQDN & "|" & strIPv4 & "|" & strIPv6
+	If (Lookup(strRegEx, oClient.HELO) = False) Then
+		Result.Value = 2
+		Result.Message = ". 04 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "HELO-Inv", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "Invalid HELO - " & oClient.HELO, 1, "h")
+		Exit Sub
+	End If
+
+	'   Filter bots using residential FQDN
+	Dim a, i 
+	a = Split(oClient.IPAddress, ".")
+	For i = 0 to 3
+	Next
+	'   Exclude certain false positives
+	strRegEx = "sendgrid|facebook.com"
+	If Lookup(strRegEx, oClient.HELO) Then Exit Sub
+	'   Search for residential HELO
+	strRegEx = 	"(.*(((?:[0]{0,2})" & a(0) & "|(?:[0]{0,2})" & a(1) & "|(?:[0]{0,2})" & a(2) & "|(?:[0]{0,2})" & a(3) & ")(?:.+)){3}" &_
+				"((?:[0]{0,2})" & a(0) & "|(?:[0]{0,2})" & a(1) & "|(?:[0]{0,2})" & a(2) & "|(?:[0]{0,2})" & a(3) & ").+)$"
+	If Lookup(strRegEx, oClient.HELO) Then
+		Result.Value = 2
+		Result.Message = ". 05 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "ResIP", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "Bot on Res IP - " & oClient.HELO, 1, "h")
+		Exit Sub
+	End If   
+
+	'	Test HELO against Spamhaus DBL
+	If IsInSpamHausDBL(oClient.HELO) Then
+		Result.Value = 2
+		Result.Message = ". 15 This server does not accept connections blacklisted by Spamhaus.org. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "SH-DBL", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "Spamhaus DBL - " & oClient.HELO, 1, "h")
+		Exit Sub
+	End If   
+
+	'   UCE Protect detection
+	'	First skip known false positives
+	strBase = "amazonses.com$"
+	If Lookup(strBase, oClient.HELO) Then Exit Sub
+	If IsUCEProtect(oClient.IPAddress) Then
+		Result.Value = 2
+		Result.Message = ". 14 This server does not accept connections blacklisted by UCEProtect-Network. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "UCEP", oClient.HELO)
+		Call AutoBan(oClient.IPAddress, "UCEProtect - " & oClient.IpAddress, 1, "h")
+		Exit Sub
+	End If
+
+End Sub
+
+Sub OnAcceptMessage(oClient, oMessage)
+
+	'	Clean up IDS for successfully received mail
+    Call idsDelIP(oClient.IPAddress)
+
+End Sub
+
