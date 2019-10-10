@@ -1,13 +1,19 @@
+# ~~~~~ hMailServer Firewall Ban ~~~~~
 # ~~~~~~~ BEGIN USER VARIABLES ~~~~~~~
-$LANSubnet = '192.168.99' # <-- 3 octets only, please
-$MailPorts = '25|465|587|110|995|143|993' # <-- add custom ports if in use
+# ~~~~~~ MySQL Auth / error log ~~~~~~
 $MySQLAdminUserName = 'root'
 $MySQLAdminPassword = 'supersecretpassword'
 $MySQLDatabase = 'hmailserver'
 $MySQLHost = 'localhost'
 $DBErrorLog = 'C:\scripts\hmailserver\FWBan\DBError.log'
+# ~~~~~~~ Firewall Log Parsing ~~~~~~~
+$LANSubnet = '192.168.99' # <-- 3 octets only, please
+$MailPorts = '25|465|587|110|995|143|993' # <-- add custom ports if in use
 $FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'
-# ~~~~~~~ END USER VARIABLES ~~~~~~~
+# ~~~~ De-Duplicate Firewall Rules ~~~
+$RuleList = 'C:\scripts\hmailserver\FWBan\Deduplicate\fwrulelist.txt'
+$DupList = 'C:\scripts\hmailserver\FWBan\Deduplicate\fwduplist.txt'
+# ~~~~~~~~ END USER VARIABLES ~~~~~~~~
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
@@ -112,31 +118,48 @@ MySQLQuery $Query | foreach {
 }
 
 #	Pickup entries from IDS 
-$Query = "SELECT ipaddress, country, helo FROM hm_ids WHERE hits > 2"
+$Query = "SELECT ipaddress, country FROM hm_ids WHERE hits > 2"
 MySQLQuery $Query | foreach {
+	$TS = $_.timestamp
 	$IP = $_.ipaddress
 	$Country = $_.country
-	$HELO = $_.helo
 	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - IDS" dir=in interface=any action=block remoteip=$IP
 	# Insert IP record into firewall ban table
-	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag,helo) VALUES (NOW(),'$IP','IDS','$Country','NULL','$HELO');"
-	MySQLQuery $Query
-	# Delete IP from IDS
-	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
+	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag) VALUES (NOW(),'$IP','IDS','$Country',NULL);"
 	MySQLQuery $Query
 }
 
 #	Delete IDS entries that are already banned
-$Query = "SELECT ipaddress FROM hm_fwban"
+$Query = "
+	SELECT 
+		a.idsip,
+		a.country
+	FROM
+	(
+		SELECT ipaddress AS idsip, country
+			FROM hm_ids 
+			GROUP BY ipaddress
+			ORDER BY ipaddress ASC
+	) AS a
+	INNER JOIN
+	(
+		SELECT ipaddress AS fwbip
+			FROM hm_fwban 
+			WHERE flag IS NULL OR flag='3' OR flag='4' OR flag='7'
+			GROUP BY ipaddress
+			ORDER BY ipaddress ASC
+	) AS b
+	ON a.idsip = b.fwbip
+	ORDER BY b.fwbip
+"
 MySQLQuery $Query | foreach {
-	$IP = $_.ipaddress
+	$IP = $_.idsip
 	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
 	MySQLQuery $Query
 }
 
 #	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1
 $LSRegex = "$LANSubnet\.\d{1,3}"
-$FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"
 $MinuteSpan = 5 # Should match interval of scheduled task
 $EndTime = (get-date).ToString("HH:mm:ss")
 $StartTime = ((get-date) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("HH:mm:ss")
@@ -158,6 +181,24 @@ $FirewallLogObjects | foreach-object {
 			MySQLQuery $Query
 		}
 	}
+}
+
+#	De-Duplicate Firewall Rules List
+$RegexIP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+Get-NetFirewallRule | foreach-object {
+	if ($_.DisplayName -match $RegexIP){
+	write-output $_.DisplayName
+	}
+} | out-file $RuleList
+
+$a = Get-Content $RuleList
+$ht = @{}
+$a | foreach {$ht["$_"] += 1}
+$ht.keys | where {$ht["$_"] -gt 1} | foreach { write-output $_ } | out-file $DupList
+
+Get-Content $DupList | foreach {
+	& netsh advfirewall firewall delete rule name=`"$_`"
+	& netsh advfirewall firewall add rule name="$_" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$_
 }
 
 #######################################

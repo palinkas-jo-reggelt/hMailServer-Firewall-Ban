@@ -127,7 +127,7 @@
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){
 		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-		echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./search.php?submit=Search&search=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br />";
+		echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./search.php?submit=Search&ban_reason=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br />";
 	}
 	echo "<br />";
 	echo "</div>";
@@ -233,7 +233,27 @@
 	$num_repeats_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh";
 	$result = mysqli_query($con,$num_repeats_sql);
 	$num_repeats = mysqli_fetch_array($result)[0];
-	$sql_repeats = "SELECT COUNT(ipaddress) AS countip, ipaddress FROM hm_fwban_rh GROUP BY ipaddress ORDER BY countip DESC LIMIT 5";
+	$sql_repeats = "
+	SELECT
+		a.ipaddress,
+		a.countip,
+		b.country
+	FROM
+	(
+		SELECT COUNT(ipaddress) AS countip, ipaddress
+		FROM hm_fwban_rh 
+		GROUP BY ipaddress 
+		ORDER BY countip DESC 
+	) AS a
+	JOIN
+	(
+		SELECT ipaddress, country 
+		FROM hm_fwban
+	) AS b
+	ON a.ipaddress = b.ipaddress
+	ORDER BY countip DESC 
+	LIMIT 5
+	";
 	$res_data = mysqli_query($con,$sql_repeats);
 	echo "<div class=\"secright\">";
 	echo "<h2>Top 5 Repeat Spammers:</h2>";
@@ -243,10 +263,7 @@
 	}else{
 		while($row = mysqli_fetch_array($res_data)){
 			if ($row['countip']==1){$singular="";}else{$singular="s";}
-			$sql_country = "SELECT country FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'";
-			$res_country = mysqli_query($con,$sql_country);
-			$country = mysqli_fetch_array($res_country)[0];
-			echo number_format($row['countip'])." knock".$singular." by <a href=\"./repeats-ip.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$country."<br />";
+			echo number_format($row['countip'])." knock".$singular." by <a href=\"./repeats-ip.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$row['country']."<br />";
 		}
 		if ($num_repeats > 5){
 			$res_total_repeat_count = mysqli_query($con,"SELECT COUNT(ipaddress) FROM hm_fwban_rh");

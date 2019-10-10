@@ -1,78 +1,88 @@
-<?php include("head-gr.php") ?>
+<?php include("head.php") ?>
 
 <div class="section">
-IDS =  Intrusion Detection System. Records all connections to mail server. If mail accepted, IDS entry is deleted. If mail not accepted, IDS entry recorded as Hit+1. When the number of hits = 3, the IP gets added to the firewall ban with ban reason "IDS" and the IDS entry gets deleted. Lists below are not static and subject to change as IDS IPs are deleted after update to firewall ban.  <br /><br />
-Click to <a href="./ids-view.php">see all</a> current IDS entries.
-</div>
-
-<div class="section">
+<h2>Search IDS Hits</h2>
 
 <?php include("cred.php") ?>
 <?php
-	$today = date('Y-m-d');
-	$yesterday = date('Y-m-d', strtotime(date('Y-m-d')." -1 day"));
-	$twodaysago = date('Y-m-d', strtotime(date('Y-m-d')." -2 day"));
-	$threedaysago = date('Y-m-d', strtotime(date('Y-m-d')." -3 day"));
-	$fourdaysago = date('Y-m-d', strtotime(date('Y-m-d')." -4 day"));
-	$thismonth = date('Y-m');
-	$lastmonth = date('Y-m', strtotime(date('Y-m')." -1 month"));
-	$twomonthsago = date('Y-m', strtotime(date('Y-m')." -2 month"));
-	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
-	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
 
-	echo "<div class=\"secleft\">";
-	echo "<h2>This Week's IDS Hits:</h2>";
-
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$today} 00:00:00' AND '{$today} 23:59:59'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$today."\">".number_format($row['IDSips'])." IPs hit by IDS</a> Today<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$yesterday} 00:00:00' AND '{$yesterday} 23:59:59'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$yesterday."\">".number_format($row['IDSips'])." IPs hit by IDS</a> Yesterday<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$twodaysago} 00:00:00' AND '{$twodaysago} 23:59:59'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$twodaysago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> on ".date("l", strtotime($twodaysago))."<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$threedaysago} 00:00:00' AND '{$threedaysago} 23:59:59'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$threedaysago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> on ".date("l", strtotime($threedaysago))."<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$fourdaysago} 00:00:00' AND '{$fourdaysago} 23:59:59'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$fourdaysago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> on ".date("l", strtotime($fourdaysago))."<br />"; }
-
-	echo "<br />";
+	if (isset($_GET['page'])) {
+		$page = $_GET['page'];
+		$display_pagination = 1;
+	} else {
+		$page = 1;
+		$total_pages = 1;
+		$display_pagination = 0;
+	}
+	if (isset($_GET['submit'])) {
+		$button = $_GET ['submit'];
+	} else {
+		$button = "";
+	}
+	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
+	if ($search=="") {$search_sql="";} else {$search_sql=" WHERE ipaddress LIKE '{$search}%' OR timestamp LIKE '{$search}%' OR country LIKE '%{$search}%'";}
+	if ($search=="") {$search_page="";} else {$search_page="&search=".$search."";}
+	if ($search=="") {$search_list="";} else {$search_list=" matching <b>\"".$search."\"</b>";}
+	if ($search=="") {$search_all="All ";} else {$search_all="";}
+  
+	echo "<div class='section'>";
+	echo "<form action='ids-view.php' method='GET'> ";
+	echo	"<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
+	echo	" ";
+	echo	"<input type='submit' name='submit' value='Search' >";
+	echo "</form>";
 	echo "</div>";
+	echo "<div class='section'>";
 
-	echo "<div class=\"secright\">";
+	$no_of_records_per_page = 20;
+	$offset = ($page-1) * $no_of_records_per_page;
+	$total_pages_sql = "SELECT COUNT(ipaddress) FROM hm_ids".$search_sql."";
+	$result = mysqli_query($con,$total_pages_sql);
+	$total_rows = mysqli_fetch_array($result)[0];
+	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	echo "<h2>This Year's Monthly IDS Hits:</h2>";
+	$sql = "SELECT ipaddress, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, country, hits FROM hm_ids".$search_sql." GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
+	$res_data = mysqli_query($con,$sql);
 
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$thismonth}-01 00:00:00' AND NOW()";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$thismonth."\">".number_format($row['IDSips'])." IPs hit by IDS</a> in ".date("F", strtotime($thismonth))."<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$lastmonth."\">".number_format($row['IDSips'])." IPs hit by IDS</a> in ".date("F", strtotime($lastmonth))."<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$twomonthsago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> in ".date("F", strtotime($twomonthsago))."<br />"; }
+	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
+	if ($total_rows == 0){
+		echo "<br />There are no IDS entries to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+	} else {
+		echo $search_all."".number_format($total_rows)." IP".$singular." hit by IDS".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo "<table class='section'>
+			<tr>
+				<th>Timestamp</th>
+				<th>IP Address</th>
+				<th>Country</th>
+				<th>Hits</th>
+			</tr>";
 
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$threemonthsago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> in ".date("F", strtotime($threemonthsago))."<br />"; }
-	
-	$sql = "SELECT COUNT(`ipaddress`) AS `IDSips` FROM `hm_ids` WHERE `timestamp` BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./ids-view.php?submit=Search&search=".$fourmonthsago."\">".number_format($row['IDSips'])." IPs hit by IDS</a> in ".date("F", strtotime($fourmonthsago))."<br />"; }
+		while($row = mysqli_fetch_array($res_data)){
+			echo "<tr>";
+			echo "<td>".$row['TimeStamp']."</td>";
+			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+			echo "<td style=\"text-align:center;\">".$row['hits']."</td>";
+			echo "</tr>";
+		}
+		echo "</table>";
+
+		if ($total_pages < 2){
+			echo "<br /><br />";
+		} else {
+			echo "<ul>";
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=".$total_pages."\">Last</a></li>";}
+			echo "</ul>";
+		}
+	}
+
+	mysqli_close($con);
 
 	echo "<br />";
-	echo "</div><div class=\"clear\"></div>";
-
 ?>
 </div>
+
 <?php include("foot.php") ?>

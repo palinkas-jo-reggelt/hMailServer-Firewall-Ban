@@ -58,7 +58,6 @@ CREATE TABLE `hm_ids` (
   `ipaddress` varchar(15) NOT NULL,
   `hits` int(1) NOT NULL,
   `country` varchar(64) DEFAULT NULL,
-  `helo` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`ipaddress`),
   UNIQUE KEY `ipaddress` (`ipaddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -96,8 +95,17 @@ I ran across an issue where a single IP hammered my server enough times to cause
 
 This way, autoban will prevent the same IP from getting to any of my filters and thereby prevent calling firewall ban multiple times for the same IP. This will drastically reduce the number of redundant IP firewall rules and redundant IP entries in the database. If you setup your EventHandlers.vbs this way from the very beginning, you will only possibly have duplicate IPs in the database after an IP has been released. 
 
+
+## Intrusion Dection System (IDS)
+
+IDS credit to SorenR: https://www.hmailserver.com/forum/viewtopic.php?p=209545#p209545
+
+IDS is very simple, but pure genius. It counts the number of connections that did not complete a transaction: either by accepting a message or by logon. Three strikes and you're out. When an IP has three strikes it gets added to the firewall ban with ban reason "IDS" and the IP is removed from the IDS count.
+
+
 ## Changelog
 
+- 0.44 cleaned up many bugs related to IDS; housekeeping
 - 0.43 added SorenR's IDS (Intrusion Detection System) and webadmin pages; now REQUIRE event OnHELO (hMailServer 5.7.0); OnHELO events updated in EventHandlers.vbs; housekeeping 
 - 0.42 hmsFirewallBan.ps1: added check to see if hmailserver is running. If not, exit script. MySQL is a dependency of hmailserver. I have found that sometimes the scheduled task runs at bootup before MySQL is running, causing an error that prevents the task from running at its next scheduled interval.
 - 0.41 fixed chart SQL to include NULL data  
