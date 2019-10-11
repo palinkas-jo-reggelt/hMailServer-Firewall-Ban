@@ -60,7 +60,7 @@
 		while($row = mysqli_fetch_array($res_data)){
 			echo "<tr>";
 			echo "<td>".$row['TimeStamp']."</td>";
-			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+			echo "<td><a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 			echo "<td style=\"text-align:center;\">".$row['hits']."</td>";
 			echo "</tr>";

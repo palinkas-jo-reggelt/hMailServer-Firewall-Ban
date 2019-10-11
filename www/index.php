@@ -134,15 +134,17 @@
 
 	echo "<div class=\"secright\">";
 	echo "<h2>IPs Released From Firewall:</h2>";
-	$sqlcount = "SELECT COUNT(*) FROM `hm_fwban` WHERE (flag=1 OR flag=2)";
+	$sqlcount = "SELECT COUNT(*) FROM `hm_fwban` WHERE (flag=1 OR flag=2 OR flag=5 OR flag=6)";
 	$res_count = mysqli_query($con,$sqlcount);
 	$total_rows = mysqli_fetch_array($res_count)[0];
 	if ($total_rows > 0) { 
-		$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence` FROM `hm_fwban` WHERE (flag=1 OR flag=2) GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
+		$sql = "SELECT `ban_reason`, COUNT(`ban_reason`) AS `value_occurrence`, flag FROM `hm_fwban` WHERE (flag=1 OR flag=2 OR flag=5 OR flag=6) GROUP BY `ban_reason` ORDER BY `value_occurrence` DESC";
 		$res_data = mysqli_query($con,$sql);
 		while($row = mysqli_fetch_array($res_data)){
 		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&search=".$row['ban_reason']."&RS=YES\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
+		if ($row['flag']==5 || $row['flag']==6){$safe_res=" marked as SAFE";}else{$safe_res=" triggered by ".$row['ban_reason'];}
+		if ($row['flag']==5 || $row['flag']==6){$safe_link="&RS=SAF";}else{$safe_link="&search=".$row['ban_reason']."&RS=YES";}
+		echo "<a href=\"./search.php?submit=Search".$safe_link."\">".number_format($row['value_occurrence'])." IP".$singular."</a>".$safe_res." released.<br />";
 		}
 	} else {
 		echo "There are no released IPs to report.";
@@ -153,17 +155,17 @@
 	echo "<div class=\"secleft\">";
 	echo "<h2>Ban Enforcement:</h2>";
 	echo "<table>";
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban`WHERE flag IS NULL OR flag=1";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban`";
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Total number of IPs banned</td></tr>"; }
 
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=1";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag=1 OR flag=2 OR flag=5 OR flag=6";
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">-".number_format($row['value_occurrence'])."</td><td>Number of IPs released from firewall</td></tr>"; }
 
 	echo "<tr><td style=\"text-align:right\">--------</td><td></td></tr>";
 
-	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag IS NULL";
+	$sql = "SELECT COUNT(`id`) AS `value_occurrence` FROM `hm_fwban` WHERE flag IS NULL OR flag=3 OR flag=4 OR flag=7";
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){ echo "<tr><td style=\"text-align:right\">".number_format($row['value_occurrence'])."</td><td>Number of IPs currently banned by firewall rule</td></tr>"; }
 	

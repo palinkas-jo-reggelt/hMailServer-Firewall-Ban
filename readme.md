@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.45 housekeeping
 - 0.44 cleaned up many bugs related to IDS; housekeeping
 - 0.43 added SorenR's IDS (Intrusion Detection System) and webadmin pages; now REQUIRE event OnHELO (hMailServer 5.7.0); OnHELO events updated in EventHandlers.vbs; housekeeping 
 - 0.42 hmsFirewallBan.ps1: added check to see if hmailserver is running. If not, exit script. MySQL is a dependency of hmailserver. I have found that sometimes the scheduled task runs at bootup before MySQL is running, causing an error that prevents the task from running at its next scheduled interval.
