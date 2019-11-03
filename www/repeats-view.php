@@ -42,7 +42,31 @@
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp FROM hm_fwban_rh".$search_sql." GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
+	// $sql = "SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp FROM hm_fwban_rh".$search_sql." GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
+
+	$sql = "
+	SELECT
+		a.TimeStamp,
+		a.ipaddress,
+		b.ban_reason,
+		b.country,
+		a.countip
+	FROM
+	(
+		SELECT DISTINCT(ipaddress), COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp
+		FROM hm_fwban_rh
+		".$search_sql."
+		GROUP BY ipaddress 
+	) AS a
+	JOIN
+	(
+		SELECT ipaddress, country, ban_reason
+		FROM hm_fwban
+	) AS b
+	ON a.ipaddress = b.ipaddress
+	ORDER BY a.TimeStamp DESC
+	LIMIT ".$offset.", ".$no_of_records_per_page;
+
 	$res_data = mysqli_query($con,$sql);
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
@@ -52,37 +76,21 @@
 		echo $search_all."".number_format($total_rows)." IP".$singular." repeatedly dropped at firewall".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>
 			<tr>
-				<th>Timestamp</th>
+				<th>Last Hit</th>
 				<th>IP Address</th>
 				<th>Reason</th>
 				<th>Country</th>
 				<th>RH</th>
-				<th>RS</th>
 			</tr>";
 
 		while($row = mysqli_fetch_array($res_data)){
-			$res_country = mysqli_query($con,"SELECT country FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
-			$country = mysqli_fetch_array($res_country)[0];
-			$res_ban_reason = mysqli_query($con,"SELECT ban_reason FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
-			$ban_reason = mysqli_fetch_array($res_ban_reason)[0];
-			$res_flag = mysqli_query($con,"SELECT flag FROM hm_fwban WHERE ipaddress='".$row['ipaddress']."'");
-			$flag = mysqli_fetch_array($res_flag)[0];
 			echo "<tr>";
 			echo "<td>".$row['TimeStamp']."</td>";
 			echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-			echo "<td>".$ban_reason."</td>";
-			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$country."</a></td>";
+			echo "<td>".$row['ban_reason']."</td>";
+			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 			if($row['countip']==0){echo "<td style=\"text-align:right;\">0</td>";}
 			else{echo "<td style=\"text-align:right;\"><a href=\"repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".number_format($row['countip'])."</a></td>";}
-			if($flag === NULL) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
-			elseif($flag == 1) echo "<td style=\"text-align:center;\">YES</td>";
-			elseif($flag == 2) echo "<td style=\"text-align:center;\">NPR</td>";
-			elseif($flag == 3) echo "<td style=\"text-align:center;\">NPB</td>";
-			elseif($flag == 4) echo "<td style=\"text-align:center;\">NEW</td>";
-			elseif($flag == 5) echo "<td style=\"text-align:center;\">NPS</td>";
-			elseif($flag == 6) echo "<td style=\"text-align:center;\">SAF</td>";
-			elseif($flag == 7) echo "<td style=\"text-align:center;\">SLR</td>";
-			else echo "<td style=\"text-align:center;\">ERR</td>";
 			echo "</tr>";
 		}
 		echo "</table>";

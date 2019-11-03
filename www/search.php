@@ -120,7 +120,7 @@ $sql = "
 				<th>Reason</th>
 				<th>Country</th>
 				<th>HELO</th>
-				<th>RH</th>
+				<th>FB</th>
 				<th>RS</th>
 			</tr>";
 		while($row = mysqli_fetch_array($res_data)){
@@ -154,7 +154,7 @@ $sql = "
 		}
 		if ($total_pages > 0){
 			echo "<br />
-			RH = Repeat Hits<br />
+			FB = Firewall Blocks<br />
 			RS = Release Status<br /><br />";
 		}
 	mysqli_close($con);

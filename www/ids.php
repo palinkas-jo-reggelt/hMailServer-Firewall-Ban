@@ -1,7 +1,7 @@
 <?php include("head.php") ?>
 
 <div class="section">
-<h2>Search IDS Hits</h2>
+<!--h2>Search IDS Hits</h2-->
 
 <?php include("cred.php") ?>
 <?php
@@ -25,14 +25,14 @@
 	if ($search=="") {$search_list="";} else {$search_list=" matching <b>\"".$search."\"</b>";}
 	if ($search=="") {$search_all="All ";} else {$search_all="";}
   
-	echo "<div class='section'>";
-	echo "<form action='ids-view.php' method='GET'> ";
-	echo	"<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
-	echo	" ";
-	echo	"<input type='submit' name='submit' value='Search' >";
-	echo "</form>";
-	echo "</div>";
-	echo "<div class='section'>";
+	// echo "<div class='section'>";
+	// echo "<form action='ids-view.php' method='GET'> ";
+	// echo	"<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
+	// echo	" ";
+	// echo	"<input type='submit' name='submit' value='Search' >";
+	// echo "</form>";
+	// echo "</div>";
+	// echo "<div class='section'>";
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
@@ -46,7 +46,11 @@
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "<br />There are no IDS entries to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+		if ($search == ""){
+			echo "<br />There are no IDS entries to report.";
+		} else {
+			echo "<br />There are no IDS entries to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+		}
 	} else {
 		echo $search_all."".number_format($total_rows)." IP".$singular." hit by IDS".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>

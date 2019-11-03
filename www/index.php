@@ -62,6 +62,51 @@
 	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$fourdaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($fourdaysago))."<br />"; }
 
 	echo "<br />";
+	$mindate_sql = "SELECT MIN(DATE(timestamp)) AS mindate FROM hm_fwban";
+	$mindate_res = mysqli_query($con,$mindate_sql);
+	$mindate = mysqli_fetch_array($mindate_res)[0];
+	if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -7 day"))){
+		echo "";
+	} else {
+		$sql = "
+		SELECT 
+			ROUND(AVG(numhits), 0) AS avghits 
+		FROM (
+			SELECT 
+				COUNT(id) as numhits,
+				DATE(timestamp)
+			FROM hm_fwban 
+			WHERE DATE(timestamp) < DATE(NOW())
+			GROUP BY DATE(timestamp)
+			ORDER BY DATE(timestamp) DESC
+			LIMIT 7
+		) d
+		";
+		$res_data = mysqli_query($con,$sql);
+		while($row = mysqli_fetch_array($res_data)){ echo "Daily average last 7 days: ".number_format($row['avghits'])." hits<br />"; }
+	}
+
+	if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -30 day"))){
+		echo "";
+	} else {
+		$sql = "
+		SELECT 
+			ROUND(AVG(numhits), 0) AS avghits 
+		FROM (
+			SELECT 
+				COUNT(id) as numhits,
+				DATE(timestamp)
+			FROM hm_fwban 
+			WHERE DATE(timestamp) < DATE(NOW())
+			GROUP BY DATE(timestamp)
+			ORDER BY DATE(timestamp) DESC
+			LIMIT 30
+		) d
+		";
+		$res_data = mysqli_query($con,$sql);
+		while($row = mysqli_fetch_array($res_data)){ echo "Daily average last 30 days: ".number_format($row['avghits'])." hits<br />"; }
+	}
+	echo "<br />";
 	echo "</div>";
 
 	echo "<div class=\"secright\">";
@@ -87,6 +132,49 @@
 	$sql = "SELECT COUNT(`id`) AS `value_occurrence`, DATE_FORMAT(timestamp, '%Y-%m') AS month FROM `hm_fwban` WHERE `timestamp` BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'";
 	$res_data = mysqli_query($con,$sql);
 	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br />"; }
+
+	echo "<br />";
+	if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -3 month"))){
+		echo "";
+	} else {
+		$sql = "
+		SELECT 
+			ROUND(AVG(numhits), 0) AS avghits 
+		FROM (
+			SELECT 
+				COUNT(id) as numhits,
+				MONTH(timestamp)
+			FROM hm_fwban 
+			WHERE MONTH(timestamp) < MONTH(NOW())
+			GROUP BY MONTH(timestamp)
+			ORDER BY MONTH(timestamp) DESC
+			LIMIT 3
+		) d
+		";
+		$res_data = mysqli_query($con,$sql);
+		while($row = mysqli_fetch_array($res_data)){ echo "Monthly average last 3 months: ".number_format($row['avghits'])." hits<br />"; }
+	}
+
+	if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -6 month"))){
+		echo "";
+	} else {
+		$sql = "
+		SELECT 
+			ROUND(AVG(numhits), 0) AS avghits 
+		FROM (
+			SELECT 
+				COUNT(id) as numhits,
+				MONTH(timestamp)
+			FROM hm_fwban 
+			WHERE MONTH(timestamp) < MONTH(NOW())
+			GROUP BY MONTH(timestamp)
+			ORDER BY MONTH(timestamp) DESC
+			LIMIT 6
+		) d
+		";
+		$res_data = mysqli_query($con,$sql);
+		while($row = mysqli_fetch_array($res_data)){ echo "Monthly average last 6 months: ".number_format($row['avghits'])." hits<br />"; }
+	}
 
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";

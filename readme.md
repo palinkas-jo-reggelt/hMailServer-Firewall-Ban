@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.46 housekeeping changes to blocks pages
 - 0.45 housekeeping
 - 0.44 cleaned up many bugs related to IDS; housekeeping
 - 0.43 added SorenR's IDS (Intrusion Detection System) and webadmin pages; now REQUIRE event OnHELO (hMailServer 5.7.0); OnHELO events updated in EventHandlers.vbs; housekeeping 

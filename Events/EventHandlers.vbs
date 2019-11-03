@@ -86,6 +86,15 @@ Function IsInSpamHausZEN(strIP) : IsInSpamHausZEN = false
 	IsInSpamHausZEN = Lookup(strRegEx, strIP)
 End Function
 
+Function IsInSpamHausDBL(strDomain) : IsInSpamHausDBL = False
+	Dim strLookup
+	With CreateObject("DNSLibrary.DNSResolver")
+		strLookup = .DNSLookup(strDomain & ".dbl.spamhaus.org")
+	End With
+	Dim strRegEx : strRegEx = "(127\.0\.1\.(2|4|5|6))"
+	IsInSpamHausDBL = Lookup(strRegEx, strLookup)
+End Function
+
 '	Function GetDatabaseObject - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function GetDatabaseObject()
    Dim oApp : Set oApp = CreateObject("hMailServer.Application")
@@ -241,18 +250,6 @@ Sub OnHELO(oClient)
 		Exit Sub
 	End If
 
-	'   Deny servers with specific HELO/EHLO greetings
-	strRegEx = GetXMLNode(XMLDATA, "//Reject/HELO")
-	Set Matches = oLookup(strRegEx, oClient.HELO, False)
-	For Each Match In Matches
-		Result.Value = 2
-		Result.Message = ". 03 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
-		Call Disconnect(oClient.IPAddress)
-		Call FWBan(oClient.IPAddress, "HELO-Rej", oClient.HELO)
-		Call AutoBan(oClient.IPAddress, "//Reject/HELO - " & Match.Value, 1, "h")
-		Exit Sub
-	Next
-
 	'	Validate HELO/EHLO greeting
 	Const strFQDN = "^(?=^.{1,254}$)(^(?:(?!\.|-)([a-z0-9\-\*]{1,63}|([a-z0-9\-]{1,62}[a-z0-9]))\.)+(?:[a-z]{2,})$)$"
 	Const strIPv4 = "^\[(?:[0-9]{1,3}\.){3}[0-9]{1,3}\]$"
@@ -297,24 +294,20 @@ Sub OnHELO(oClient)
 		Exit Sub
 	End If   
 
-	'   UCE Protect detection
-	'	First skip known false positives
-	strBase = "amazonses.com$"
-	If Lookup(strBase, oClient.HELO) Then Exit Sub
-	If IsUCEProtect(oClient.IPAddress) Then
-		Result.Value = 2
-		Result.Message = ". 14 This server does not accept connections blacklisted by UCEProtect-Network. If you believe that this failure is in error, please contact the intended recipient via alternate means."
-		Call Disconnect(oClient.IPAddress)
-		Call FWBan(oClient.IPAddress, "UCEP", oClient.HELO)
-		Call AutoBan(oClient.IPAddress, "UCEProtect - " & oClient.IpAddress, 1, "h")
-		Exit Sub
+End Sub
+
+Sub OnClientLogon(oClient)
+
+	'	Successful logons get IDS entry removed
+	If oClient.Authenticated Then
+		Call idsDelIP(oClient.IPAddress
 	End If
 
 End Sub
 
 Sub OnAcceptMessage(oClient, oMessage)
 
-	'	Clean up IDS for successfully received mail
+	'	Successfully received mail gets IDS entry removed
     Call idsDelIP(oClient.IPAddress)
 
 End Sub
