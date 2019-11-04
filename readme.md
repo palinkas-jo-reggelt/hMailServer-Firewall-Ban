@@ -1,3 +1,10 @@
+_  _ _  _  __  _ _    ____ ____ ____ _  _ ____ ____     
+|__| |\/| /__\ | |    [__  |___ |__/ |  | |___ |__/     
+|  | |  |/    \| |___ ___] |___ |  \  \/  |___ |  \     
+____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _ 
+|___ | |__/ |___ | | | /__\ |    |       |__] /__\ |\ | 
+|    | |  \ |___ |_|_|/    \|___ |___    |__]/    \| \| 
+
 # hMailServer Firewall Ban
 
 Ban Spammers to Windows Defender Firewall. Use of various reject methods in EventHandlers.vbs to call Firewall Ban. Integrated web admin.
@@ -16,7 +23,7 @@ Ban Spammers to Windows Defender Firewall. Use of various reject methods in Even
 2) Copy vbsjson.vbs to hMailServer Events folder (default location: C:\Program Files (x86)\hMailServer\Events)
 3) Install RvdH's DNS resolver (https://d-fault.nl/files/)
 4) Copy RvdH's Disconnect.exe to hMailServer Events folder (https://d-fault.nl/files/)
-5) Edit db variables in hmsFirewallBan.ps1
+5) Edit variables in hmsFirewallBan.ps1
 6) Using phpMyAdmin or whatever you want, add tables `hm_fwban`, `hm_fwban_rh` and `hm_ids` to hmailserver database (see below for create table SQL)
 7) Change group policy for firewall log to log dropped connections. Set log location to match with path in hmsFirewallBan.ps1 (or change path in hmsFirewallBan.ps1). From cmd/administrator:
 ```
@@ -105,6 +112,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.47 housekeeping changes to powershell
 - 0.46 housekeeping changes to blocks pages
 - 0.45 housekeeping
 - 0.44 cleaned up many bugs related to IDS; housekeeping

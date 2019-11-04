@@ -1,19 +1,45 @@
-# ~~~~~ hMailServer Firewall Ban ~~~~~
-# ~~~~~~~ BEGIN USER VARIABLES ~~~~~~~
-# ~~~~~~ MySQL Auth / error log ~~~~~~
-$MySQLAdminUserName = 'root'
-$MySQLAdminPassword = 'supersecretpassword'
-$MySQLDatabase = 'hmailserver'
-$MySQLHost = 'localhost'
-$DBErrorLog = 'C:\scripts\hmailserver\FWBan\DBError.log'
-# ~~~~~~~ Firewall Log Parsing ~~~~~~~
-$LANSubnet = '192.168.99' # <-- 3 octets only, please
-$MailPorts = '25|465|587|110|995|143|993' # <-- add custom ports if in use
-$FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'
-# ~~~~ De-Duplicate Firewall Rules ~~~
-$RuleList = 'C:\scripts\hmailserver\FWBan\Deduplicate\fwrulelist.txt'
-$DupList = 'C:\scripts\hmailserver\FWBan\Deduplicate\fwduplist.txt'
-# ~~~~~~~~ END USER VARIABLES ~~~~~~~~
+<#
+_  _ _  _  __  _ _    ____ ____ ____ _  _ ____ ____     
+|__| |\/| /__\ | |    [__  |___ |__/ |  | |___ |__/     
+|  | |  |/    \| |___ ___] |___ |  \  \/  |___ |  \     
+____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _ 
+|___ | |__/ |___ | | | /__\ |    |       |__] /__\ |\ | 
+|    | |  \ |___ |_|_|/    \|___ |___    |__]/    \| \| 
+
+.SYNOPSIS
+	Powershell component to hMailServer Firewall Ban (hmsFirewallBan.ps1)
+
+.DESCRIPTION
+	Backend firewall rule administration for hMailServer Firewall Ban Project
+
+.FUNCTIONALITY
+	* Reads Firewall Ban database (hm_fwban) and creates firewall rule
+	* Works directly with PHP front end
+	* Prevents duplicates and removes duplicates automatically
+	* Reads firewall log for dropped connections
+	* Handles rule auto expiration
+
+.NOTES
+	* Create scheduled task to run every 5 minutes
+	
+.EXAMPLE
+
+#>
+
+###   MYSQL VARIABLES   ####################################################
+#                                                                          #
+$MySQLAdminUserName = 'hmailserver'                                        #
+$MySQLAdminPassword = 'supersecretpassword'                                #
+$MySQLDatabase = 'hmailserver'                                             #
+$MySQLHost = 'localhost'                                                   #
+#                                                                          #
+###   FIREWALL VARIABLES   #################################################
+#                                                                          #
+$LANSubnet = '192.168.99' # <-- 3 octets only, please                      #
+$MailPorts = '25|465|587|110|995|143|993' # <-- add custom ports if in use #
+$FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"       #
+#                                                                          #
+############################################################################
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
@@ -184,6 +210,8 @@ $FirewallLogObjects | foreach-object {
 }
 
 #	De-Duplicate Firewall Rules List
+$RuleList = "$PSScriptRoot\Deduplicate\fwrulelist.txt"
+$DupList = "$PSScriptRoot\Deduplicate\fwduplist.txt"
 $RegexIP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
 Get-NetFirewallRule | foreach-object {
 	if ($_.DisplayName -match $RegexIP){
@@ -208,7 +236,7 @@ Get-Content $DupList | foreach {
 #                                     #
 #######################################
 
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus
+<#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus #>
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
@@ -220,7 +248,7 @@ MySQLQuery $Query | foreach {
 	MySQLQuery $Query
 }
 
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary
+<#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary #>
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
@@ -232,7 +260,7 @@ MySQLQuery $Query | foreach {
 	MySQLQuery $Query
 }
 
-#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs
+<#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs #>
 $Days = "365" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND flag IS NULL"
 MySQLQuery $Query | foreach {
