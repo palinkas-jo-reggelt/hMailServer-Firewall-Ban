@@ -66,17 +66,20 @@ Function MySQLQuery($Query) {
 #	Prevents scheduled task failures at bootup.
 If ((get-service hMailServer).Status -ne 'Running'){exit}
 
+#	Set time for so interval queries align
+$QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
+
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
-$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= now() - interval 5 minute"
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= '$QueryTime' - interval 5 minute"
 MySQLQuery $Query
 #	Now find all new (non-duplicated) IP entries
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp >= now() - interval 5 minute"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp >= '$QueryTime' - interval 5 minute"
 MySQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	#	Check each against previous entries marked safe
-	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress='$IP' AND timestamp < now() - interval 5 minute"
+	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress='$IP' AND timestamp < '$QueryTime' - interval 5 minute"
 	MySQLQuery $Query | foreach {
 		$FlagSafe = $_.flag
 	}
@@ -187,10 +190,10 @@ MySQLQuery $Query | foreach {
 #	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1
 $LSRegex = "$LANSubnet\.\d{1,3}"
 $MinuteSpan = 5 # Should match interval of scheduled task
-$EndTime = (get-date).ToString("HH:mm:ss")
-$StartTime = ((get-date) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("HH:mm:ss")
-$DateEnd = (get-date).ToString("yyyy-MM-dd")
-$DateStart = ((get-date) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("yyyy-MM-dd")
+$EndTime = $QueryTime
+$StartTime = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("HH:mm:ss")
+$DateEnd = $QueryTime
+$DateStart = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $MinuteSpan)).ToString("yyyy-MM-dd")
 
 $FirewallLogObjects = import-csv -Path $FirewallLog -Delimiter " " -Header Date, Time, Action, Protocol, SourceIP, `
     DestinationIP, SourcePort, DestinationPort, Size, tcpflags, tcpsyn, tcpack, tcpwin, icmptype, icmpcode, info, path | `
@@ -239,7 +242,7 @@ Get-Content $DupList | foreach {
 <#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus #>
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
 MySQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -251,7 +254,7 @@ MySQLQuery $Query | foreach {
 <#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary #>
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
 MySQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -262,7 +265,7 @@ MySQLQuery $Query | foreach {
 
 <#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs #>
 $Days = "365" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < now() - interval $Days day AND flag IS NULL"
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND flag IS NULL"
 MySQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
