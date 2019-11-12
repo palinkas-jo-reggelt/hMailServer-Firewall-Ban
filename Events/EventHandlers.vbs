@@ -177,10 +177,10 @@ End Function
 '******************************************************************************************************************************
 
 Sub OnClientConnect(oClient)
-	' Exclude Backup-MX & local LAN from test
-	' If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
-	' If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
-	' If oClient.IPAddress = "127.0.0.1" Then Exit Sub
+	Exclude Backup-MX & local LAN from test
+	If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
+	If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
+	If oClient.IPAddress = "127.0.0.1" Then Exit Sub
 End Sub
 
 Sub OnHELO(oClient)
@@ -229,7 +229,6 @@ Sub OnHELO(oClient)
 
 	If bolGeoIP Then
 		'  Connection PASSED examination
-		Call AccRejDB(strPort, oClient.Port, "OnHELO", "Accepted", "GeoIP", oClient.IPAddress, oClient.HELO)
 	Else
 		'  Disconnect all others.
 		Result.Value = 2

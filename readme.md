@@ -113,6 +113,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.49 added BlockCount.ps1 to analyze firewall drops
 - 0.48 added fixed query time to powershell in order to keep the query intervals aligned
 - 0.47 housekeeping changes to powershell
 - 0.46 housekeeping changes to blocks pages
