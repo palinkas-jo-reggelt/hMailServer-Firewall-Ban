@@ -70,7 +70,8 @@ Write-Output ""
 
 Write-Output "Block Count - Count number of drops from firewall log"
 Write-Output " "
-Write-Output "    Run : $((get-date).ToString(`"yy/MM/dd HH:mm`"))"
+$StartTime = get-date
+Write-Output "    Run : $(($StartTime).ToString(`"yy/MM/dd HH:mm`"))"
 Write-Output " "
 
 $Query = "Select MIN(timestamp) AS mints FROM hm_fwban"
@@ -108,7 +109,14 @@ Do {
 	$Rows = @(MySQLQuery($Query))
 	$ReturnIPs = $Rows.Rows.Count
 	$PercentReturns = ($ReturnIPs / $TotalRules).ToString("P")
-	Write-Output ("{0,7} : {1,6} : Number of return IPs blocked on at least $b days" -f ($ReturnIPs).ToString("#,###"), $PercentReturns)
+	If ($ReturnIPs -lt 1) {
+		Write-Output ""
+		Write-Output "No more results"
+		$TimeElapsed = (New-TimeSpan $StartTime $(get-date))
+		Write-Output ("Time Elapsed: {0:mm} minutes {0:ss} seconds" -f $TimeElapsed)
+	} Else {
+		Write-Output ("{0,7} : {1,6} : Number of return IPs blocked on at least $b days" -f ($ReturnIPs).ToString("#,###"), $PercentReturns)
+	}
 	$a++
 	$b++
 } Until ($ReturnIPs -lt 1)
