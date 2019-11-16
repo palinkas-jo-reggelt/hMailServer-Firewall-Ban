@@ -8,6 +8,10 @@ Option Explicit
 
 Private Const ADMIN = "Administrator"
 Private Const PASSWORD = "supersecretpassword"
+Private Const EVENTDIR = "C:\Program Files (x86)\hMailServer\Events"
+Private Const LOGDIR   = "C:\Program Files (x86)\hMailServer\Logs"
+Private Const TEMPDIR  = "C:\Program Files (x86)\hMailServer\Temp"
+Private Const idsTable = "hm_ids"
 
 '******************************************************************************************************************************
 '********** Functions                                                                                                **********
@@ -177,7 +181,7 @@ End Function
 '******************************************************************************************************************************
 
 Sub OnClientConnect(oClient)
-	Exclude Backup-MX & local LAN from test
+	'	Exclude Backup-MX & local LAN from test
 	If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
 	If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
 	If oClient.IPAddress = "127.0.0.1" Then Exit Sub
@@ -299,7 +303,7 @@ Sub OnClientLogon(oClient)
 
 	'	Successful logons get IDS entry removed
 	If oClient.Authenticated Then
-		Call idsDelIP(oClient.IPAddress
+		Call idsDelIP(oClient.IPAddress)
 	End If
 
 End Sub

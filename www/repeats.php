@@ -27,6 +27,7 @@
 	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
 	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
 
+	echo "<div class=\"section\">";
 	echo "<div class=\"secleft\">";
 	echo "<h2>This Week's Daily Blocked IPs:</h2>";
 
@@ -78,9 +79,10 @@
 	while($row = mysqli_fetch_array($res_data)){ echo "<a href=\"./repeats-view.php?submit=Search&search=".$fourmonthsago."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($fourmonthsago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; }
 
 	echo "<br />";
-	echo "</div><div class=\"clear\"></div>";
+	echo "</div><div class=\"clear\"></div></div>";
 
 
+	echo "<div class=\"section\">";
 	echo "<div class=\"secleft\">";
 	echo "<h2>Search for Repeat Blocks by IP:</h2>";
 	echo "<form autocomplete='off' action='repeats-view.php' method='GET'> ";
@@ -101,9 +103,10 @@
 	echo "</table>";
 	echo "</form>";
 	echo "<br />";
-	echo "</div><div class=\"clear\"></div>";
+	echo "</div><div class=\"clear\"></div></div>";
 	
 
+	echo "<div class=\"section\">";
 	echo "<div class=\"secleft\">";
 	echo "<h2>Mark an IP Safe:</h2>";
 	echo "Permanently release an IP and mark it safe from future bans.<br /><br />";
@@ -124,8 +127,18 @@
 	echo	"<input type='submit' name='submit' value='UnSafeIP' >";
 	echo "</form>";
 	echo "<br />";
-	echo "</div><div class=\"clear\"></div>";
+	echo "</div><div class=\"clear\"></div></div>";
 
+
+	echo "<div class=\"section\">";
+	echo "<div class=\"secleft\">";
+	echo "<h2>Blocks Analyzer</h2>";
+	echo "See how many IPs have returned for a given number of days.<br /><br />";
+	echo "<a href=\"./blocks.php\">Blocks Analyzer</a>";
+	echo "</div>";
+
+	echo "<div class=\"secright\">";
+	echo "</div><div class=\"clear\"></div></div>";
 
 ?>
 </div>

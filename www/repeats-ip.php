@@ -74,7 +74,7 @@
 				<th>IP Address</th>
 				<th>Reason</th>
 				<th>Country</th>
-				<th>RH</th>
+				<th>FB</th>
 			</tr>";
 
 		while($row = mysqli_fetch_array($res_data)){
@@ -99,7 +99,7 @@
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
-			echo	"RH = Repeat Hits<br />
+			echo	"FB = Firewall Blocks<br />
 					RS = Released Status<br />";
 		}
 	}

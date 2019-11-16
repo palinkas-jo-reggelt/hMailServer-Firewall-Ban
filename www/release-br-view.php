@@ -26,7 +26,7 @@
 		$total_rows = mysqli_fetch_array($result)[0];
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, countrycode, country, flag FROM hm_fwban WHERE `ban_reason` LIKE '{$ban_reason}' AND (flag IS NULL OR flag=3) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, country, helo, flag FROM hm_fwban WHERE `ban_reason` LIKE '{$ban_reason}' AND (flag IS NULL OR flag=3) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
 		$res_data = mysqli_query($con,$sql);
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
@@ -44,6 +44,7 @@
 					<th>IP Address</th>
 					<th>Reason</th>
 					<th>Country</th>
+					<th>HELO</th>
 					<th>RS</th>
 				</tr>";
 			while($row = mysqli_fetch_array($res_data)){
@@ -54,19 +55,26 @@
 			echo "<td><a href=\"search.php?submit=Search&search=" . $row['ipaddress'] . "\">" . $row['ipaddress'] . "</a></td>";
 			echo "<td>" . $row['ban_reason'] . "</td>";
 			echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress'] . "\"  target=\"_blank\">" . $row['country'] . "</a></td>";
+			echo "<td>" . $row['helo'] . "</td>";
 			if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 			else echo "<td>YES</td>";
 
 			echo "</tr>";
 			}
 			echo "</table>";
-			echo "<br />";
-			echo "<ul>";
-			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=1\">First </a><li>";}
-			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page - 1)."\">Prev </a></li>";}
-			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page + 1)."\">Next </a></li>";}
-			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".$total_pages."\">Last</a></li>";}
-			echo "</ul>";
+			if ($total_pages == 1){echo "";}
+			else {
+				echo "<ul>";
+				if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=1\">First </a><li>";}
+				if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page - 1)."\">Prev </a></li>";}
+				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".($page + 1)."\">Next </a></li>";}
+				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&ban_reason=".$ban_reason."&page=".$total_pages."\">Last</a></li>";}
+				echo "</ul>";
+			}
+			if ($total_pages > 0){
+				echo "<br />
+				RS = Release Status<br /><br />";
+			}
 		}
 		mysqli_close($con);
 	}

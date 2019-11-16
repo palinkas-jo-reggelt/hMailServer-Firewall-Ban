@@ -6,10 +6,11 @@
 		<h2>Hits per day from inception:</h2>
 		<div id="chart_combined"></div>
 	</div>
-	<div class="secleft">
+	<div class="secright">
 		<h2>Total blocks per day (block frequency):</h2>
 		<div id="chart_totalblocksperday"></div>
 	</div>
+	<div class="clear"></div>
 </div>
 
 <div class="section">
@@ -17,10 +18,11 @@
 		<h2>Average hits per hour from inception:</h2>
 		<div id="chart_hitsperhour"></div>
 	</div>
-	<div class="secleft">
+	<div class="secright">
 		<h2>Average blocks per hour from inception:</h2>
 		<div id="chart_blocksperhour"></div>
 	</div>
+	<div class="clear"></div>
 </div>
 
 <div class="section">
@@ -365,5 +367,6 @@
 	echo "</div><div class=\"clear\"></div>";
 
 ?>
-</div>
+</div> <!-- end section -->
+</div> <!-- end wrapper -->
 <?php include("foot.php") ?>
