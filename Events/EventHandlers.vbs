@@ -106,11 +106,22 @@ Function GetDatabaseObject()
    Set GetDatabaseObject = oApp.Database
 End Function
 
-Function idsAddIP(sIPAddress, sCountry, sHELO)
-    Dim strSQL, oDB : Set oDB = GetDatabaseObject
-    strSQL = "INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country,helo) VALUES (NOW(),'" & sIPAddress & "',1,'" & sCountry & "','" & sHELO & "') ON DUPLICATE KEY UPDATE hits=(hits+1),timestamp=NOW();"
-    Call oDB.ExecuteSQL(strSQL)
-    Set oDB = Nothing
+Function idsAddIP(sIPAddress)
+	Include("C:\Program Files (x86)\hMailServer\Events\VbsJson.vbs")
+	Dim ReturnCode, Json, oGeoip, oXML
+	Set Json = New VbsJson
+	On Error Resume Next
+	Set oXML = CreateObject ("Msxml2.XMLHTTP.3.0")
+	oXML.Open "GET", "http://ip-api.com/json/" & sIPAddress, False
+	oXML.Send
+	Set oGeoip = Json.Decode(oXML.responseText)
+	ReturnCode = oXML.Status
+	On Error Goto 0
+
+	Dim strSQL, oDB : Set oDB = GetDatabaseObject
+	strSQL = "INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country) VALUES (NOW(),'" & sIPAddress & "',1,'" & oGeoip("country") & "') ON DUPLICATE KEY UPDATE hits=(hits+1),timestamp=NOW();"
+	Call oDB.ExecuteSQL(strSQL)
+	Set oDB = Nothing
 End Function
 
 Function idsDelIP(sIPAddress)
@@ -185,6 +196,10 @@ Sub OnClientConnect(oClient)
 	If (Left(oClient.IPAddress, 12) = "184.105.182.") Then Exit Sub
 	If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
 	If oClient.IPAddress = "127.0.0.1" Then Exit Sub
+
+	' Call IDS 
+    Call idsAddIP(oClient.IPAddress)
+
 End Sub
 
 Sub OnHELO(oClient)
@@ -218,9 +233,6 @@ Sub OnHELO(oClient)
 		Exit Sub
 	End If
 
-	' Call IDS on all non-local SMTP connections
-    If (InStr("|25|587|465|", oClient.Port) > 0) Then Call idsAddIP(oClient.IPAddress, oGeoip("country"), oClient.HELO)
-
 	If (oClient.Port = 25) Then
 		'  ALLOWED COUNTRIES - Port 25 only... Check Alpha-2 Code here -> https://en.wikipedia.org/wiki/ISO_3166-1
 		strBase = "^(US|CA|AT|BE|CH|CZ|DE|DK|ES|FI|FR|GB|GL|GR|HR|HU|IE|IS|IT|LI|MC|NL|NO|PL|PT|RO|RS|SE|SI|SK|SM|AU|NZ)$"
@@ -238,8 +250,8 @@ Sub OnHELO(oClient)
 		Result.Value = 2
 		Result.Message = ". 01 This mail server does not accept connections from " & oGeoip("country") &". If you believe that this failure is in error, please contact the intended recipient via alternate means."
 		Call Disconnect(oClient.IPAddress)
-		Call FWBan(oClient.IPAddress, "GeoIP", oClient.HELO)
 		Call AutoBan(oClient.IPAddress, "GeoIP - " & oClient.IpAddress, 1, "h")
+		Call FWBan(oClient.IPAddress, "GeoIP", oClient.HELO)
 		Exit Sub
 	End If
 
@@ -248,8 +260,8 @@ Sub OnHELO(oClient)
 		Result.Value = 2
 		Result.Message = ". 02 This server does not accept connections blacklisted by Spamhaus.org. If you believe that this failure is in error, please contact the intended recipient via alternate means."
 		Call Disconnect(oClient.IPAddress)
-		Call FWBan(oClient.IPAddress, "Spamhaus", oClient.HELO)
 		Call AutoBan(oClient.IPAddress, "Spamhaus - " & oClient.IpAddress, 1, "h")
+		Call FWBan(oClient.IPAddress, "Spamhaus", oClient.HELO)
 		Exit Sub
 	End If
 
@@ -262,8 +274,8 @@ Sub OnHELO(oClient)
 		Result.Value = 2
 		Result.Message = ". 04 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
 		Call Disconnect(oClient.IPAddress)
-		Call FWBan(oClient.IPAddress, "HELO-Inv", oClient.HELO)
 		Call AutoBan(oClient.IPAddress, "Invalid HELO - " & oClient.HELO, 1, "h")
+		Call FWBan(oClient.IPAddress, "HELO-Inv", oClient.HELO)
 		Exit Sub
 	End If
 
@@ -282,8 +294,8 @@ Sub OnHELO(oClient)
 		Result.Value = 2
 		Result.Message = ". 05 Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient via alternate means."
 		Call Disconnect(oClient.IPAddress)
+		Call AutoBan(oClient.IPAddress, "Invalid HELO - " & oClient.HELO, 1, "h")
 		Call FWBan(oClient.IPAddress, "ResIP", oClient.HELO)
-		Call AutoBan(oClient.IPAddress, "Bot on Res IP - " & oClient.HELO, 1, "h")
 		Exit Sub
 	End If   
 
@@ -292,8 +304,8 @@ Sub OnHELO(oClient)
 		Result.Value = 2
 		Result.Message = ". 15 This server does not accept connections blacklisted by Spamhaus.org. If you believe that this failure is in error, please contact the intended recipient via alternate means."
 		Call Disconnect(oClient.IPAddress)
+		Call AutoBan(oClient.IPAddress, "Invalid HELO - " & oClient.HELO, 1, "h")
 		Call FWBan(oClient.IPAddress, "SH-DBL", oClient.HELO)
-		Call AutoBan(oClient.IPAddress, "Spamhaus DBL - " & oClient.HELO, 1, "h")
 		Exit Sub
 	End If   
 
@@ -311,6 +323,7 @@ End Sub
 Sub OnAcceptMessage(oClient, oMessage)
 
 	'	Successfully received mail gets IDS entry removed
+	'	Should be the very last in line (if other tests present in OnAcceptMessage)
     Call idsDelIP(oClient.IPAddress)
 
 End Sub

@@ -113,6 +113,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.52 cleaned up obsolete items in EventHandlers.vbs
 - 0.51 housekeeping in EventHandlers.vbs; added blocks analyzer pages 
 - 0.50 simplified BlockCount.ps1; automated end of script
 - 0.49 added BlockCount.ps1 to analyze firewall drops
