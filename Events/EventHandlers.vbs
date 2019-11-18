@@ -170,7 +170,7 @@ Function Disconnect(sIPAddress)
 End Function
 
 '	Function FWBan - http://hmailserver.com/forum/viewtopic.php?f=9&t=34082
-Function FWBan(sIPAddress, sReason)
+Function FWBan(sIPAddress, sReason, sHELO)
    Include("C:\Program Files (x86)\hMailServer\Events\VbsJson.vbs")
    Dim ReturnCode, Json, oGeoip, oXML
    Set Json = New VbsJson
@@ -183,7 +183,7 @@ Function FWBan(sIPAddress, sReason)
    On Error Goto 0
 
    Dim strSQL, oDB : Set oDB = GetDatabaseObject
-   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,countrycode,country,flag) VALUES (NOW(),'" & sIPAddress & "','" & sReason & "','" & oGeoip("countryCode") & "','" & oGeoip("country") & "','4');"
+   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,countrycode,country,helo,flag) VALUES (NOW(),'" & sIPAddress & "','" & sReason & "','" & oGeoip("countryCode") & "','" & oGeoip("country") & "','" & sHELO & "','4');"
    Call oDB.ExecuteSQL(strSQL)
 End Function
 

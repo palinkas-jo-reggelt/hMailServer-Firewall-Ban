@@ -44,6 +44,7 @@ $FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"       #
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
+	  $DBErrorLog = $PSScriptRoot\DBError.log
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString
@@ -65,6 +66,50 @@ Function MySQLQuery($Query) {
 #	Check to see if hMailServer is running. If not, quit. MySQL is a dependency of hMailServer service so you're actually checking both.
 #	Prevents scheduled task failures at bootup.
 If ((get-service hMailServer).Status -ne 'Running'){exit}
+
+#	Create hm_fwban table if it doesn't exist
+$Query = "
+	CREATE TABLE IF NOT EXISTS `hm_fwban` (
+	  `ID` int(11) NOT NULL AUTO_INCREMENT,
+	  `ipaddress` varchar(192) NOT NULL,
+	  `timestamp` timestamp NULL DEFAULT NULL,
+	  `ban_reason` varchar(192) NOT NULL,
+	  `countrycode` varchar(4) NOT NULL,
+	  `country` varchar(192) NOT NULL,
+	  `flag` int(1) DEFAULT NULL,
+	  `helo` varchar(192) NOT NULL,
+	  PRIMARY KEY (`ID`),
+	  UNIQUE KEY `ID` (`ID`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	COMMIT;
+	"
+MySQLQuery($Query)
+
+#	Create hm_fwban_rh table if it doesn't exist
+$Query = "
+	CREATE TABLE IF NOT EXISTS `hm_fwban_rh` (
+	  `timestamp` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+	  `ipaddress` varchar(15) NOT NULL,
+	  PRIMARY KEY (`timestamp`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	COMMIT;
+	"
+MySQLQuery($Query)
+
+#	Create hm_ids table if it doesn't exist
+$Query = "
+	CREATE TABLE IF NOT EXISTS `hm_ids` (
+	  `timestamp` datetime NOT NULL,
+	  `ipaddress` varchar(15) NOT NULL,
+	  `hits` int(1) NOT NULL,
+	  `country` varchar(64) DEFAULT NULL,
+	  `helo` varchar(128) DEFAULT NULL,
+	  PRIMARY KEY (`ipaddress`),
+	  UNIQUE KEY `ipaddress` (`ipaddress`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	COMMIT;
+	"
+MySQLQuery($Query)
 
 #	Set time for so interval queries align
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
@@ -213,8 +258,8 @@ $FirewallLogObjects | foreach-object {
 }
 
 #	De-Duplicate Firewall Rules List
-$RuleList = "$PSScriptRoot\Deduplicate\fwrulelist.txt"
-$DupList = "$PSScriptRoot\Deduplicate\fwduplist.txt"
+$RuleList = "$PSScriptRoot\fwrulelist.txt"
+$DupList = "$PSScriptRoot\fwduplist.txt"
 $RegexIP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
 Get-NetFirewallRule | foreach-object {
 	if ($_.DisplayName -match $RegexIP){

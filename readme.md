@@ -42,34 +42,7 @@ You may need to edit this with Group Policy Editor. You may also need to give NT
 
 ## MySQL Create Table
 
-```
-CREATE TABLE `hm_fwban` (
-  `ID` int(11) NOT NULL,
-  `ipaddress` varchar(192) NOT NULL,
-  `timestamp` timestamp NULL DEFAULT NULL,
-  `ban_reason` varchar(192) NOT NULL,
-  `countrycode` varchar(4) NOT NULL,
-  `country` varchar(192) NOT NULL,
-  `flag` int(1) DEFAULT NULL,
-  `helo` varchar(192) NOT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `ID` (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `hm_fwban_rh` (
-  `timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `ipaddress` varchar(15) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `hm_ids` (
-  `timestamp` datetime NOT NULL,
-  `ipaddress` varchar(15) NOT NULL,
-  `hits` int(1) NOT NULL,
-  `country` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`ipaddress`),
-  UNIQUE KEY `ipaddress` (`ipaddress`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-```
+Moved to hmsFirewallBan.ps1 - will be created at first run.
 
    
 ## Flag Logic
@@ -113,6 +86,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.53 bug fixes in EventHandlers.vbs; moved table creation to hmsFirewallBan.ps1 for automatic creation
 - 0.52 cleaned up obsolete items in EventHandlers.vbs
 - 0.51 housekeeping in EventHandlers.vbs; added blocks analyzer pages 
 - 0.50 simplified BlockCount.ps1; automated end of script
