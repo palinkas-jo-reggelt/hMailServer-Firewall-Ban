@@ -44,7 +44,8 @@ $FirewallLog = "C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log"       #
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
-	  $DBErrorLog = $PSScriptRoot\DBError.log
+	  $Today = (Get-Date).ToString("yyyyMMdd")
+	  $DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString
@@ -56,7 +57,7 @@ Function MySQLQuery($Query) {
 	  $DataSet.Tables[0]
 	  }
 	Catch {
-	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
+	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $Query `n$Error[0]" | out-file $DBErrorLog -append
 	 }
 	Finally {
 	  $Connection.Close()
@@ -88,9 +89,10 @@ MySQLQuery($Query)
 #	Create hm_fwban_rh table if it doesn't exist
 $Query = "
 	CREATE TABLE IF NOT EXISTS hm_fwban_rh (
+	  id int(12) NOT NULL AUTO_INCREMENT,
 	  timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
 	  ipaddress varchar(15) NOT NULL,
-	  PRIMARY KEY (timestamp)
+	  PRIMARY KEY (id)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	COMMIT;
 	"
@@ -231,6 +233,10 @@ MySQLQuery $Query | foreach {
 	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
 	MySQLQuery $Query
 }
+
+#	Expire old IDS entries (older than 2 days)
+$Query = "DELETE FROM hm_ids WHERE timestamp < now() - interval 2 day"
+MySQLQuery $Query
 
 #	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1
 $LSRegex = "$LANSubnet\.\d{1,3}"
