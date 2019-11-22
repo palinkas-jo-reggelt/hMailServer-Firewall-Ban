@@ -86,6 +86,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.55 bug fixes in php pages + hmsFirewallBan.ps1
 - 0.54 bug fixes in hmsFirewallBan.ps1
 - 0.53 bug fixes in EventHandlers.vbs; moved table creation to hmsFirewallBan.ps1 for automatic creation
 - 0.52 cleaned up obsolete items in EventHandlers.vbs

@@ -95,7 +95,7 @@
 
 		while($row = mysqli_fetch_array($res_data)){
 			echo "<tr>";
-			echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+			echo "<td>".$row['ipaddress']."</td>";
 			echo "<td>".$row['ban_reason']."</td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 			if($row['countip']==0){echo "<td style=\"text-align:right;\">0</td>";}

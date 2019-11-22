@@ -264,26 +264,11 @@
 	echo "</div>";
 
 	echo "<div class=\"secright\">";
-	echo "<h2>Special:</h2>";
-	echo "<h2>IP Ranges banned:</h2>";
-	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
-	$res_data = mysqli_query($con,$sql);
-	$total_rows = mysqli_fetch_array($res_data)[0];
-	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hit".$singular."</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
-
-	echo "<br />";
-
-	echo "<h2>IPs Marked Safe:</h2>";
-	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `flag`=5 OR `flag`=6";
-	$res_data = mysqli_query($con,$sql);
-	$total_rows = mysqli_fetch_array($res_data)[0];
-	if ($total_rows==1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./search.php?submit=Search&RS=SAF\">".$total_rows." hit".$singular."</a> for permanently released (SAFE) IPs.<br />";
-	
-
-	echo "<br />";
+	echo "<h2>Banalyzer:</h2>";
+	echo "Ban Analyzer: How many IPs have unsuccessfully returned to spam and how many times.<br /><br />";
+	echo "<a href=\"./blocks.php\">Blocks Analyzer</a><br /><br />";
 	echo "</div><div class=\"clear\"></div>";
+
 
 	echo "<div class=\"secleft\">";
 	echo "<h2>Unprocessed IPs:</h2>";
@@ -365,6 +350,30 @@
 
 	echo "<br />";
 	echo "</div><div class=\"clear\"></div>";
+
+	echo "<div class=\"secleft\">";
+	echo "<h2>IP Ranges banned:</h2>";
+	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` LIKE '%.0/24'";
+	$res_data = mysqli_query($con,$sql);
+	$total_rows = mysqli_fetch_array($res_data)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&search=.0/24\">".$total_rows." hit".$singular."</a> for CIDR bans (0.0.255.0/24 IP ranges).<br />";
+	echo "<br />";
+	echo "</div>";
+
+	echo "<div class=\"secright\">";
+	echo "<h2>IPs Marked Safe:</h2>";
+	$sql = "SELECT COUNT(`ipaddress`) AS `value_occurrence` FROM `hm_fwban` WHERE `flag`=5 OR `flag`=6";
+	$res_data = mysqli_query($con,$sql);
+	$total_rows = mysqli_fetch_array($res_data)[0];
+	if ($total_rows==1){$singular="";}else{$singular="s";}
+	echo "<a href=\"./search.php?submit=Search&RS=SAF\">".$total_rows." hit".$singular."</a> for permanently released (SAFE) IPs.<br />";
+	
+
+	echo "<br />";
+	echo "</div><div class=\"clear\"></div>";
+
+
 
 ?>
 </div> <!-- end section -->

@@ -73,12 +73,11 @@ $Query = "
 	CREATE TABLE IF NOT EXISTS hm_fwban (
 	  ID int(11) NOT NULL AUTO_INCREMENT,
 	  ipaddress varchar(192) NOT NULL,
-	  timestamp timestamp NULL DEFAULT NULL,
-	  ban_reason varchar(192) NOT NULL,
-	  countrycode varchar(4) NOT NULL,
-	  country varchar(192) NOT NULL,
+	  timestamp datetime NOT NULL,
+	  ban_reason varchar(192) DEFAULT NULL,
+	  country varchar(192) DEFAULT NULL,
 	  flag int(1) DEFAULT NULL,
-	  helo varchar(192) NOT NULL,
+	  helo varchar(192) DEFAULT NULL,
 	  PRIMARY KEY (ID),
 	  UNIQUE KEY ID (ID)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -267,6 +266,7 @@ $FirewallLogObjects | foreach-object {
 $RuleList = "$PSScriptRoot\fwrulelist.txt"
 $DupList = "$PSScriptRoot\fwduplist.txt"
 $RegexIP = '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+
 Get-NetFirewallRule | foreach-object {
 	if ($_.DisplayName -match $RegexIP){
 	write-output $_.DisplayName

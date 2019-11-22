@@ -58,7 +58,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		$ban_reason_sql=" AND ban_reason LIKE '{$ban_reason}'";
 	}
 	
-	$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL."";
+	$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL."";
 	$result = mysqli_query($con,$total_pages_sql);
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
@@ -76,7 +76,7 @@ $sql = "
 	(
 		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo 
 		FROM hm_fwban 
-		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR countrycode LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
+		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
 		ORDER BY timestamp DESC 
 	) AS a
 	LEFT JOIN
