@@ -11,6 +11,17 @@ ____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _
 Ban Spammers to Windows Defender Firewall. Use of various reject methods in EventHandlers.vbs to call Firewall Ban. Integrated web admin.
 
 
+## !! NEW !! MUST READ !!
+
+Recent updates have dramatically changed how firewall rules are created. When an IP gets banned, a firewall rule is created that contains only that IP as the remote address to block. This is how it has been since the beginning of this project. However, I found that too many rules (>10,000) caused issues with mysql connections and probably other things that I did not notice. Therefore, I changed the rule creation to be one rule per day that contains all of that day's banned IPs.
+
+It works as normal for the current day. Therefore, there are no changes to EventHandlers.vbs. A handler script - hmsConsolidateRules.ps1 - should be run daily at 12:01 am. This script consolidates the previous day's firewall rules into a single rule. A scheduled task should be created for this.
+
+For working installations, you will want to consolidate all of your rules for days previous to yesterday. For this task, use hmsConsolidateRulesRetroactively.ps1. This should only be run once and is NOT required for fresh installs.
+
+Obviously, if you're upgrading, you will want to copy all of the files to your installation, but particularly hmsFirewallBan.ps1 and hmsConsolidateRules.ps1 are required.
+
+
 ## Prerequisites
 
 1) Working hMailServer 5.7.0
@@ -34,10 +45,13 @@ netsh advfirewall set allprofiles logging droppedconnections enable
 You may need to edit this with Group Policy Editor. You may also need to give NT SERVICE\MPSSVC full control permissions on the folder the log resides in or the log may not automatically roll over after reaching maximum size. See here: https://serverfault.com/a/859949
 
 8) Create scheduled task to run every 5 minutes with action: 
-```powershell -executionpolicy bypass -File C:\scripts\checkstate\hmsFirewallBan.ps1```
+```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-9) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
-10) Sit back and watch your firewall rule count grow while your spam logs get quiet.
+9) Create scheduled task to run DAILY AT 12:01 am with action: 
+```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
+!!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
+10) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
+11) Sit back and watch your firewall rule count grow while your spam logs get quiet.
 
 
 ## MySQL Create Table
@@ -86,6 +100,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.56 created hmsConsolidateRules.ps1 and hmsConsolidateRulesRetroactively.ps1 to handle consolidation of firewall rules into daily rules 
 - 0.55 bug fixes in php pages + hmsFirewallBan.ps1
 - 0.54 bug fixes in hmsFirewallBan.ps1
 - 0.53 bug fixes in EventHandlers.vbs; moved table creation to hmsFirewallBan.ps1 for automatic creation
