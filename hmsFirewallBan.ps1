@@ -321,28 +321,6 @@ MySQLQuery $Query | foreach {
 $Query = "DELETE FROM hm_ids WHERE timestamp < now() - interval $IDSExpire day"
 MySQLQuery $Query
 
-<#	De-Duplicate Firewall Rules List
-$FWRuleList = "$PSScriptRoot\fwrulelist.txt"
-$DupList = "$PSScriptRoot\fwduplist.txt"
-$RegexRule = '^hMS\sFWBan\s([0-9]{4}\-[0-9]{2}\-[0-9]{2})$'
-
-Get-NetFirewallRule | foreach-object {
-	if ($_.DisplayName -match $RegexRule){
-	write-output $_.DisplayName
-	}
-} | out-file $FWRuleList
-
-$a = Get-Content $FWRuleList
-$ht = @{}
-$a | foreach {$ht["$_"] += 1}
-$ht.keys | where {$ht["$_"] -gt 1} | foreach { write-output $_ } | out-file $DupList
-
-Get-Content $DupList | foreach {
-	& netsh advfirewall firewall delete rule name=`"$_`"
-	& netsh advfirewall firewall add rule name="$_" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$_
-}
-#>
-
 #######################################
 #                                     #
 #        FIREWALL LOG PARSING         #
@@ -380,9 +358,9 @@ $FirewallLogObjects | foreach-object {
 #                                     #
 #######################################
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: "One Hit Wonders" 
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: "One Hit Wonders" 
 #	Release all IPs that never returned after specified number of days
-<# 
+<#
 $Days = "30" 	# <-- Number of days for automatic expiry                   
 $Query = "
 	SELECT id, ipaddress, DATE(timestamp) AS dateip
@@ -410,7 +388,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: Spamhaus 
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Reason: Spamhaus 
 <#
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
@@ -429,7 +407,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Country: Hungary 
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - Country: Hungary 
 <#
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
@@ -448,7 +426,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - All IPs 
+#	EXAMPLE AUTO EXPIRE! - Automatic expiration from firewall - All IPs 
 <#
 $Days = "60" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND flag IS NULL"

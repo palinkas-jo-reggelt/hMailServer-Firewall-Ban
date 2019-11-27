@@ -100,6 +100,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.57 made changes to hmsConsolidateRules.ps1 to prevent accidental firewall rule banning all local and remote IPs :)
 - 0.56 created hmsConsolidateRules.ps1 and hmsConsolidateRulesRetroactively.ps1 to handle consolidation of firewall rules into daily rules 
 - 0.55 bug fixes in php pages + hmsFirewallBan.ps1
 - 0.54 bug fixes in hmsFirewallBan.ps1

@@ -30,13 +30,14 @@ $MySQLAdminUserName = 'hmailserver'                                            #
 $MySQLAdminPassword = 'supersecretpassword'                                    #
 $MySQLDatabase = 'hmailserver'                                                 #
 $MySQLHost = '127.0.0.1'                                                       #
-$DBErrorLog = "$PSScriptRoot\DBErrorConsolidateRules.log"                      #
 #                                                                              #
 ################################################################################
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
+	  $Today = (Get-Date).ToString("yyyyMMdd")
+	  $DBErrorLog = "$PSScriptRoot\$Today-DBErrorConsolidateRules.log"
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString
@@ -55,24 +56,39 @@ Function MySQLQuery($Query) {
 	  }
 }
 
+#	Get BanDate (Yesterday) and establish csv
 $BanDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd")
 $ConsRules = "$PSScriptRoot\hmsFWBRule-$BanDate.csv"
 
+#	Query database for yesterday's bans, export to csv
 $Query = "SELECT id, ipaddress FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
 MySQLQuery $Query | Export-CSV $ConsRules
 
+#	Import csv, output IPs only to txt file
 Import-CSV $ConsRules | ForEach {
 	Write-Output $_.ipaddress
 } | Out-File "$ConsRules.txt"
 
-$NL = [System.Environment]::NewLine
-$Content=[String] $Template= [System.IO.File]::ReadAllText("$ConsRules.txt")
-$Content.Replace($NL,",") | Out-File "$ConsRules.rule.txt"
-(Get-Content -Path "$ConsRules.rule.txt") -Replace ',$','' | Set-Content -Path "$ConsRules.rule.txt"
+#	Make sure txt file path exists
+If (Test-Path "$ConsRules.txt"){
+	$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
+	$RuleData = Get-Content "$ConsRules.txt" | Select-Object -First 1
+	#	Make sure txt file is populated with IP data (if not, you'll have a rule banning all local and all remote IPs)
+	If ($RuleData -match $RegexIP){
 
-& netsh advfirewall firewall add rule name="hMS FWBan $BanDate" description="FWB Rules for $BanDate" dir=in interface=any action=block remoteip=$(Get-Content "$ConsRules.rule.txt")
+		#	Replace all newlines and last comma in order to create a single string that can be used to populate firewall rule remoteaddress	
+		$NL = [System.Environment]::NewLine
+		$Content=[String] $Template= [System.IO.File]::ReadAllText("$ConsRules.txt")
+		$Content.Replace($NL,",") | Out-File "$ConsRules.rule.txt"
+		(Get-Content -Path "$ConsRules.rule.txt") -Replace ',$','' | Set-Content -Path "$ConsRules.rule.txt"
 
-Import-CSV $ConsRules | ForEach {
-	$IP = $_.ipaddress
-	& netsh advfirewall firewall delete rule name=`"$IP`"
+		#	Add firewall rule with string containing all IPs from yesterday's bans
+		& netsh advfirewall firewall add rule name="hMS FWBan $BanDate" description="FWB Rules for $BanDate" dir=in interface=any action=block remoteip=$(Get-Content "$ConsRules.rule.txt")
+
+		#	Read csv and delete each of yesterday's individual IP firewall rules
+		Import-CSV $ConsRules | ForEach {
+			$IP = $_.ipaddress
+			& netsh advfirewall firewall delete rule name=`"$IP`"
+		}
+	}
 }
