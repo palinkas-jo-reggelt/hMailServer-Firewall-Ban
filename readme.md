@@ -47,8 +47,9 @@ You may need to edit this with Group Policy Editor. You may also need to give NT
 8) Create scheduled task to run every 5 minutes with action: 
 ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-9) Create scheduled task to run DAILY AT 12:01 am with action: 
+9) Create scheduled task to run DAILY AT 12:01 am with actions: 
 ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
+```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 10) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
 11) Sit back and watch your firewall rule count grow while your spam logs get quiet.
@@ -100,6 +101,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.58 added hmsDuplicateRuleFinder.ps1 to find duplicate and orphaned firewall rules
 - 0.57 made changes to hmsConsolidateRules.ps1 to prevent accidental firewall rule banning all local and remote IPs :)
 - 0.56 created hmsConsolidateRules.ps1 and hmsConsolidateRulesRetroactively.ps1 to handle consolidation of firewall rules into daily rules 
 - 0.55 bug fixes in php pages + hmsFirewallBan.ps1
