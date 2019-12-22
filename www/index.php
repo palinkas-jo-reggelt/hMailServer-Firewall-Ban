@@ -232,9 +232,7 @@
 		$res_data = mysqli_query($con,$sql);
 		while($row = mysqli_fetch_array($res_data)){
 		if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-		if ($row['flag']==5 || $row['flag']==6){$safe_res=" marked as SAFE";}else{$safe_res=" triggered by ".$row['ban_reason'];}
-		if ($row['flag']==5 || $row['flag']==6){$safe_link="&RS=SAF";}else{$safe_link="&search=".$row['ban_reason']."&RS=YES";}
-		echo "<a href=\"./search.php?submit=Search".$safe_link."\">".number_format($row['value_occurrence'])." IP".$singular."</a>".$safe_res." released.<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=YES&ban_reason=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
 		}
 	} else {
 		echo "There are no released IPs to report.";

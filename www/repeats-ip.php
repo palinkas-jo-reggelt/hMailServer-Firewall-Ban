@@ -31,6 +31,9 @@
 	$total_rows = mysqli_fetch_array($result)[0];
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
+	$total_hits_sql = "SELECT COUNT(ipaddress) FROM hm_fwban_rh WHERE ipaddress='{$repeatIP}'";
+	$total_hits_result = mysqli_query($con,$total_hits_sql);
+	$total_hits = mysqli_fetch_array($total_hits_result)[0];
 	
 	$sql = "
 	SELECT
@@ -66,7 +69,7 @@
 	if ($total_rows == 0){
 		echo "<br /><br />There are no repeat dropped IPs to report.";
 	} else {
-		echo "IP <b>".$repeatIP."</b> denied access on ".number_format($total_rows)." day".$singular.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo "IP <b>".$repeatIP."</b> denied access ".number_format($total_hits)." times over ".number_format($total_rows)." day".$singular.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>
 			<tr>
 				<th>Date</th>

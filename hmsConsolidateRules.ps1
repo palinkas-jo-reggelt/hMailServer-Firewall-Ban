@@ -35,9 +35,9 @@ $MySQLHost = '127.0.0.1'                                                       #
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
+	$Today = (Get-Date).ToString("yyyyMMdd")
+	$DBErrorLog = "$PSScriptRoot\$Today-DBErrorConsolidateRules.log"
 	Try {
-	  $Today = (Get-Date).ToString("yyyyMMdd")
-	  $DBErrorLog = "$PSScriptRoot\$Today-DBErrorConsolidateRules.log"
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString
@@ -54,6 +54,11 @@ Function MySQLQuery($Query) {
 	Finally {
 	  $Connection.Close()
 	  }
+}
+
+#	Create ConsolidateRules folder if it doesn't exist
+If (-not(Test-Path "$PSScriptRoot\ConsolidateRules")) {
+	md "$PSScriptRoot\ConsolidateRules"
 }
 
 #	Get BanDate (Yesterday) and establish csv

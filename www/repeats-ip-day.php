@@ -92,10 +92,10 @@
 			echo "<br /><br />";
 		} else {
 			echo "<ul>";
-			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=1\">First </a><li>";}
-			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=".($page - 1)."\">Prev </a></li>";}
-			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=".($page + 1)."\">Next </a></li>";}
-			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=".$total_pages."\">Last</a></li>";}
+			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&date=".$date."&repeatIP=".$repeatIP."&page=1\">First </a><li>";}
+			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&date=".$date."&repeatIP=".$repeatIP."&page=".($page - 1)."\">Prev </a></li>";}
+			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&date=".$date."&repeatIP=".$repeatIP."&page=".($page + 1)."\">Next </a></li>";}
+			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&date=".$date."&repeatIP=".$repeatIP."&page=".$total_pages."\">Last</a></li>";}
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
