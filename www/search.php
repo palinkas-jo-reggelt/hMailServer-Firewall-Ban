@@ -71,11 +71,10 @@ $sql = "
 		a.country,
 		a.flag,
 		a.helo,
-		a.ptr,
 		b.returnhits
 	FROM
 	(
-		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo, ptr 
+		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo
 		FROM hm_fwban 
 		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
 		ORDER BY timestamp DESC 
