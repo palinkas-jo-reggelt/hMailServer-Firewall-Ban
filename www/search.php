@@ -71,10 +71,11 @@ $sql = "
 		a.country,
 		a.flag,
 		a.helo,
+		a.ptr,
 		b.returnhits
 	FROM
 	(
-		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo 
+		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo, ptr 
 		FROM hm_fwban 
 		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
 		ORDER BY timestamp DESC 
@@ -129,7 +130,7 @@ $sql = "
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
 			echo "<td>".$row['ban_reason']."</td>";
 			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
-			echo "<td>".$row['helo']."</td>";
+			echo "<td><a onClick=\"window.open('./ptr.php?ip=".$row['ipaddress']."','PTR','resizable,height=240,width=320'); return false;\">".$row['helo']."</a><noscript>You need Javascript to use the previous link or use <a href=\"ptr.php?ip=".$row['ipaddress']."\" target=\"_blank\">PTR/detail</a></noscript>";
 			if ($row['returnhits']===NULL){echo "<td style=\"text-align:right;\">0</td>";}
 			else {echo "<td style=\"text-align:right;\"><a href=\"repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".number_format($row['returnhits'])."</a></td>";}
 			if($row['flag'] === NULL || $row['flag'] == 3 || $row['flag'] == 7) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";

@@ -101,6 +101,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.60 added popup PTR detail on search.php (PTR derived via PHP "gethostbyaddr")
 - 0.59 housekeeping
 - 0.58 added hmsDuplicateRuleFinder.ps1 to find duplicate and orphaned firewall rules
 - 0.57 made changes to hmsConsolidateRules.ps1 to prevent accidental firewall rule banning all local and remote IPs :)
