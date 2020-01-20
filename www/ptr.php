@@ -16,24 +16,25 @@
 <div class="section">
 
 <?php
-if (isset($_GET['ip'])) {$ip = $_GET ['ip'];} else {$ip = "";}
+	if (isset($_GET['ip'])) {$ip = $_GET ['ip'];} else {$ip = "";}
 
-echo "IP: ".$ip."<br />";
-$ptr = gethostbyaddr($ip);
-if ($ptr == $ip){
-	echo "PTR: No PTR <br />";
-} else {
-	echo "PTR: ".$ptr."<br />";
-}	
+	// echo "IP: ".$ip."<br />";
+	// $ptr = gethostbyaddr($ip);
+	// if ($ptr == $ip){
+		// echo "PTR: No PTR <br />";
+	// } else {
+		// echo "PTR: ".$ptr."<br />";
+	// }	
 
-$sql = "SELECT DATE(timestamp) AS dateptr, ban_reason, helo FROM hm_fwban WHERE ipaddress = '$ip'";
-$res_data = mysqli_query($con,$sql);
-while($row = mysqli_fetch_array($res_data)){
-	echo "HELO: ".$row['helo']."<br />";
-	echo "Ban Reason: ".$row['ban_reason']."<br />";
-	echo "Ban Date: ".$row['dateptr']."<br />";
-}
-
+	$sql = "SELECT DATE(timestamp) AS dateptr, ban_reason, helo, ptr FROM hm_fwban WHERE ipaddress = '$ip'";
+	$res_data = mysqli_query($con,$sql);
+	while($row = mysqli_fetch_array($res_data)){
+		echo "IP: ".$ip."<br />";
+		echo "PTR: ".$row['ptr']."<br />";
+		echo "HELO: ".$row['helo']."<br />";
+		echo "Ban Reason: ".$row['ban_reason']."<br />";
+		echo "Ban Date: ".$row['dateptr']."<br />";
+	}
 ?>
 
 </div>

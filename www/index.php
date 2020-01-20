@@ -147,7 +147,7 @@
 				COUNT(id) as numhits,
 				MONTH(timestamp)
 			FROM hm_fwban 
-			WHERE MONTH(timestamp) < MONTH(NOW())
+			WHERE MONTH(timestamp) < DATE_FORMAT(NOW(), '%Y/%m/01')
 			GROUP BY MONTH(timestamp)
 			ORDER BY MONTH(timestamp) DESC
 			LIMIT 3
@@ -168,7 +168,7 @@
 				COUNT(id) as numhits,
 				MONTH(timestamp)
 			FROM hm_fwban 
-			WHERE MONTH(timestamp) < MONTH(NOW())
+			WHERE MONTH(timestamp) < DATE_FORMAT(NOW(), '%Y/%m/01')
 			GROUP BY MONTH(timestamp)
 			ORDER BY MONTH(timestamp) DESC
 			LIMIT 6

@@ -85,7 +85,9 @@
 
 	mysqli_close($con);
 
-	echo "<br />";
+	echo "<br />
+	IDS = Intrusion Detection System. <br /><br />
+	Records connections that either a) were not rejected and did not successfully send a message or b) were not rejected and did not successfully log in. After 3 such connections within 48 hours, the IP is banned. If an IP is recorded less than 3 times within 48 hours, it is expired from the IDS table.";
 ?>
 </div>
 
