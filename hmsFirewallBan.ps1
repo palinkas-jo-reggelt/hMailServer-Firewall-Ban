@@ -75,7 +75,7 @@ Function MySQLQuery($Query) {
 	  }
 }
 
-<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
+#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  
 Function Get-NetshFireWallrule {
 	Param(
 		[String]$RuleName
@@ -184,7 +184,7 @@ MySQLQuery $Query
 #                                     #
 #######################################
 
-#	Set time for so interval queries align
+#	Set time so interval queries align
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
 
 #	Pickup entries marked SAFE through webadmin
@@ -326,7 +326,7 @@ MySQLQuery $Query
 #                                     #
 #######################################
 
-<#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1  #>
+#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1  
 $LSRegex = "($LANSubnet\.\d{1,3})"
 $EndTime = $QueryTime
 $StartTime = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $Interval)).ToString("HH:mm:ss")
@@ -355,8 +355,8 @@ $FirewallLogObjects | foreach-object {
 #                                     #
 #######################################
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: "One Hit Wonders" 
-#	Release all IPs that never returned after specified number of days
+<#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: "One Hit Wonders"  #>
+<#	Release all IPs that never returned after specified number of days  #>
 <#
 $Days = "30" 	# <-- Number of days for automatic expiry                   
 $Query = "
@@ -381,7 +381,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: Spamhaus 
+<#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Reason: Spamhaus  #>
 <#
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
@@ -396,7 +396,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Country: Hungary 
+<#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - Country: Hungary  #>
 <#
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
@@ -411,7 +411,7 @@ MySQLQuery $Query | foreach {
 }
 #>
 
-#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - All IPs 
+<#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - All IPs #>
 <#
 $Days = "60" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND flag IS NULL"
