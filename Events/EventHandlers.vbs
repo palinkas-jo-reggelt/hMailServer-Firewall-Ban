@@ -183,7 +183,7 @@ Function FWBan(sIPAddress, sReason, sHELO)
    On Error Goto 0
 
    Dim strSQL, oDB : Set oDB = GetDatabaseObject
-   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,countrycode,country,helo,flag) VALUES (NOW(),'" & sIPAddress & "','" & sReason & "','" & oGeoip("countryCode") & "','" & oGeoip("country") & "','" & sHELO & "','4');"
+   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,country,helo,flag) VALUES (NOW(),'" & sIPAddress & "','" & sReason & "','" & oGeoip("country") & "','" & sHELO & "','4');"
    Call oDB.ExecuteSQL(strSQL)
 End Function
 
