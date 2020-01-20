@@ -187,6 +187,16 @@ Function FWBan(sIPAddress, sReason, sHELO)
    Call oDB.ExecuteSQL(strSQL)
 End Function
 
+Function PTRLookup(strIP)
+	Dim strLookup, strPTR
+	With CreateObject("DNSLibrary.DNSResolver")
+		strLookup = .PTR(strIP)
+	End With
+	If strLookup = Empty Then strPTR = "No.PTR.Record" Else strPTR = strLookup End If
+	PTRLookup = strPTR
+End Function
+
+
 '******************************************************************************************************************************
 '********** hMailServer Triggers                                                                                     **********
 '******************************************************************************************************************************
@@ -210,6 +220,9 @@ Sub OnHELO(oClient)
 	Dim bolGeoIP : bolGeoIP = False
 
 	strPort = Trim(Mid("SMTP POP  IMAP SMTPSSUBM IMAPSPOPS ", InStr("25   110  143  465  587  993  995  ", oClient.Port), 5))
+
+	REM	- Grab PTR-Record
+	PTR_Record = PTRLookup(oClient.IPAddress)
 
 	'	Exclude local LAN & Backup from test after recording connection
 	If (Left(oClient.IPAddress, 8) = "192.168.") Then Exit Sub
@@ -306,6 +319,17 @@ Sub OnHELO(oClient)
 		Call Disconnect(oClient.IPAddress)
 		Call AutoBan(oClient.IPAddress, "Invalid HELO - " & oClient.HELO, 1, "h")
 		Call FWBan(oClient.IPAddress, "SH-DBL", oClient.HELO)
+		Exit Sub
+	End If   
+
+	REM	- Test PTR against Spamhaus DBL
+	If IsInSpamHausDBL(PTR_Record) Then
+		Result.Value = 2
+		Result.Message = ". 15 This server does not accept connections blacklisted by Spamhaus.org. If you believe that this failure is in error, please contact the intended recipient via alternate means."
+		Call Disconnect(oClient.IPAddress)
+		Call FWBan(oClient.IPAddress, "SH-DBL-PTR", oClient.HELO, PTR_Record)
+		Call AutoBan(oClient.IPAddress, "SH-DBL-PTR - " & PTR_Record, 1, "h")
+		Call AccRejDB(msgID, oClient.Port, "OnAcceptMessage", "REJECTED", "SH-DBL-PTR", oClient.IPAddress, PTR_Record)
 		Exit Sub
 	End If   
 

@@ -23,14 +23,14 @@ ____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _
 
 #>
 
-###   MYSQL VARIABLES   ####################################################
-#                                                                          #
-$MySQLAdminUserName = 'hmailserver'                                        #
-$MySQLAdminPassword = 'supersecretpassword'                                #
-$MySQLDatabase      = 'hmailserver'                                        #
-$MySQLHost          = 'localhost'                                          #
-#                                                                          #
-############################################################################
+### MySQL Variables #############################
+                                                #
+$MySQLAdminUserName = 'hmailserver'             #
+$MySQLAdminPassword = 'supersecretpassword'     #
+$MySQLDatabase      = 'hmailserver'             #
+$MySQLHost          = 'localhost'               #
+                                                #
+#################################################
 
 Function MySQLQuery ($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase

@@ -28,19 +28,20 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-###   MYSQL VARIABLES   ########################################################
-#                                                                              #
-$MySQLAdminUserName = 'hmailserver'                                            #
-$MySQLAdminPassword = 'supersecretpassword'                                    #
-$MySQLDatabase = 'hmailserver'                                                 #
-$MySQLHost = '127.0.0.1'                                                       #
-$DBErrorLog = "$PSScriptRoot\DBErrorConsolidateRules.log"                      #
-#                                                                              #
-################################################################################
+### MySQL Variables #############################
+                                                #
+$MySQLAdminUserName = 'hmailserver'             #
+$MySQLAdminPassword = 'supersecretpassword'     #
+$MySQLDatabase      = 'hmailserver'             #
+$MySQLHost          = 'localhost'               #
+                                                #
+#################################################
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
+	  $Today = (Get-Date).ToString("yyyyMMdd")
+	  $DBErrorLog = "$PSScriptRoot\$Today-DBError-Retroactive-Consolidate.log"
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString

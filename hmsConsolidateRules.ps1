@@ -14,7 +14,7 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 .FUNCTIONALITY
 	* Queries database for previous day's bans
-	* Creates new firewall rule containing all of previous day's banned IPs 
+	* Creates new firewall containing all of previous day's banned IPs 
 	* Deletes all of previous day's one-IP-per firewall rules
 
 .NOTES
@@ -24,14 +24,14 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-###   MYSQL VARIABLES   ########################################################
-#                                                                              #
-$MySQLAdminUserName = 'hmailserver'                                            #
-$MySQLAdminPassword = 'supersecretpassword'                                    #
-$MySQLDatabase = 'hmailserver'                                                 #
-$MySQLHost = '127.0.0.1'                                                       #
-#                                                                              #
-################################################################################
+### MySQL Variables #############################
+                                                #
+$MySQLAdminUserName = 'hmailserver'             #
+$MySQLAdminPassword = 'supersecretpassword'     #
+$MySQLDatabase      = 'hmailserver'             #
+$MySQLHost          = 'localhost'               #
+                                                #
+#################################################
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
@@ -63,37 +63,67 @@ If (-not(Test-Path "$PSScriptRoot\ConsolidateRules")) {
 
 #	Get BanDate (Yesterday) and establish csv
 $BanDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd")
-$ConsRules = "$PSScriptRoot\hmsFWBRule-$BanDate.csv"
 
-#	Query database for yesterday's bans, export to csv
-$Query = "SELECT id, ipaddress FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
-MySQLQuery $Query | Export-CSV $ConsRules
+$Query = "SELECT COUNT(id) AS countid FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
+MySQLQuery $Query | ForEach {
+	[int]$CountIP = $_.countid
+}
 
-#	Import csv, output IPs only to txt file
-Import-CSV $ConsRules | ForEach {
-	Write-Output $_.ipaddress
-} | Out-File "$ConsRules.txt"
+$NewLine = [System.Environment]::NewLine
+$N = 0
+$Rows = 400
+$Limit = [math]::ceiling($CountIP / $Rows)
 
-#	Make sure txt file path exists
-If (Test-Path "$ConsRules.txt"){
-	$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
-	$RuleData = Get-Content "$ConsRules.txt" | Select-Object -First 1
-	#	Make sure txt file is populated with IP data (if not, you'll have a rule banning all local and all remote IPs)
-	If ($RuleData -match $RegexIP){
+Do {
+	$X = ($N).ToString("000")
+	$ConsRules = "$PSScriptRoot\ConsolidateRules\hmsFWBRule-"+$BanDate+"_"+$X+".csv"
+	$Query = "
+		SELECT ipaddress 
+		FROM hm_fwban 
+		WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL 
+		ORDER BY timestamp DESC
+		LIMIT $($N * $Rows), $Rows
+	"
+	MySQLQuery $Query | Export-CSV $ConsRules
+	
+	$N++
+}
+Until ($N -eq $Limit)
 
-		#	Replace all newlines and last comma in order to create a single string that can be used to populate firewall rule remoteaddress	
-		$NL = [System.Environment]::NewLine
-		$Content=[String] $Template= [System.IO.File]::ReadAllText("$ConsRules.txt")
-		$Content.Replace($NL,",") | Out-File "$ConsRules.rule.txt"
-		(Get-Content -Path "$ConsRules.rule.txt") -Replace ',$','' | Set-Content -Path "$ConsRules.rule.txt"
+$Location = "$PSScriptRoot\ConsolidateRules"
+$RegexName = 'hmsFWBRule\-202[0-9]\-[0-9][0-9]\-[0-9][0-9]_[0-9]{3}\.csv$'
+$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
+Get-ChildItem $Location | Where-Object {$_.name -match $RegexName} | ForEach {
+	$FileName = $_.name
+	$FilePathName = "$Location\$FileName"
+	$RuleName = ($FileName).Replace(".csv", "")
+	import-csv -Path $FilePathName | ForEach {
+		$IP = $_.ipaddress
+		$Query = "UPDATE hm_fwban SET rulename = '$RuleName' WHERE ipaddress = '$IP'"
+		MySQLQuery($Query)
+		Write-Output $IP
+	}  | Out-File "$FilePathName.txt"
 
-		#	Add firewall rule with string containing all IPs from yesterday's bans
-		& netsh advfirewall firewall add rule name="hMS FWBan $BanDate" description="FWB Rules for $BanDate" dir=in interface=any action=block remoteip=$(Get-Content "$ConsRules.rule.txt")
+	#	Make sure txt file path exists
+	If (Test-Path "$FilePathName.txt"){
+		$RuleData = Get-Content "$FilePathName.txt" | Select-Object -First 1
+		#	Make sure txt file is populated with IP data (if not, you'll have a rule banning all local and all remote IPs)
+		If ($RuleData -match $RegexIP){
 
-		#	Read csv and delete each of yesterday's individual IP firewall rules
-		Import-CSV $ConsRules | ForEach {
-			$IP = $_.ipaddress
-			& netsh advfirewall firewall delete rule name=`"$IP`"
+			#	Replace all newlines and last comma in order to create a single string that can be used to populate firewall rule remoteaddress	
+			$NL = [System.Environment]::NewLine
+			$Content=[String] $Template= [System.IO.File]::ReadAllText("$FilePathName.txt")
+			$Content.Replace($NL,",") | Out-File "$FilePathName.rule.txt"
+			(Get-Content -Path "$FilePathName.rule.txt") -Replace ',$','' | Set-Content -Path "$FilePathName.rule.txt"
+
+			#	Add firewall rule with string containing all IPs from yesterday's bans
+			& netsh advfirewall firewall add rule name="$RuleName" description="FWB Rules for $BanDate" dir=in interface=any action=block remoteip=$(Get-Content "$FilePathName.rule.txt")
+
+			#	Read csv and delete each of yesterday's individual IP firewall rules
+			Import-CSV $FilePathName | ForEach {
+				$IP = $_.ipaddress
+				& netsh advfirewall firewall delete rule name=`"$IP`"
+			}
 		}
 	}
 }

@@ -25,20 +25,20 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-###   MYSQL VARIABLES   ########################################################
-#                                                                              #
-$MySQLAdminUserName = 'hmailserver'                                            #
-$MySQLAdminPassword = 'supersecretpassword'                                    #
-$MySQLDatabase = 'hmailserver'                                                 #
-$MySQLHost = '127.0.0.1'                                                       #
-#                                                                              #
-###   FIREWALL VARIABLES   #####################################################
+### MySQL Variables #############################
+                                                #
+$MySQLAdminUserName = 'hmailserver'             #
+$MySQLAdminPassword = 'supersecretpassword'     #
+$MySQLDatabase      = 'hmailserver'             #
+$MySQLHost          = 'localhost'               #
+                                                #
+#################################################
 
 Function MySQLQuery($Query) {
 	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
 	Try {
 	  $Today = (Get-Date).ToString("yyyyMMdd")
-	  $DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
+	  $DBErrorLog = "$PSScriptRoot\$Today-DBError-Deduplicate.log"
 	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
 	  $Connection.ConnectionString = $ConnectionString
@@ -57,15 +57,32 @@ Function MySQLQuery($Query) {
 	  }
 }
 
+<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
+Function Get-NetshFireWallrule {
+	Param(
+		[String]$RuleName
+	)
+	$Rules = & netsh advfirewall firewall show rule name="$ruleName"
+	$return = @()
+		$HAsh = [Ordered]@{}
+		foreach ($Rule in $Rules){
+			switch -Regex ($Rule){
+				'^Rule Name:\s+(?<RuleName>.*$)'{$Hash.RuleName = $MAtches.RuleName}
+				'^RemoteIP:\s+(?<RemoteIP>.*$)'{$Hash.RemoteIP = $Matches.RemoteIP;$obj = New-Object psobject -Property $Hash;$return += $obj}
+			}
+		}
+	return $return
+}
+
 #	Establish files and regex
 $FWRuleList = "$PSScriptRoot\fwrulelist.txt"
 $DupList = "$PSScriptRoot\fwduplist.txt"
-$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
+$RegexIP = '^(([0-9]{1,3}\.){3}[0-9]{1,3})$'
 
 #	Read rules from firewall and output only ones with IP name (unconsolidated rules)
-Get-NetFirewallRule | foreach-object {
-	if ($_.DisplayName -match $RegexIP){
-	write-output $_.DisplayName
+Get-NetshFireWallrule ("all") | ForEach {
+	If ($_.RuleName -match $RegexIP){
+		Write-Output $_.RuleName
 	}
 } | out-file $FWRuleList
 
@@ -85,10 +102,9 @@ Get-Content $DupList | ForEach {
 Get-Content $FWRuleList | ForEach {
 	$IP = $_
 	#	Query all IPs and find flag status
-	$Query = "SELECT flag FROM hm_fwban WHERE ip = '$IP'"
+	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP'"
 	MySQLQuery $Query | ForEach {
 		$Flag = $_.flag
-		Write-Output $Flag
 	}
 	#	If flag not null, then rule should not exist, so delete it
 	If ($Flag -ne $NULL) {
