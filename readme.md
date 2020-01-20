@@ -52,14 +52,14 @@ Obviously, if you're upgrading, you will want to copy all of the files to your i
 netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
 netsh advfirewall set allprofiles logging droppedconnections enable
 ```
-You may need to edit this with Group Policy Editor. You may also need to give NT SERVICE\MPSSVC full control permissions on the folder the log resides in or the log may not automatically roll over after reaching maximum size. See here: https://serverfault.com/a/859949
+   + You may need to edit this with Group Policy Editor. You may also need to give NT SERVICE\MPSSVC full control permissions on the folder the log resides in or the log may not automatically roll over after reaching maximum size. See here: https://serverfault.com/a/859949
 
 7) Create scheduled task to run every 5 minutes with action: 
-```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
+	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 8) Create scheduled task to run DAILY AT 12:01 am with actions: 
-```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
-```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
+	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
+	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 9) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
 10) Sit back and watch your firewall rule count grow while your spam logs get quiet.
