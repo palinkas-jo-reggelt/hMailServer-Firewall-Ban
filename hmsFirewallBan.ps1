@@ -143,6 +143,7 @@ $Query = "
 	  flag int(1) DEFAULT NULL,
 	  helo varchar(192) DEFAULT NULL,
 	  ptr varchar(192) DEFAULT NULL,
+	  rulename varchar(192) DEFAULT NULL,
 	  PRIMARY KEY (ID),
 	  UNIQUE KEY ID (ID)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
