@@ -20,8 +20,21 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 	* Handles rule auto expiration
 
 .NOTES
-	* Create scheduled task to run every 5 minutes
+	Create scheduled task to run every 5 minutes
+
+	Flag Logic:
 	
+	Flag	Meaning
+	====	=======
+	NULL	Has been added as a firewall rule
+	1   	Has been released from firewall (firewall rule deleted)
+	2   	Marked for release by manual release (release.php) but not firewall rule not yet deleted - after firewall rule deleted, reset flag to 1
+	3   	Marked for reban by manual reban (reban.php) but firewall rule not yet added - after firewall rule added, reset flag to NULL
+	4   	Default entry - signifies IP has been added to database but firewall rule has not yet been added - after firewall rule added, reset flag to NULL
+	5   	Marked SAFE in webadmin but firewall rule not yet deleted - permanently removes firewall rule and prevents future bans
+	6   	Marked SAFE and firewal rule deleted
+	7   	Marked for removal from SAFE list and firewall rule added
+
 .EXAMPLE
 
 #>

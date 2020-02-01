@@ -15,56 +15,116 @@
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ipRange'])) {
-		if(preg_match("/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){1,2}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
-			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange'])))).".0/24";
-		} else {
+		if(preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
+			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange']))))."/32";
+		} else if (preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))$/", ($_GET['ipRange']))) {
 			$ipRange = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange'])));
+		} else {
+			$ipRange = "";
 		}
 	} else {
 		$ipRange = "";
 	}
 
-	if (empty($ipRange)){ echo "Error: No IP range specified\"<br /><br />"; } 
-	else {
+	function ipRangeFinder($cidr) {
+	   $range = array();
+	   $cidr = explode('/', $cidr);
+	   $range[0] = long2ip((ip2long($cidr[0])) & ((-1 << (32 - (int)$cidr[1]))));
+	   $range[1] = long2ip((ip2long($range[0])) + pow(2, (32 - (int)$cidr[1])) - 1);
+	   return $range;
+	}
+
+	if (empty($ipRange)){ 
+		echo "Error: <br />- no IP range specified or <br />- malformed IP range/CIDR or <br />- CIDR outside program bounds of /22 to /32"; 
+	} else {
+
+		$ips = ipRangeFinder($ipRange);
+		$iplo = $ips[0];
+		$iphi = $ips[1];
+
+		$range = explode("/", $ipRange);
+		$rcidr = $range[1]; 
+		$ip_count = 1 << (32 - $rcidr);
+
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
-		$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE `ipaddress` LIKE '{$ipRange}%' AND (flag=1 OR flag=2)";
+		$total_pages_sql = "
+			SELECT COUNT(*) AS count 
+			FROM hm_fwban 
+			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
+			ORDER BY INET_ATON(ipaddress) ASC
+		";
 		$result = mysqli_query($con,$total_pages_sql);
 		$total_rows = mysqli_fetch_array($result)[0];
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, country, flag FROM hm_fwban WHERE `ipaddress` LIKE '{$ipRange}%' AND (flag=1 OR flag=2) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
+		$sql = "
+			SELECT 
+				id, 
+				DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, 
+				ipaddress, 
+				ban_reason, 
+				country, 
+				flag 
+			FROM hm_fwban 
+			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
+			ORDER BY TimeStamp DESC 
+			LIMIT ".$offset.", ".$no_of_records_per_page."
+		";
 		$res_data = mysqli_query($con,$sql);
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
-		if ($total_rows == 0){
-			echo "<br /><br />No released results for IP range \"<b>".$ipRange."</b>\". Click here to <a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Reban\" onclick=\"return confirm('Are you sure you want to ban IP range ".$ipRange."?')\">manually ban</a>.";
+		// if ($total_rows == 0){
+
+			// echo "<br /><br />No released results for IP range \"<b>".$ipRange."</b>\". Click here to <a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Reban\" onclick=\"return confirm('Are you sure you want to ban IP range ".$ipRange."?')\">manually ban</a>.";
+		// } else {
+
+		echo "<h2>IP Range Information</h2>";
+		echo "<table class='section'>
+			<tr>
+				<th>IP Range</th>
+				<th>Network Address</th>
+				<th>Broadcast Address</th>
+				<th>IPs in range</th>
+			</tr>
+			<tr>
+				<td style=\"text-align:center;\">".$ipRange."</td>
+				<td style=\"text-align:center;\">".$iplo."</td>
+				<td style=\"text-align:center;\">".$iphi."</td>
+				<td style=\"text-align:center;\">".$ip_count."</td>
+			</tr>
+			</table><br /><br />";
+
+		echo "<h2>What would you like to ban?</h2>";
+		echo "Click \"YES\" under column \"RS\" to reban a single address (if previously released).<br /><br />";
+		echo "<a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Ban\" onclick=\"return confirm('Are you sure you want to ban all ".number_format($ip_count)." IPs in range ".$ipRange."?')\">Click here</a> to ban all <b>".number_format($ip_count)."</b> IPs in range. Duplicates will be deleted from the database prior to adding firewall rules.<br />";
+		echo "<br /><br />";
+		if ($total_pages == 0) {
+			echo "No results from Firewall Ban found within IP range ".$ipRange;
 		} else {
-			echo "<h2>What would you like to ban?</h2>";
-			echo "Click \"YES\" under column \"RS\" to reban a single address.<br /><br />";
-			echo "<a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Reban\" onclick=\"return confirm('Are you sure you want to release IP range ".$ipRange."?')\">Click here</a> to reban all. Duplicates will be deleted from the database prior to adding firewall rule.<br />";
-			echo "<br /><br />";
-			echo "Results for IP range \"<b>".$ipRange."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Firewall Ban results for IP range \"<b>".$ipRange."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
 					<th>IP Address</th>
 					<th>Reason</th>
 					<th>Country</th>
-					<th>RS</th>
+					<th style=\"text-align:center;\">RS</th>
 				</tr>";
 			while($row = mysqli_fetch_array($res_data)){
 
-			echo "<tr>";
+				echo "<tr>";
 
-			echo "<td>".$row['TimeStamp']."</td>";
-			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-			echo "<td>".$row['ban_reason']."</td>";
-			echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
-			if($row['flag'] == 1 || $row['flag'] == 2) echo "<td><a href=\"./reban-ip.php?submit=Reban&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to reban ".$row['ipaddress']."?')\">YES</a></td>";
-			else echo "<td>NO</td>";
+				echo "<td>".$row['TimeStamp']."</td>";
+				echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+				echo "<td>".$row['ban_reason']."</td>";
+				echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+				if($row['flag'] == 1 || $row['flag'] == 2) echo "<td style=\"text-align:center;\"><a href=\"./reban-ip.php?submit=Reban&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to reban ".$row['ipaddress']."?')\">YES</a></td>";
+			elseif($row['flag']==NULL||$row['flag']==3||$row['flag']==4||$row['flag']==7) echo "<td style=\"text-align:center;\">NO</td>";
+			elseif($row['flag'] == 6 || $row['flag'] == 5) echo "<td style=\"text-align:center;\">SAF</td>";
+			else echo "<td style=\"text-align:center;\">ERR</td>";
 
-			echo "</tr>";
+				echo "</tr>";
 			}
 			echo "</table>";
 
@@ -81,6 +141,8 @@
 		}
 		mysqli_close($con);
 	}
+	
+	// }
 ?>
 </div>
 

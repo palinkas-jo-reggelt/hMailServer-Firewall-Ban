@@ -110,15 +110,15 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Manually ban an IP range:</h2>
-		Enter an IP or IP range. Will search for matches and if found will reban. If no matches found will add IP to firewall ban list with reason: "Manual". Not dependent on previous bans/releases.<br /><br />
+		Enter an IP or IP range. Will search for matches and if found will reban. If no matches found will add IP to firewall ban list with reason "Manual". Not dependent on previous bans/releases.<br /><br />
 		<form autocomplete="off" action="reban-iprange.php" method="GET">
-			<input type="text" pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2,3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" title="255.255.255.255 OR 255.255.255" id="ipRange" name="ipRange">
-			<input type="submit" name="submit" value="Ban">
+			<input type="text" pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))?$" title="255.255.255.255 OR 255.255.255.255/23" id="ipRange" name="ipRange">
+			<input type="submit" name="submit" value="Review">
 		</form>
 		<br />IP Ranges MUST be in: <br />
 		<b>255.255.255.255</b> OR <br />
-		<b>255.255.255</b> format. <br /><br />
-		IP ranges will be automatically converted to CIDR for insertion as firewall rule.
+		<b>255.255.255.255/24</b> format. <br /><br />
+		Single IPs will be automatically converted to /32 CIDR for insertion as firewall rule. Netmask /22 - /32 only. Click to review options before committing to a network ban.
 	</div>
 
 	<div class="secright">
