@@ -108,7 +108,7 @@ Function Get-NetshFireWallrule {
 Function RemRuleIP($IP){
 	$Query = "SELECT rulename FROM hm_fwban WHERE ipaddress = '$IP'"
 	MySQLQuery $Query | ForEach {
-		$RuleName = $_.rulenamme
+		$RuleName = $_.rulename
 	}
 
 	If (-not($RuleName)){
