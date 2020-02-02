@@ -68,8 +68,8 @@
 				$id = $row['id'];
 			}
 			if (empty($ipaddressdb)){
-				echo "IP ".$ip." not found in firewall ban database - no action taken<br />";
-			} else {
+				// echo "IP ".$ip." not found in firewall ban database - no action taken<br />";
+			// } else {
 				if (!(($flag==1)||($flag==2)||($flag==5)||($flag==6))){
 					$sql_update_manban = "UPDATE hm_fwban SET flag=2 WHERE id=".$id;
 					$result = mysqli_query($con,$sql_update_manban);
