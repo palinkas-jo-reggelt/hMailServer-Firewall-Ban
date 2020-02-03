@@ -111,10 +111,11 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.65 consolidated user variables into a single INI file; added INI parsing and array inclusion to powershell files
 - 0.64 bug fix - stoopid typo
 - 0.63 housekeeping
 - 0.62 changed IP Range add/release to work with actual CIDR ranges (/22 - /32)
-- 0.61 added PTR to database; added rule splitting so maximum IPs/rule = 400; removed all reference to NetFirewall Powershell cmdlet and replaced with Netsh for compatibility
+- 0.61 added PTR to database (no more "gethostbyaddr" - PTR called locally from database); added rule splitting so maximum IPs/rule = 400; removed all reference to NetFirewall Powershell cmdlet and replaced with Netsh for compatibility;
 - 0.60 added popup PTR detail on search.php (PTR derived via PHP "gethostbyaddr")
 - 0.59 housekeeping
 - 0.58 added hmsDuplicateRuleFinder.ps1 to find duplicate and orphaned firewall rules

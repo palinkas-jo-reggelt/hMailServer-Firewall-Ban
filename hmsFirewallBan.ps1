@@ -39,56 +39,58 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-###   MYSQL VARIABLES   ########################################################
-#                                                                              #
-$MySQLAdminUserName = 'hmailserver'                                            #
-$MySQLAdminPassword = 'supersecretpassword'                                    #
-$MySQLDatabase      = 'hmailserver'                                            #
-$MySQLHost          = 'localhost'                                              #
-#                                                                              #
-###   FIREWALL VARIABLES   #####################################################
-#                                                                              #
-$LANSubnet   = '192.168.99' # <-- 3 octets only, please                        #
-$MailPorts   = '25|465|587|110|995|143|993' # <-- add custom ports if in use   #
-$FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'           #
-#                                                                              #
-###   INTERVAL VARIABLES   #####################################################
-#                                                                              #
-$Interval  = 5   # <-- (minutes) must match the frequency of Win Sched Task    #
-$IDSExpire = 2   # <-- (days) expire IDS entries that have not resulted in ban #
-#                                                                              #
-################################################################################
-
 #######################################
 #                                     #
 #             FUNCTIONS               #
 #                                     #
 #######################################
 
-Function MySQLQuery($Query) {
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
-	Try {
-	  $Today = (Get-Date).ToString("yyyyMMdd")
-	  $DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-	  $Connection.ConnectionString = $ConnectionString
-	  $Connection.Open()
-	  $Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-	  $DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-	  $DataSet = New-Object System.Data.DataSet
-	  $RecordCount = $dataAdapter.Fill($dataSet, "data")
-	  $DataSet.Tables[0]
-	  }
-	Catch {
-	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	 }
-	Finally {
-	  $Connection.Close()
-	  }
+<# https://stackoverflow.com/a/422529 #>
+Function Parse-IniFile ($file) {
+	$ini = @{}
+
+	$section = "NO_SECTION"
+	$ini[$section] = @{}
+
+	switch -regex -file $file {
+		"^\[(.+)\]$" {
+			$section = $matches[1].Trim()
+			$ini[$section] = @{}
+		}
+		"^\s*([^#].+?)\s*=\s*(.*)" {
+			$name,$value = $matches[1..2]
+			if (!($name.StartsWith(";"))) {
+				$ini[$section][$name] = $value.Trim()
+			}
+		}
+	}
+	$ini
 }
 
-#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  
+Function MySQLQuery($Query) {
+	$Today = (Get-Date).ToString("yyyyMMdd")
+	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
+	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
+	Try {
+		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+		$Connection.ConnectionString = $ConnectionString
+		$Connection.Open()
+		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+		$DataSet = New-Object System.Data.DataSet
+		$RecordCount = $dataAdapter.Fill($dataSet, "data")
+		$DataSet.Tables[0]
+	}
+	Catch {
+		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
+	}
+	Finally {
+		$Connection.Close()
+	}
+}
+
+<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
 Function Get-NetshFireWallrule {
 	Param(
 		[String]$RuleName
@@ -134,6 +136,9 @@ Function RemRuleIP($IP){
 		& netsh advfirewall firewall add rule name=`"$RuleName`" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
 	}
 }
+
+#	Load User Variables
+$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 #######################################
 #                                     #
@@ -196,6 +201,9 @@ MySQLQuery $Query
 #       FIREWALL RULES SCRIPTS        #
 #                                     #
 #######################################
+
+#	Establish scheduled task interval 
+$Interval = $ini['Interval']['TaskInterval']
 
 #	Set time so interval queries align
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
@@ -330,7 +338,8 @@ MySQLQuery $Query | foreach {
 }
 
 #	Expire old IDS entries 
-$Query = "DELETE FROM hm_ids WHERE timestamp < now() - interval $IDSExpire day"
+
+$Query = "DELETE FROM hm_ids WHERE timestamp < now() - interval $($ini['Interval']['IDSExpire']) hour"
 MySQLQuery $Query
 
 #######################################
@@ -339,8 +348,11 @@ MySQLQuery $Query
 #                                     #
 #######################################
 
-#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1  
-$LSRegex = "($LANSubnet\.\d{1,3})"
+<#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1  #>
+$LSRegex = "$($ini['Firewall']['LANSubnet'])\.\d{1,3}"
+write-host $LSRegex
+$MailPorts = $ini['Firewall']['MailPorts']
+$FirewallLog = $ini['Firewall']['FirewallLog']
 $EndTime = $QueryTime
 $StartTime = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $Interval)).ToString("HH:mm:ss")
 $DateEnd = $QueryTime

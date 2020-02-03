@@ -23,53 +23,62 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-### MySQL Variables #############################
-                                                #
-$MySQLAdminUserName = 'hmailserver'             #
-$MySQLAdminPassword = 'supersecretpassword'     #
-$MySQLDatabase      = 'hmailserver'             #
-$MySQLHost          = 'localhost'               #
-                                                #
-### Email Variables #############################
-                                                #
-$EmailFrom          = "notify@gmail.com"        #
-$EmailTo            = "me@mydomain.com"         #
-$SMTPServer         = "localhost"               #
-$SMTPAuthUser       = "notify@gmail.com"        #
-$SMTPAuthPass       = "supersecretpassword"     #
-                                                #
-#################################################
+<# https://stackoverflow.com/a/422529 #>
+Function Parse-IniFile ($file) {
+	$ini = @{}
+
+	$section = "NO_SECTION"
+	$ini[$section] = @{}
+
+	switch -regex -file $file {
+		"^\[(.+)\]$" {
+			$section = $matches[1].Trim()
+			$ini[$section] = @{}
+		}
+		"^\s*([^#].+?)\s*=\s*(.*)" {
+			$name,$value = $matches[1..2]
+			if (!($name.StartsWith(";"))) {
+				$ini[$section][$name] = $value.Trim()
+			}
+		}
+	}
+	$ini
+}
+
+Function MySQLQuery($Query) {
+	$Today = (Get-Date).ToString("yyyyMMdd")
+	$DBErrorLog = "$PSScriptRoot\$Today-RetroAddPTR.log"
+	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
+	Try {
+		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+		$Connection.ConnectionString = $ConnectionString
+		$Connection.Open()
+		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+		$DataSet = New-Object System.Data.DataSet
+		$RecordCount = $dataAdapter.Fill($dataSet, "data")
+		$DataSet.Tables[0]
+	}
+	Catch {
+		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
+	}
+	Finally {
+		$Connection.Close()
+	}
+}
 
 Function EmailResults {
 	$Subject = "Retroactive PTR Results" 
 	$Body = $Msg
-	$SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) 
-	$SMTPClient.EnableSsl = $true 
-	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPAuthUser, $SMTPAuthPass); 
-	$SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body)
+	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], 587) 
+	$SMTPClient.EnableSsl = $($ini['Email']['SSL'])
+	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($ini['Email']['SMTPAuthUser'], $ini['Email']['SMTPAuthPass']); 
+	$SMTPClient.Send($ini['Email']['FromAddress'], $ini['Email']['Recipient'], $Subject, $Body)
 }
 
-Function MySQLQuery($Query) {
-	$DBErrorLog = "$PSScriptRoot\DBError-RetroAddPTR.log"
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
-	Try {
-	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-	  $Connection.ConnectionString = $ConnectionString
-	  $Connection.Open()
-	  $Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-	  $DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-	  $DataSet = New-Object System.Data.DataSet
-	  $RecordCount = $dataAdapter.Fill($dataSet, "data")
-	  $DataSet.Tables[0]
-	  }
-	Catch {
-	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	 }
-	Finally {
-	  $Connection.Close()
-	  }
-}
+#	Load User Variables
+$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 $StartTime = (Get-Date -f G)
 

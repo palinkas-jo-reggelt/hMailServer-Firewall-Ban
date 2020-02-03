@@ -25,36 +25,49 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-### MySQL Variables #############################
-                                                #
-$MySQLAdminUserName = 'hmailserver'             #
-$MySQLAdminPassword = 'supersecretpassword'     #
-$MySQLDatabase      = 'hmailserver'             #
-$MySQLHost          = 'localhost'               #
-                                                #
-#################################################
+<# https://stackoverflow.com/a/422529 #>
+Function Parse-IniFile ($file) {
+	$ini = @{}
+
+	$section = "NO_SECTION"
+	$ini[$section] = @{}
+
+	switch -regex -file $file {
+		"^\[(.+)\]$" {
+			$section = $matches[1].Trim()
+			$ini[$section] = @{}
+		}
+		"^\s*([^#].+?)\s*=\s*(.*)" {
+			$name,$value = $matches[1..2]
+			if (!($name.StartsWith(";"))) {
+				$ini[$section][$name] = $value.Trim()
+			}
+		}
+	}
+	$ini
+}
 
 Function MySQLQuery($Query) {
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
+	$Today = (Get-Date).ToString("yyyyMMdd")
+	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
+	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
 	Try {
-	  $Today = (Get-Date).ToString("yyyyMMdd")
-	  $DBErrorLog = "$PSScriptRoot\$Today-DBError-Deduplicate.log"
-	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-	  $Connection.ConnectionString = $ConnectionString
-	  $Connection.Open()
-	  $Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-	  $DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-	  $DataSet = New-Object System.Data.DataSet
-	  $RecordCount = $dataAdapter.Fill($dataSet, "data")
-	  $DataSet.Tables[0]
-	  }
+		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
+		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
+		$Connection.ConnectionString = $ConnectionString
+		$Connection.Open()
+		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
+		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
+		$DataSet = New-Object System.Data.DataSet
+		$RecordCount = $dataAdapter.Fill($dataSet, "data")
+		$DataSet.Tables[0]
+	}
 	Catch {
-	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	 }
+		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
+	}
 	Finally {
-	  $Connection.Close()
-	  }
+		$Connection.Close()
+	}
 }
 
 <#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
@@ -73,6 +86,9 @@ Function Get-NetshFireWallrule {
 		}
 	return $return
 }
+
+#	Load User Variables
+$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 #	Establish files and regex
 $FWRuleList = "$PSScriptRoot\fwrulelist.txt"
