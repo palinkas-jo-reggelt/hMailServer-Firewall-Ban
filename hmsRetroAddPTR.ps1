@@ -70,9 +70,9 @@ Function MySQLQuery($Query) {
 
 Function EmailResults {
 	$Subject = "Retroactive PTR Results" 
-	$Body = $Msg
-	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], 587) 
-	$SMTPClient.EnableSsl = $($ini['Email']['SSL'])
+	$Body = (Get-Content -Path $Msg | Out-String )
+	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], $ini['Email']['SMTPPort']) 
+	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($ini['Email']['SSL'])
 	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($ini['Email']['SMTPAuthUser'], $ini['Email']['SMTPAuthPass']); 
 	$SMTPClient.Send($ini['Email']['FromAddress'], $ini['Email']['Recipient'], $Subject, $Body)
 }

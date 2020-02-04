@@ -111,6 +111,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.66 improved powershell email function
 - 0.65 consolidated user variables into a single INI file; added INI parsing and array inclusion to powershell files
 - 0.64 bug fix - stoopid typo
 - 0.63 housekeeping

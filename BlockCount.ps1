@@ -68,27 +68,42 @@ Function MySQLQuery($Query) {
 	}
 }
 
+Function EmailResults {
+	$Subject = "Retroactive PTR Results" 
+	$Body = (Get-Content -Path $EmailBody | Out-String )
+	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], $ini['Email']['SMTPPort']) 
+	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($ini['Email']['SSL'])
+	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($ini['Email']['SMTPAuthUser'], $ini['Email']['SMTPAuthPass']); 
+	$SMTPClient.Send($ini['Email']['FromAddress'], $ini['Email']['Recipient'], $Subject, $Body)
+}
+
 #	Load User Variables
 $ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
-Write-Output " "
-Write-Output " "
+$EmailBody = "$PSScriptRoot\BlockCountEmailBody.txt"
 
-Write-Output "_  _ _  _  __  _ _    ____ ____ ____ _  _ ____ ____     "
-Write-Output "|__| |\/| /__\ | |    [__  |___ |__/ |  | |___ |__/     "
-Write-Output "|  | |  |/    \| |___ ___] |___ |  \  \/  |___ |  \     "
-Write-Output "                                                        "
-Write-Output "____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _ "
-Write-Output "|___ | |__/ |___ | | | /__\ |    |       |__] /__\ |\ | "
-Write-Output "|    | |  \ |___ |_|_|/    \|___ |___    |__]/    \| \| "
-Write-Output ""
-Write-Output ""
+#	Delete old files if exist
+If (Test-Path $EmailBody) {Remove-Item -Force -Path $EmailBody}
 
-Write-Output "Block Count - Count number of drops from firewall log"
-Write-Output " "
+Write-Output "
+_  _ _  _  __  _ _    ____ ____ ____ _  _ ____ ____     
+|__| |\/| /__\ | |    [__  |___ |__/ |  | |___ |__/     
+|  | |  |/    \| |___ ___] |___ |  \  \/  |___ |  \     
+                                                        
+____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _ 
+|___ | |__/ |___ | | | /__\ |    |       |__] /__\ |\ | 
+|    | |  \ |___ |_|_|/    \|___ |___    |__]/    \| \| 
+
+
+" | out-file $EmailBody -append
+
+Write-Output "hMailServer Firewall Ban Project" | out-file $EmailBody -append
+Write-Output "Block Count" | out-file $EmailBody -append
+Write-Output "Count number of drops from firewall log" | out-file $EmailBody -append
+Write-Output " " | out-file $EmailBody -append
 $StartTime = get-date
-Write-Output "    Run : $(($StartTime).ToString(`"yy/MM/dd HH:mm`"))"
-Write-Output " "
+Write-Output "    Run : $(($StartTime).ToString(`"yy/MM/dd HH:mm`"))" | out-file $EmailBody -append
+Write-Output " " | out-file $EmailBody -append
 
 #	Find oldest database entry and count days.
 $Query = "Select MIN(timestamp) AS mints FROM hm_fwban"
@@ -97,16 +112,16 @@ MySQLQuery($Query) | ForEach {
 }
 $NumDays = (New-TimeSpan $Oldest $(Get-Date)).Days
 
-Write-Output ("{0,7} : Number of days data in database" -f ($NumDays).ToString("#,###"))
-Write-Output " "
+Write-Output ("{0,7} : Number of days data in database" -f ($NumDays).ToString("#,###")) | out-file $EmailBody -append
+Write-Output " " | out-file $EmailBody -append
 
 #	Count number of bans in firewall ban database
 $Query = "Select COUNT(ipaddress) AS countip from hm_fwban WHERE flag IS NULL"
 MySQLQuery($Query) | ForEach {
 	$TotalRules = $_.countip
 }
-Write-Output ("{0,7} : Total number of firewall rules" -f ($TotalRules).ToString("#,###"))
-Write-Output " "
+Write-Output ("{0,7} : Total number of firewall rules" -f ($TotalRules).ToString("#,###")) | out-file $EmailBody -append
+Write-Output " " | out-file $EmailBody -append
 
 #	Count number of distinct IPs recorded in repeat hit database
 $Query = "Select COUNT(DISTINCT(ipaddress)) AS totalreturnips, COUNT(ipaddress) AS totalhits FROM hm_fwban_rh"
@@ -118,8 +133,8 @@ MySQLQuery($Query) | ForEach {
 $PercentReturns = ([int]$TotalReturnIPs / [int]$TotalRules).ToString("P")
 $NeverBlocked = ([int]$TotalRules - [int]$TotalReturnIPs)
 $PercentNever = ([int]$NeverBlocked / [int]$TotalRules).ToString("P")
-Write-Output ("{0,7} : {1,6} : Number of return IPs never blocked" -f ($NeverBlocked).ToString("#,###"), $PercentNever)
-Write-Output " "
+Write-Output ("{0,7} : {1,6} : Number of return IPs never blocked" -f ($NeverBlocked).ToString("#,###"), $PercentNever) | out-file $EmailBody -append
+Write-Output " " | out-file $EmailBody -append
 
 #	Find number of distinct IPs that were blocked for a given number of days and continue until no results are found
 $a = 0
@@ -130,18 +145,17 @@ Do {
 	}
 	$PercentReturns = ($ReturnIPs / $TotalRules)
 	If ($ReturnIPs -lt 1) {
-		Write-Output ""
-		Write-Output "No more results"
+		Write-Output "" | out-file $EmailBody -append
+		Write-Output "No more results" | out-file $EmailBody -append
 		$TimeElapsed = (New-TimeSpan $StartTime $(get-date))
 		If (($TimeElapsed).Minutes -eq 1) {$sm = ""} Else {$sm = "s"}
 		If (($TimeElapsed).Seconds -eq 1) {$ss = ""} Else {$ss = "s"}
-		Write-Output ("Time Elapsed: {0:%m} minute$sm {0:%s} second$ss" -f $TimeElapsed)
+		Write-Output ("Time Elapsed: {0:%m} minute$sm {0:%s} second$ss" -f $TimeElapsed) | out-file $EmailBody -append
 	} Else {
 		If ($a -eq 0) {$sd = ""} Else {$sd = "s"}
-		Write-Output ("{0,7} : {1,6} : Number of return IPs blocked on at least $($a + 1) day$sd" -f ($ReturnIPs).ToString("#,###"), $PercentReturns.ToString("P"))
+		Write-Output ("{0,7} : {1,6} : Number of return IPs blocked on at least $($a + 1) day$sd" -f ($ReturnIPs).ToString("#,###"), $PercentReturns.ToString("P")) | out-file $EmailBody -append
 	}
 	$a++
 } Until ($ReturnIPs -lt 1)
 
-Write-Output " "
-Write-Output " "
+EmailResults
