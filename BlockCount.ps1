@@ -69,7 +69,7 @@ Function MySQLQuery($Query) {
 }
 
 Function EmailResults {
-	$Subject = "Retroactive PTR Results" 
+	$Subject = "Firewall Ban Block Count Analysis Results" 
 	$Body = (Get-Content -Path $EmailBody | Out-String )
 	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], $ini['Email']['SMTPPort']) 
 	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($ini['Email']['SSL'])
