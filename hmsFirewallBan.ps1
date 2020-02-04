@@ -41,81 +41,47 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #######################################
 #                                     #
+#      INCLUDE REQUIRED FILES         #
+#                                     #
+#######################################
+
+# region Include required files
+#
+$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+try {
+	.("$ScriptDirectory\CommonCode.ps1")
+}
+catch {
+	Write-Host "Error while loading supporting PowerShell Scripts" 
+}
+#endregion
+
+#######################################
+#                                     #
+#              STARTUP                #
+#                                     #
+#######################################
+
+#	Load User Variables
+$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
+
+
+#######################################
+#                                     #
 #             FUNCTIONS               #
 #                                     #
 #######################################
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
-
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
-}
-
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
-}
-
-<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
-Function Get-NetshFireWallrule {
-	Param(
-		[String]$RuleName
-	)
-	$Rules = & netsh advfirewall firewall show rule name="$ruleName"
-	$return = @()
-		$HAsh = [Ordered]@{}
-		foreach ($Rule in $Rules){
-			switch -Regex ($Rule){
-				'^Rule Name:\s+(?<RuleName>.*$)'{$Hash.RuleName = $MAtches.RuleName}
-				'^RemoteIP:\s+(?<RemoteIP>.*$)'{$Hash.RemoteIP = $Matches.RemoteIP;$obj = New-Object psobject -Property $Hash;$return += $obj}
-			}
-		}
-	return $return
-}
-
-Function RemRuleIP($IP){
+Function RemRuleIP($IP) {
 	$Query = "SELECT rulename FROM hm_fwban WHERE ipaddress = '$IP'"
-	MySQLQuery $Query | ForEach {
+	RunSQLQuery $Query | ForEach {
 		$RuleName = $_.rulename
 	}
 
-	If (-not($RuleName)){
+	If (-not($RuleName)) {
 		& netsh advfirewall firewall delete rule name=`"$IP`"
-	} Else {
+	}
+ Else {
 		$RuleList = "$PSScriptRoot\fwrulelist.txt"
 		$NewLine = [System.Environment]::NewLine
 
@@ -128,17 +94,15 @@ Function RemRuleIP($IP){
 
 		Get-Content $RuleList | where { $_ -ne $IP } | Out-File "$RuleList.delIP.txt"
 		$NL = [System.Environment]::NewLine
-		$Content=[String] $Template= [System.IO.File]::ReadAllText("$RuleList.delIP.txt")
-		$Content.Replace($NL,",") | Out-File "$RuleList.rule.txt"
-		(Get-Content -Path "$RuleList.rule.txt") -Replace ',$','' | Set-Content -Path "$RuleList.rule.txt"
+		$Content = [String] $Template = [System.IO.File]::ReadAllText("$RuleList.delIP.txt")
+		$Content.Replace($NL, ",") | Out-File "$RuleList.rule.txt"
+		(Get-Content -Path "$RuleList.rule.txt") -Replace ',$', '' | Set-Content -Path "$RuleList.rule.txt"
 
 		& netsh advfirewall firewall delete rule name=`"$RuleName`"
 		& netsh advfirewall firewall add rule name=`"$RuleName`" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
 	}
 }
 
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 #######################################
 #                                     #
@@ -148,29 +112,77 @@ $ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 #	Check to see if hMailServer is running. If not, quit. MySQL is a dependency of hMailServer service so you're actually checking both.
 #	Prevents scheduled task failures at bootup.
-If ((get-service hMailServer).Status -ne 'Running'){exit}
+If ((get-service hMailServer).Status -ne 'Running') { exit }
 
-#	Create hm_fwban table if it doesn't exist
-$Query = "
-	CREATE TABLE IF NOT EXISTS hm_fwban (
-	  ID int(11) NOT NULL AUTO_INCREMENT,
-	  ipaddress varchar(192) NOT NULL,
-	  timestamp datetime NOT NULL,
-	  ban_reason varchar(192) DEFAULT NULL,
-	  country varchar(192) DEFAULT NULL,
-	  flag int(1) DEFAULT NULL,
-	  helo varchar(192) DEFAULT NULL,
-	  ptr varchar(192) DEFAULT NULL,
-	  rulename varchar(192) DEFAULT NULL,
-	  PRIMARY KEY (ID),
-	  UNIQUE KEY ID (ID)
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	COMMIT;
+$Query = ""
+
+If (IsMSSQL) {
+	#	Create hm_fwban table if it doesn't exist
+	$Query = "
+		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban')
+		BEGIN
+			CREATE TABLE hm_fwban (
+				ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+				ipaddress varchar NOT NULL,
+				timestamp datetime NOT NULL,
+				ban_reason varchar(192) DEFAULT NULL,
+				country varchar(192) DEFAULT NULL,
+				flag int DEFAULT NULL,
+				helo varchar(192) DEFAULT NULL,
+				ptr varchar(192) DEFAULT NULL,
+				rulename varchar(192) DEFAULT NULL
+			)
+		END;
+		"
+	RunSQLQuery $Query
+	#	Create hm_fwban_rh table if it doesn't exist
+	$Query = "
+		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban_rh')
+		BEGIN
+			CREATE TABLE hm_fwban_rh (
+				id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+				timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+				ipaddress varchar(15) NOT NULL
+			)
+		END;
+		"
+	RunSQLQuery $Query
+	#	Create hm_ids table if it doesn't exist
+	$Query = "
+	IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_ids')
+	BEGIN
+		CREATE TABLE hm_ids (
+			timestamp datetime NOT NULL,
+			ipaddress varchar(15) NOT NULL PRIMARY KEY,
+			hits int NOT NULL,
+			country varchar(64) DEFAULT NULL,
+			helo varchar(128) DEFAULT NULL
+		)
+	END;
 	"
-MySQLQuery $Query
-
-#	Create hm_fwban_rh table if it doesn't exist
-$Query = "
+	RunSQLQuery $Query
+}
+elseif (ISMySQL) {
+	#	Create hm_fwban table if it doesn't exist
+	$Query = "
+		CREATE TABLE IF NOT EXISTS hm_fwban (
+		ID int(11) NOT NULL AUTO_INCREMENT,
+		ipaddress varchar(192) NOT NULL,
+		timestamp datetime NOT NULL,
+		ban_reason varchar(192) DEFAULT NULL,
+		country varchar(192) DEFAULT NULL,
+		flag int(1) DEFAULT NULL,
+		helo varchar(192) DEFAULT NULL,
+		ptr varchar(192) DEFAULT NULL,
+		rulename varchar(192) DEFAULT NULL,
+		PRIMARY KEY (ID),
+		UNIQUE KEY ID (ID)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+		COMMIT;
+		"
+	RunSQLQuery $Query
+	#	Create hm_fwban_rh table if it doesn't exist
+	$Query = "
 	CREATE TABLE IF NOT EXISTS hm_fwban_rh (
 	  id int(12) NOT NULL AUTO_INCREMENT,
 	  timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -179,10 +191,9 @@ $Query = "
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	COMMIT;
 	"
-MySQLQuery $Query
-
-#	Create hm_ids table if it doesn't exist
-$Query = "
+	RunSQLQuery $Query
+	#	Create hm_ids table if it doesn't exist
+	$Query = "
 	CREATE TABLE IF NOT EXISTS hm_ids (
 	  timestamp datetime NOT NULL,
 	  ipaddress varchar(15) NOT NULL,
@@ -194,7 +205,11 @@ $Query = "
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	COMMIT;
 	"
-MySQLQuery $Query
+	RunSQLQuery $Query
+}
+
+
+
 
 #######################################
 #                                     #
@@ -209,83 +224,84 @@ $Interval = $ini['Interval']['TaskInterval']
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
 
 #	Pickup entries marked SAFE through webadmin
-$Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE flag=5"
-MySQLQuery $Query | foreach {
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=5"
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=6, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 
 #	Pickup entries marked for RELEASE through webadmin
-$Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE flag=2"
-MySQLQuery $Query | foreach {
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=2"
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=1, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
-$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= '$QueryTime' - interval $Interval minute"
-MySQLQuery $Query
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
+
+RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag = 4 AND timestamp >= '$QueryTime' - interval $Interval minute"
-MySQLQuery $Query | foreach {
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag = 4 AND timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	#	Check each against previous entries marked safe
-	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP' AND timestamp < '$QueryTime' - interval $Interval minute"
-	MySQLQuery $Query | foreach {
+	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP' AND timestamp < " + $(DBSubtractIntervalFromDate $QueryTime "minute" $Interval)
+	RunSQLQuery $Query | foreach {
 		$FlagSafe = $_.flag
 	}
 	#	If newly marked safe, delete firewall rule and update flag to safe
-	If ($FlagSafe -match 5){
+	If ($FlagSafe -match 5) {
 		RemRuleIP $IP
 		$Query = "UPDATE hm_fwban SET flag=6, rulename=NULL WHERE id='$ID'"	
-		MySQLQuery $Query
+		RunSQLQuery $Query
 	}
 	#	If previously marked safe (firewall rule already removed), update flag to safe
-	ElseIf ($FlagSafe -match 6){
+	ElseIf ($FlagSafe -match 6) {
 		$Query = "UPDATE hm_fwban SET flag = 6 WHERE id='$ID'"	
-		MySQLQuery $Query
+		RunSQLQuery $Query
 	}
 	#	All others (not marked safe) add firewall rule and update flag
 	Else {
 		& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy'))" dir=in interface=any action=block remoteip=$IP
 		$Query = "UPDATE hm_fwban SET flag=NULL, rulename='$IP' WHERE id='$ID'"
-		MySQLQuery $Query
+		RunSQLQuery $Query
 	}
 }
 
 #	Pick up any missed NEW entries (out of interval)
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag=4"
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy'))" dir=in interface=any action=block remoteip=$IP
 	$Query = "UPDATE hm_fwban SET flag=NULL, rulename='$IP' WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 
 #	Pickup entries marked for REBAN or UNSAFE through webadmin
 #	First delete any duplicate IP entries to be rebanned to prevent duplicate firewall rules
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND (t1.flag=3 OR t1.flag=7)"
-MySQLQuery $Query
+RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress), id, DATE(timestamp) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
-MySQLQuery $Query | foreach {
+$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - REBAN" dir=in interface=any action=block remoteip=$IP
 	$Query = "UPDATE hm_fwban SET flag=NULL, rulename='$IP' WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 
 #######################################
@@ -297,15 +313,23 @@ MySQLQuery $Query | foreach {
 
 #	Pickup entries from IDS 
 $Query = "SELECT ipaddress, country FROM hm_ids WHERE hits > 2"
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$TS = $_.timestamp
 	$IP = $_.ipaddress
 	$Country = $_.country
-	$PTR = [System.Net.Dns]::GetHostEntry($IP).HostName
+
+	#some IPs don't have PTR record
+	try {
+		$PTR = [System.Net.Dns]::GetHostEntry($IP).HostName
+	}
+	catch {
+		$PTR = "No.PTR.Record"
+	}
+	
 	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - IDS" dir=in interface=any action=block remoteip=$IP
 	# Insert IP record into firewall ban table
-	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag,ptr,rulename) VALUES (NOW(),'$IP','IDS','$Country',NULL,'$PTR','$IP');"
-	MySQLQuery $Query
+	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag,ptr,rulename) VALUES ($(DBGetCurrentDateTime),'$IP','IDS','$Country',NULL,'$PTR','$IP');"
+	RunSQLQuery $Query
 }
 
 #	Delete IDS entries that are already banned
@@ -317,8 +341,7 @@ $Query = "
 	(
 		SELECT ipaddress AS idsip, country
 			FROM hm_ids 
-			GROUP BY ipaddress
-			ORDER BY ipaddress ASC
+			GROUP BY ipaddress, country
 	) AS a
 	INNER JOIN
 	(
@@ -326,21 +349,20 @@ $Query = "
 			FROM hm_fwban 
 			WHERE flag IS NULL OR flag='3' OR flag='4' OR flag='7'
 			GROUP BY ipaddress
-			ORDER BY ipaddress ASC
 	) AS b
 	ON a.idsip = b.fwbip
 	ORDER BY b.fwbip
 "
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$IP = $_.idsip
 	$Query = "DELETE FROM hm_ids WHERE ipaddress = '$IP'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 
 #	Expire old IDS entries 
 
-$Query = "DELETE FROM hm_ids WHERE timestamp < now() - interval $($ini['Interval']['IDSExpire']) hour"
-MySQLQuery $Query
+$Query = "DELETE FROM hm_ids WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime)  "hour"  $($ini['Interval']['IDSExpire']))
+RunSQLQuery $Query
 
 #######################################
 #                                     #
@@ -359,17 +381,17 @@ $DateEnd = $QueryTime
 $DateStart = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $Interval)).ToString("yyyy-MM-dd")
 
 $FirewallLogObjects = import-csv -Path $FirewallLog -Delimiter " " -Header Date, Time, Action, Protocol, SourceIP, `
-    DestinationIP, SourcePort, DestinationPort, Size, tcpflags, tcpsyn, tcpack, tcpwin, icmptype, icmpcode, info, path | `
-    Where-Object {$_.Date -match "[0-9]{4}-[0-9]{2}-[0-9]{2}"}
-$FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Date -ge $DateStart -and $_.Date -lt $DateEnd}
-$FirewallLogObjects = $FirewallLogObjects | Where-Object {$_.Time -ge $StartTime -and $_.Time -lt $EndTime}
+	DestinationIP, SourcePort, DestinationPort, Size, tcpflags, tcpsyn, tcpack, tcpwin, icmptype, icmpcode, info, path | `
+	Where-Object { $_.Date -match "[0-9]{4}-[0-9]{2}-[0-9]{2}" }
+$FirewallLogObjects = $FirewallLogObjects | Where-Object { $_.Date -ge $DateStart -and $_.Date -lt $DateEnd }
+$FirewallLogObjects = $FirewallLogObjects | Where-Object { $_.Time -ge $StartTime -and $_.Time -lt $EndTime }
 
 $FirewallLogObjects | foreach-object {
-	If (($_.Action -match 'DROP') -and ($_.DestinationPort -match $MailPorts) -and ($_.SourceIP -notmatch $LSRegex)){
+	If (($_.Action -match 'DROP') -and ($_.DestinationPort -match $MailPorts) -and ($_.SourceIP -notmatch $LSRegex)) {
 		$IP = $_.SourceIP
-		$DateTime = $_.Date+" "+$_.Time
+		$DateTime = $_.Date + " " + $_.Time
 		$Query = "INSERT INTO hm_fwban_rh (timestamp, ipaddress) VALUES ('$DateTime', '$IP')"
-		MySQLQuery $Query
+		RunSQLQuery $Query
 	}
 }
 
@@ -396,13 +418,13 @@ $Query = "
 	AND flag IS NULL
 	ORDER BY timestamp DESC
 "
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=1, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 #>
 
@@ -411,13 +433,13 @@ MySQLQuery $Query | foreach {
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=1, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 #>
 
@@ -426,13 +448,13 @@ MySQLQuery $Query | foreach {
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=1, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 #>
 
@@ -440,12 +462,12 @@ MySQLQuery $Query | foreach {
 <#
 $Days = "60" 				#<-- Days until expires
 $Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND flag IS NULL"
-MySQLQuery $Query | foreach {
+RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	$DateIP = (Get-Date -date $_.dateip)
 	RemRuleIP $IP
 	$Query = "UPDATE hm_fwban SET flag=1, rulename=NULL WHERE id='$ID'"
-	MySQLQuery $Query
+	RunSQLQuery $Query
 }
 #>

@@ -24,50 +24,28 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
+#######################################
+#                                     #
+#      INCLUDE REQUIRED FILES         #
+#                                     #
+#######################################
 
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+# region Include required files
+#
+$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+try {
+	.("$ScriptDirectory\CommonCode.ps1")
 }
-
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError-ConsolidateRules.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
+catch {
+	Write-Host "Error while loading supporting PowerShell Scripts" 
 }
+#endregion
+
+#######################################
+#                                     #
+#              STARTUP                #
+#                                     #
+#######################################
 
 #	Load User Variables
 $ini = Parse-IniFile("$PSScriptRoot\Config.INI")
@@ -80,8 +58,8 @@ If (-not(Test-Path "$PSScriptRoot\ConsolidateRules")) {
 #	Get BanDate (Yesterday) and establish csv
 $BanDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd")
 
-$Query = "SELECT COUNT(id) AS countid FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
-MySQLQuery $Query | ForEach {
+$Query = "SELECT COUNT(id) AS countid FROM hm_fwban WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL"
+RunSQLQuery $Query | ForEach {
 	[int]$CountIP = $_.countid
 }
 
@@ -96,11 +74,11 @@ Do {
 	$Query = "
 		SELECT ipaddress 
 		FROM hm_fwban 
-		WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL 
+		WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL 
 		ORDER BY timestamp DESC
-		LIMIT $($N * $Rows), $Rows
+		$(DBLimitRowsWithOffset $($N * $Rows) $Rows)
 	"
-	MySQLQuery $Query | Export-CSV $ConsRules
+	RunSQLQuery $Query | Export-CSV $ConsRules
 	
 	$N++
 }
@@ -116,7 +94,7 @@ Get-ChildItem $Location | Where-Object {$_.name -match $RegexName} | ForEach {
 	import-csv -Path $FilePathName | ForEach {
 		$IP = $_.ipaddress
 		$Query = "UPDATE hm_fwban SET rulename = '$RuleName' WHERE ipaddress = '$IP'"
-		MySQLQuery($Query)
+		RunSQLQuery($Query)
 		Write-Output $IP
 	}  | Out-File "$FilePathName.txt"
 
