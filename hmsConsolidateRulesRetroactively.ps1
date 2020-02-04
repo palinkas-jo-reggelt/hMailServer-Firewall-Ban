@@ -28,40 +28,36 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-### MySQL Variables #############################
-                                                #
-$MySQLAdminUserName = 'hmailserver'             #
-$MySQLAdminPassword = 'supersecretpassword'     #
-$MySQLDatabase      = 'hmailserver'             #
-$MySQLHost          = 'localhost'               #
-                                                #
-#################################################
 
-Function MySQLQuery($Query) {
-	$ConnectionString = "server=" + $MySQLHost + ";port=3306;uid=" + $MySQLAdminUserName + ";pwd=" + $MySQLAdminPassword + ";database=" + $MySQLDatabase
-	Try {
-	  $Today = (Get-Date).ToString("yyyyMMdd")
-	  $DBErrorLog = "$PSScriptRoot\$Today-DBError-Retroactive-Consolidate.log"
-	  [void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-	  $Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-	  $Connection.ConnectionString = $ConnectionString
-	  $Connection.Open()
-	  $Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-	  $DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-	  $DataSet = New-Object System.Data.DataSet
-	  $RecordCount = $dataAdapter.Fill($dataSet, "data")
-	  $DataSet.Tables[0]
-	  }
-	Catch {
-	  Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | Out-File $DBErrorLog -append
-	 }
-	Finally {
-	  $Connection.Close()
-	  }
+#######################################
+#                                     #
+#      INCLUDE REQUIRED FILES         #
+#                                     #
+#######################################
+
+# region Include required files
+#
+$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+try {
+	.("$ScriptDirectory\CommonCode.ps1")
 }
+catch {
+	Write-Host "Error while loading supporting PowerShell Scripts" 
+}
+#endregion
+
+#######################################
+#                                     #
+#              STARTUP                #
+#                                     #
+#######################################
+
+#	Load User Variables
+$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
+
 
 $Query = "SELECT MIN(timestamp) AS mindate FROM hm_fwban WHERE flag IS NULL"
-MySQLQuery $Query | ForEach {
+RunSQLQuery $Query | ForEach {
 	$MinDate = (Get-Date -date $_.mindate)
 }
 
@@ -71,8 +67,8 @@ Do {
 	$BanDate = $MinDate.AddDays($A).ToString("yyyy-MM-dd")
 	$ConsRules = "$PSScriptRoot\hmsFWBRule-$BanDate.csv"
 
-	$Query = "SELECT id, ipaddress FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
-	MySQLQuery $Query | Export-CSV $ConsRules
+	$Query = "SELECT id, ipaddress FROM hm_fwban WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL"
+	RunSQLQuery $Query | Export-CSV $ConsRules
 
 	Import-CSV $ConsRules | ForEach {
 		Write-Output $_.ipaddress

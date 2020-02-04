@@ -25,70 +25,32 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
+#######################################
+#                                     #
+#      INCLUDE REQUIRED FILES         #
+#                                     #
+#######################################
 
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+# region Include required files
+#
+$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+try {
+	.("$ScriptDirectory\CommonCode.ps1")
 }
-
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
+catch {
+	Write-Host "Error while loading supporting PowerShell Scripts" 
 }
+#endregion
 
-<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
-Function Get-NetshFireWallrule {
-	Param(
-		[String]$RuleName
-	)
-	$Rules = & netsh advfirewall firewall show rule name="$ruleName"
-	$return = @()
-		$HAsh = [Ordered]@{}
-		foreach ($Rule in $Rules){
-			switch -Regex ($Rule){
-				'^Rule Name:\s+(?<RuleName>.*$)'{$Hash.RuleName = $MAtches.RuleName}
-				'^RemoteIP:\s+(?<RemoteIP>.*$)'{$Hash.RemoteIP = $Matches.RemoteIP;$obj = New-Object psobject -Property $Hash;$return += $obj}
-			}
-		}
-	return $return
-}
+#######################################
+#                                     #
+#              STARTUP                #
+#                                     #
+#######################################
 
 #	Load User Variables
 $ini = Parse-IniFile("$PSScriptRoot\Config.INI")
+
 
 #	Establish files and regex
 $FWRuleList = "$PSScriptRoot\fwrulelist.txt"
@@ -119,7 +81,7 @@ Get-Content $FWRuleList | ForEach {
 	$IP = $_
 	#	Query all IPs and find flag status
 	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP'"
-	MySQLQuery $Query | ForEach {
+	RunSQLQuery $Query | ForEach {
 		$Flag = $_.flag
 	}
 	#	If flag not null, then rule should not exist, so delete it
