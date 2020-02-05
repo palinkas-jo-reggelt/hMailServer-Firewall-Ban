@@ -23,43 +23,16 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-
-#######################################
-#                                     #
-#      INCLUDE REQUIRED FILES         #
-#                                     #
-#######################################
-
-# region Include required files
-#
-$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-try {
-	.("$ScriptDirectory\CommonCode.ps1")
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
 }
-catch {
-	Write-Host "Error while loading supporting PowerShell Scripts" 
-}
-#endregion
-
-#######################################
-#                                     #
-#              STARTUP                #
-#                                     #
-#######################################
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
-
-
-Function EmailResults {
-	$Subject = "Retroactive PTR Results" 
-	$Body = (Get-Content -Path $Msg | Out-String )
-	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], $ini['Email']['SMTPPort']) 
-	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($ini['Email']['SSL'])
-	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($ini['Email']['SMTPAuthUser'], $ini['Email']['SMTPAuthPass']); 
-	$SMTPClient.Send($ini['Email']['FromAddress'], $ini['Email']['Recipient'], $Subject, $Body)
+Catch {
+	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
 
+#	Set start time
 $StartTime = (Get-Date -f G)
 
 # 	Add "ptr" column to hm_fwban

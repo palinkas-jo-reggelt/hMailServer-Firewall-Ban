@@ -25,32 +25,14 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-#######################################
-#                                     #
-#      INCLUDE REQUIRED FILES         #
-#                                     #
-#######################################
-
-# region Include required files
-#
-$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-try {
-	.("$ScriptDirectory\CommonCode.ps1")
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
 }
-catch {
-	Write-Host "Error while loading supporting PowerShell Scripts" 
+Catch {
+	Write-Output "Error while loading supporting PowerShell Scripts" | Out-File -Path "$PSScriptRoot\PSError.log"
 }
-#endregion
-
-#######################################
-#                                     #
-#              STARTUP                #
-#                                     #
-#######################################
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
-
 
 #	Establish files and regex
 $FWRuleList = "$PSScriptRoot\fwrulelist.txt"

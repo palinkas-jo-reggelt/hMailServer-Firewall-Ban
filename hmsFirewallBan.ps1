@@ -39,177 +39,18 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-#######################################
-#                                     #
-#      INCLUDE REQUIRED FILES         #
-#                                     #
-#######################################
-
-# region Include required files
-#
-$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-try {
-	.("$ScriptDirectory\CommonCode.ps1")
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
 }
-catch {
-	Write-Host "Error while loading supporting PowerShell Scripts" 
+Catch {
+	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
-#endregion
-
-#######################################
-#                                     #
-#              STARTUP                #
-#                                     #
-#######################################
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
-
-
-#######################################
-#                                     #
-#             FUNCTIONS               #
-#                                     #
-#######################################
-
-Function RemRuleIP($IP) {
-	$Query = "SELECT rulename FROM hm_fwban WHERE ipaddress = '$IP'"
-	RunSQLQuery $Query | ForEach {
-		$RuleName = $_.rulename
-	}
-
-	If (-not($RuleName)) {
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-	}
- Else {
-		$RuleList = "$PSScriptRoot\fwrulelist.txt"
-		$NewLine = [System.Environment]::NewLine
-
-		Get-NetshFireWallrule ("$RuleName") | ForEach {
-			$RemoteIP = $_.RemoteIP
-			$ReplaceCIDR = ($RemoteIP).Replace("/32", "")
-			$ReplaceNL = ($ReplaceCIDR).Replace(",", $NewLine)
-			Write-Output $ReplaceNL 
-		} | out-file $RuleList
-
-		Get-Content $RuleList | where { $_ -ne $IP } | Out-File "$RuleList.delIP.txt"
-		$NL = [System.Environment]::NewLine
-		$Content = [String] $Template = [System.IO.File]::ReadAllText("$RuleList.delIP.txt")
-		$Content.Replace($NL, ",") | Out-File "$RuleList.rule.txt"
-		(Get-Content -Path "$RuleList.rule.txt") -Replace ',$', '' | Set-Content -Path "$RuleList.rule.txt"
-
-		& netsh advfirewall firewall delete rule name=`"$RuleName`"
-		& netsh advfirewall firewall add rule name=`"$RuleName`" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
-	}
-}
-
-
-#######################################
-#                                     #
-#          DATABASE SCRIPTS           #
-#                                     #
-#######################################
 
 #	Check to see if hMailServer is running. If not, quit. MySQL is a dependency of hMailServer service so you're actually checking both.
 #	Prevents scheduled task failures at bootup.
 If ((get-service hMailServer).Status -ne 'Running') { exit }
-
-$Query = ""
-
-If (IsMSSQL) {
-	#	Create hm_fwban table if it doesn't exist
-	$Query = "
-		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban')
-		BEGIN
-			CREATE TABLE hm_fwban (
-				ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-				ipaddress varchar NOT NULL,
-				timestamp datetime NOT NULL,
-				ban_reason varchar(192) DEFAULT NULL,
-				country varchar(192) DEFAULT NULL,
-				flag int DEFAULT NULL,
-				helo varchar(192) DEFAULT NULL,
-				ptr varchar(192) DEFAULT NULL,
-				rulename varchar(192) DEFAULT NULL
-			)
-		END;
-		"
-	RunSQLQuery $Query
-	#	Create hm_fwban_rh table if it doesn't exist
-	$Query = "
-		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban_rh')
-		BEGIN
-			CREATE TABLE hm_fwban_rh (
-				id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-				timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-				ipaddress varchar(15) NOT NULL
-			)
-		END;
-		"
-	RunSQLQuery $Query
-	#	Create hm_ids table if it doesn't exist
-	$Query = "
-	IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_ids')
-	BEGIN
-		CREATE TABLE hm_ids (
-			timestamp datetime NOT NULL,
-			ipaddress varchar(15) NOT NULL PRIMARY KEY,
-			hits int NOT NULL,
-			country varchar(64) DEFAULT NULL,
-			helo varchar(128) DEFAULT NULL
-		)
-	END;
-	"
-	RunSQLQuery $Query
-}
-elseif (ISMySQL) {
-	#	Create hm_fwban table if it doesn't exist
-	$Query = "
-		CREATE TABLE IF NOT EXISTS hm_fwban (
-		ID int(11) NOT NULL AUTO_INCREMENT,
-		ipaddress varchar(192) NOT NULL,
-		timestamp datetime NOT NULL,
-		ban_reason varchar(192) DEFAULT NULL,
-		country varchar(192) DEFAULT NULL,
-		flag int(1) DEFAULT NULL,
-		helo varchar(192) DEFAULT NULL,
-		ptr varchar(192) DEFAULT NULL,
-		rulename varchar(192) DEFAULT NULL,
-		PRIMARY KEY (ID),
-		UNIQUE KEY ID (ID)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		COMMIT;
-		"
-	RunSQLQuery $Query
-	#	Create hm_fwban_rh table if it doesn't exist
-	$Query = "
-	CREATE TABLE IF NOT EXISTS hm_fwban_rh (
-	  id int(12) NOT NULL AUTO_INCREMENT,
-	  timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-	  ipaddress varchar(15) NOT NULL,
-	  PRIMARY KEY (id)
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	COMMIT;
-	"
-	RunSQLQuery $Query
-	#	Create hm_ids table if it doesn't exist
-	$Query = "
-	CREATE TABLE IF NOT EXISTS hm_ids (
-	  timestamp datetime NOT NULL,
-	  ipaddress varchar(15) NOT NULL,
-	  hits int(1) NOT NULL,
-	  country varchar(64) DEFAULT NULL,
-	  helo varchar(128) DEFAULT NULL,
-	  PRIMARY KEY (ipaddress),
-	  UNIQUE KEY ipaddress (ipaddress)
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	COMMIT;
-	"
-	RunSQLQuery $Query
-}
-
-
-
 
 #######################################
 #                                     #
@@ -217,14 +58,11 @@ elseif (ISMySQL) {
 #                                     #
 #######################################
 
-#	Establish scheduled task interval 
-$Interval = $ini['Interval']['TaskInterval']
-
 #	Set time so interval queries align
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
 
 #	Pickup entries marked SAFE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=5"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=5"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -235,7 +73,7 @@ RunSQLQuery $Query | foreach {
 }
 
 #	Pickup entries marked for RELEASE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=2"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=2"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -248,7 +86,6 @@ RunSQLQuery $Query | foreach {
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
-
 RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag = 4 AND timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
@@ -294,7 +131,7 @@ RunSQLQuery $Query | foreach {
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND (t1.flag=3 OR t1.flag=7)"
 RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate("timestamp")) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
+$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -318,7 +155,7 @@ RunSQLQuery $Query | foreach {
 	$IP = $_.ipaddress
 	$Country = $_.country
 
-	#some IPs don't have PTR record
+	#	Grab PTR record
 	try {
 		$PTR = [System.Net.Dns]::GetHostEntry($IP).HostName
 	}
@@ -327,7 +164,7 @@ RunSQLQuery $Query | foreach {
 	}
 	
 	& netsh advfirewall firewall add rule name="$IP" description="Rule added $((get-date).ToString('MM/dd/yy')) - IDS" dir=in interface=any action=block remoteip=$IP
-	# Insert IP record into firewall ban table
+	#	Insert IP record into firewall ban table
 	$Query = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country,flag,ptr,rulename) VALUES ($(DBGetCurrentDateTime),'$IP','IDS','$Country',NULL,'$PTR','$IP');"
 	RunSQLQuery $Query
 }
@@ -360,8 +197,7 @@ RunSQLQuery $Query | foreach {
 }
 
 #	Expire old IDS entries 
-
-$Query = "DELETE FROM hm_ids WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime)  "hour"  $($ini['Interval']['IDSExpire']))
+$Query = "DELETE FROM hm_ids WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) "hour" $IDSExpire)
 RunSQLQuery $Query
 
 #######################################
@@ -371,10 +207,7 @@ RunSQLQuery $Query
 #######################################
 
 <#	Get firewall logs - https://github.com/zarabelin/Get-WindowsFirewallLogs/blob/master/Get-WindowsFirewallLog.ps1  #>
-$LSRegex = "$($ini['Firewall']['LANSubnet'])\.\d{1,3}"
-write-host $LSRegex
-$MailPorts = $ini['Firewall']['MailPorts']
-$FirewallLog = $ini['Firewall']['FirewallLog']
+$LSRegex = "$LANSubnet\.\d{1,3}"
 $EndTime = $QueryTime
 $StartTime = ([datetime]::parseexact($QueryTime, 'yyyy-MM-dd HH:mm:00', $Null ) - (New-TimeSpan -Minutes $Interval)).ToString("HH:mm:ss")
 $DateEnd = $QueryTime
@@ -407,14 +240,14 @@ $FirewallLogObjects | foreach-object {
 <#
 $Days = "30" 	# <-- Number of days for automatic expiry                   
 $Query = "
-	SELECT id, ipaddress, DATE(timestamp) AS dateip
+	SELECT id, ipaddress, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip
 	FROM hm_fwban 
 	WHERE hm_fwban.ipaddress NOT IN 
 	(
 		SELECT ipaddress 
 		FROM hm_fwban_rh
 	) 
-	AND timestamp < NOW() - INTERVAL $Days DAY
+	AND timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) "DAY" $Days) + "
 	AND flag IS NULL
 	ORDER BY timestamp DESC
 "
@@ -432,7 +265,7 @@ RunSQLQuery $Query | foreach {
 <#
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -447,7 +280,7 @@ RunSQLQuery $Query | foreach {
 <#
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND country LIKE '$Country' AND flag IS NULL"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND country LIKE '$Country' AND flag IS NULL"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -461,7 +294,7 @@ RunSQLQuery $Query | foreach {
 <#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - All IPs #>
 <#
 $Days = "60" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, DATE(timestamp) AS dateip FROM hm_fwban WHERE timestamp < '$QueryTime' - interval $Days day AND flag IS NULL"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND flag IS NULL"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress

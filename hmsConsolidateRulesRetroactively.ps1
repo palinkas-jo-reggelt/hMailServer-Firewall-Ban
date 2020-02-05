@@ -28,33 +28,14 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-
-#######################################
-#                                     #
-#      INCLUDE REQUIRED FILES         #
-#                                     #
-#######################################
-
-# region Include required files
-#
-$ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-try {
-	.("$ScriptDirectory\CommonCode.ps1")
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
 }
-catch {
-	Write-Host "Error while loading supporting PowerShell Scripts" 
+Catch {
+	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
-#endregion
-
-#######################################
-#                                     #
-#              STARTUP                #
-#                                     #
-#######################################
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
-
 
 $Query = "SELECT MIN(timestamp) AS mindate FROM hm_fwban WHERE flag IS NULL"
 RunSQLQuery $Query | ForEach {

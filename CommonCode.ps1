@@ -21,32 +21,27 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+}
+Catch {
+	Write-Output "Error while loading supporting PowerShell Scripts" | Out-File -Path "$PSScriptRoot\PSError.log"
+}
+
 #######################################
 #                                     #
-#           INI FILE CODE             #
+#             EMAIL CODE              #
 #                                     #
 #######################################
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
-
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+Function EmailResults {
+	$Subject = "Retroactive PTR Results" 
+	$Body = (Get-Content -Path $EmailBody | Out-String )
+	$SMTPClient = New-Object Net.Mail.SmtpClient($SMTPServer, $SMTPPort) 
+	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($SSL)
+	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPAuthUser, $SMTPAuthPass); 
+	$SMTPClient.Send($FromAddress, $Recipient, $Subject, $Body)
 }
 
 #######################################
@@ -55,8 +50,7 @@ Function Parse-IniFile ($file) {
 #                                     #
 #######################################
 
-Function RunSQLQuery($Query)
-{
+Function RunSQLQuery($Query){
     if (IsMSSQL) {
         MSSQLQuery($Query)
     } elseif (IsMySQL){
@@ -66,20 +60,18 @@ Function RunSQLQuery($Query)
     }
 }
 
-Function IsMSSQL()
-{
-    return $ini['Database']['DatabaseType'] -eq "MSSQL"
+Function IsMSSQL(){
+    return $DatabaseType -eq "MSSQL"
 }
 
-Function IsMySQL()
-{
-    return $ini['Database']['DatabaseType'] -eq "MySQL"
+Function IsMySQL(){
+    return $DatabaseType -eq "MySQL"
 }
 
 Function MySQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
+	$ConnectionString = "server="+$SQLHost+";port="+$SQLPort+";uid="+$SQLAdminUserName+";pwd="+$SQLAdminPassword+";database="+$SQLDatabase
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
@@ -102,7 +94,7 @@ Function MySQLQuery($Query) {
 Function MSSQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-    $ConnectionString = "Data Source=$($ini['Database']['Host']);uid=$($ini['Database']['Username']);password=$($ini['Database']['Password']);Initial Catalog=$($ini['Database']['DBase'])"
+    $ConnectionString = "Data Source="+$SQLHost+";port="+$SQLPort+";uid="+$SQLAdminUserName+";password="+$SQLAdminPassword+";Initial Catalog="+$SQLDatabase
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object System.Data.SqlClient.SQLConnection($connectionString)
@@ -121,8 +113,7 @@ Function MSSQLQuery($Query) {
 	}
 }
 
-Function DBCastDateTimeFieldAsDate($fieldName)
-{
+Function DBCastDateTimeFieldAsDate($fieldName){
     $Return = ""
     if (IsMySQL) {
         $Return = "DATE($fieldName)"
@@ -132,8 +123,7 @@ Function DBCastDateTimeFieldAsDate($fieldName)
     return $Return
 }
 
-Function DBSubtractIntervalFromDate()
-{
+Function DBSubtractIntervalFromDate(){
     param
     (
         $dateString,
@@ -150,8 +140,7 @@ Function DBSubtractIntervalFromDate()
     return $Return
 }
 
-Function DBSubtractIntervalFromField()
-{
+Function DBSubtractIntervalFromField(){
     param
     (
         $fieldName, 
@@ -168,8 +157,7 @@ Function DBSubtractIntervalFromField()
     return $Return
 }
 
-Function DBGetCurrentDateTime()
-{
+Function DBGetCurrentDateTime(){
     $Return = ""
     if (IsMySQL) {
         $Return = "NOW()"
@@ -179,8 +167,7 @@ Function DBGetCurrentDateTime()
     return $Return
 }
 
-Function DBLimitRowsWithOffset()
-{
+Function DBLimitRowsWithOffset(){
     param(
         $offset,
         $numRows
@@ -199,15 +186,11 @@ Function DBLimitRowsWithOffset()
     return $QueryLimit
 }
 
-
-
-
 #######################################
 #                                     #
 #           FIREWALL CODE             #
 #                                     #
 #######################################
-
 
 <#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
 Function Get-NetshFireWallrule {
@@ -224,4 +207,35 @@ Function Get-NetshFireWallrule {
 			}
 		}
 	return $return
+}
+
+Function RemRuleIP($IP) {
+	$Query = "SELECT rulename FROM hm_fwban WHERE ipaddress = '$IP'"
+	RunSQLQuery $Query | ForEach {
+		$RuleName = $_.rulename
+	}
+
+	If (-not($RuleName)) {
+		& netsh advfirewall firewall delete rule name=`"$IP`"
+	}
+	Else {
+		$RuleList = "$PSScriptRoot\fwrulelist.txt"
+		$NewLine = [System.Environment]::NewLine
+
+		Get-NetshFireWallrule ("$RuleName") | ForEach {
+			$RemoteIP = $_.RemoteIP
+			$ReplaceCIDR = ($RemoteIP).Replace("/32", "")
+			$ReplaceNL = ($ReplaceCIDR).Replace(",", $NewLine)
+			Write-Output $ReplaceNL 
+		} | out-file $RuleList
+
+		Get-Content $RuleList | where { $_ -ne $IP } | Out-File "$RuleList.delIP.txt"
+		$NL = [System.Environment]::NewLine
+		$Content = [String] $Template = [System.IO.File]::ReadAllText("$RuleList.delIP.txt")
+		$Content.Replace($NL, ",") | Out-File "$RuleList.rule.txt"
+		(Get-Content -Path "$RuleList.rule.txt") -Replace ',$', '' | Set-Content -Path "$RuleList.rule.txt"
+
+		& netsh advfirewall firewall delete rule name=`"$RuleName`"
+		& netsh advfirewall firewall add rule name=`"$RuleName`" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
+	}
 }
