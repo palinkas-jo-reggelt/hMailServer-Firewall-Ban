@@ -111,6 +111,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.69 oops... forgot to add config.ps1
 - 0.68 replaced INI with ps1; moved CREATE TABLEs to hmsFirewallBanDBSetup.ps1 for first run; housekeeping
 - 0.67 Added MSSQL Server Support for PowershellScripts and EventHandler Code; INI file to EventHandler configurations; CommonCode.ps1 to store common code between all PowerShell scripts
 - 0.66 improved powershell email function
