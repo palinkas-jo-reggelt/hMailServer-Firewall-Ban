@@ -1,4 +1,5 @@
-<?php include("cred.php") ?>
+<?php include_once("config.php") ?>
+<?php include_once("functions.php") ?>
 <script type="text/javascript">
 google.load("visualization", "1", {packages:["corechart", "line"]});
 google.setOnLoadCallback(drawChart);
@@ -8,9 +9,20 @@ function drawChart() {
 	data.addColumn('number', 'Blocks');
 	data.addRows([
 <?php 
-	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(DISTINCT(ipaddress)) AS ipperday FROM hm_fwban_rh WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ORDER BY daily ASC";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
+	$sql = $pdo->prepare("
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
+			".DBFormatDate('timestamp', '%Y')." AS year,
+			(".DBFormatDate('timestamp', '%c')." - 1) AS month,
+			".DBFormatDate('timestamp', '%e')." AS day,
+			COUNT(DISTINCT(ipaddress)) AS ipperday 
+		FROM hm_fwban_rh 
+		WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
+		GROUP BY daily 
+		ORDER BY daily ASC
+	");
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
 	}
 ?>

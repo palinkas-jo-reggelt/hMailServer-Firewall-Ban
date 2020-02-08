@@ -1,4 +1,6 @@
-<?php include("cred.php") ?>
+<?php include_once("config.php") ?>
+<?php include_once("functions.php") ?>
+
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link rel="stylesheet" href="/resources/demos/style.css">
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -8,10 +10,15 @@ $(function () {
     $("#dateFrom").datepicker({
         dateFormat: "yy-mm-dd",
 		minDate: <?php
-	$query = "SELECT DATE(timestamp) Date FROM hm_fwban ORDER BY DATE(timestamp) ASC LIMIT 1";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
-		echo "'".$row['Date']."',";
+	$sql = $pdo->prepare("
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS date 
+		FROM hm_fwban 
+		".DBLimitRowsWithOffset((DBCastDateTimeFieldAsDate('timestamp')),'ASC',0,0,0,1)
+	);
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+		echo "'".$row['date']."',";
 	}
 ?>
 		maxDate: new Date,
@@ -22,10 +29,15 @@ $(function () {
     $("#dateTo").datepicker({
         dateFormat: "yy-mm-dd",
 		minDate: <?php
-	$query = "SELECT DATE(timestamp) Date FROM hm_fwban ORDER BY DATE(timestamp) ASC LIMIT 1";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
-		echo "'".$row['Date']."',";
+	$sql = $pdo->prepare("
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS date 
+		FROM hm_fwban 
+		".DBLimitRowsWithOffset((DBCastDateTimeFieldAsDate('timestamp')),'ASC',0,0,0,1)
+	);
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+		echo "'".$row['date']."',";
 	}
 ?>
 		maxDate: new Date,

@@ -4,8 +4,9 @@
 To search for a date range <a href="./search-date.php">click here</a>.
 </div>
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -15,11 +16,11 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
-	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
-	if (isset($_GET['flag'])) {$flag = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['flag'])));} else {$flag = "";}
-	if (isset($_GET['ban_reason'])) {$ban_reason = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ban_reason'])));} else {$ban_reason = "";}
+	if (isset($_GET['submit'])) {$button = $_GET['submit'];} else {$button = "";}
+	if (isset($_GET['search'])) {$search = $_GET['search'];} else {$search = "";}
+	if (isset($_GET['RS'])) {$RS = $_GET['RS'];} else {$RS = "";}
+	if (isset($_GET['flag'])) {$flag = $_GET['flag'];} else {$flag = "";}
+	if (isset($_GET['ban_reason'])) {$ban_reason = $_GET['ban_reason'];} else {$ban_reason = "";}
 
 	echo "<div class='section'>";
 	echo "<form action='search.php' method='GET'> ";
@@ -58,40 +59,52 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		$ban_reason_sql=" AND ban_reason LIKE '{$ban_reason}'";
 	}
 	
-	$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL."";
-	$result = mysqli_query($con,$total_pages_sql);
-	$total_rows = mysqli_fetch_array($result)[0];
+	$total_pages_sql = $pdo->prepare("
+		SELECT Count( * ) AS count 
+		FROM hm_fwban 
+		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql.$RS_SQL);
+	$total_pages_sql->execute();
+	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-$sql = "
-	SELECT
-		a.tsf,
-		a.ipaddress,
-		a.ban_reason,
-		a.country,
-		a.flag,
-		a.helo,
-		a.ptr,
-		b.returnhits
-	FROM
-	(
-		SELECT DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as tsf, timestamp, ipaddress, ban_reason, country, flag, helo, ptr
-		FROM hm_fwban 
-		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
-		ORDER BY timestamp DESC 
-	) AS a
-	LEFT JOIN
-	(
-		SELECT COUNT(ipaddress) AS returnhits, ipaddress, timestamp
-		FROM hm_fwban_rh
-		GROUP BY ipaddress
-		ORDER BY timestamp DESC
-	) AS b
-	ON a.ipaddress = b.ipaddress
-	ORDER BY a.tsf DESC
-	LIMIT ".$offset.", ".$no_of_records_per_page;
-
-	$res_data = mysqli_query($con,$sql);
+	$sql = $pdo->prepare("
+		SELECT
+			a.tsf,
+			a.ipaddress,
+			a.ban_reason,
+			a.country,
+			a.flag,
+			a.helo,
+			a.ptr,
+			b.returnhits
+		FROM
+		(
+			SELECT 
+				".DBFormatDate('timestamp', '%y/%m/%d %T')." AS tsf, 
+				timestamp, 
+				ipaddress, 
+				ban_reason, 
+				country, 
+				flag, 
+				helo, 
+				ptr
+			FROM hm_fwban 
+			WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
+			ORDER BY timestamp DESC 
+		) AS a
+		LEFT JOIN
+		(
+			SELECT 
+				COUNT(ipaddress) AS returnhits, 
+				ipaddress, 
+				timestamp
+			FROM hm_fwban_rh
+			GROUP BY ipaddress
+			ORDER BY timestamp DESC
+		) AS b
+		ON a.ipaddress = b.ipaddress
+		".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page));
+	$sql->execute();
 	
 	if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
 	elseif ($RS=="NO"){$RSres=" with release status \"<b>NO</b>\"";} 
@@ -124,7 +137,7 @@ $sql = "
 				<th>FB</th>
 				<th>RS</th>
 			</tr>";
-		while($row = mysqli_fetch_array($res_data)){
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<tr>";
 			echo "<td>".$row['tsf']."</td>";
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
@@ -159,7 +172,6 @@ $sql = "
 			FB = Firewall Blocks<br />
 			RS = Release Status<br /><br />";
 		}
-	mysqli_close($con);
 	}
 	echo "<br />";
 	echo "</div>";

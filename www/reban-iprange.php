@@ -2,8 +2,9 @@
 
 <div class="section">
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -16,22 +17,14 @@
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ipRange'])) {
 		if(preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
-			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange']))))."/32";
+			$ipRange = $_GET['ipRange']."/32";
 		} else if (preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))$/", ($_GET['ipRange']))) {
-			$ipRange = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange'])));
+			$ipRange = $_GET['ipRange'];
 		} else {
 			$ipRange = "";
 		}
 	} else {
 		$ipRange = "";
-	}
-
-	function ipRangeFinder($cidr) {
-	   $range = array();
-	   $cidr = explode('/', $cidr);
-	   $range[0] = long2ip((ip2long($cidr[0])) & ((-1 << (32 - (int)$cidr[1]))));
-	   $range[1] = long2ip((ip2long($range[0])) + pow(2, (32 - (int)$cidr[1])) - 1);
-	   return $range;
 	}
 
 	if (empty($ipRange)){ 
@@ -48,36 +41,31 @@
 
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
-		$total_pages_sql = "
+		$total_pages_sql = $pdo->prepare("
 			SELECT COUNT(*) AS count 
 			FROM hm_fwban 
 			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
 			ORDER BY INET_ATON(ipaddress) ASC
-		";
-		$result = mysqli_query($con,$total_pages_sql);
-		$total_rows = mysqli_fetch_array($result)[0];
+		");
+		$total_pages_sql->execute();
+		$total_rows = $total_pages_sql->fetchColumn();
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "
+		$sql = $pdo->prepare("
 			SELECT 
 				id, 
-				DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, 
+				".DBFormatDate('timestamp', '%y/%m/%d %T')." as TimeStamp, 
 				ipaddress, 
 				ban_reason, 
 				country, 
 				flag 
 			FROM hm_fwban 
 			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
-			ORDER BY TimeStamp DESC 
-			LIMIT ".$offset.", ".$no_of_records_per_page."
-		";
-		$res_data = mysqli_query($con,$sql);
+			".DBLimitRowsWithOffset('TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
+		);
+		$sql->execute();
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
-		// if ($total_rows == 0){
-
-			// echo "<br /><br />No released results for IP range \"<b>".$ipRange."</b>\". Click here to <a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Reban\" onclick=\"return confirm('Are you sure you want to ban IP range ".$ipRange."?')\">manually ban</a>.";
-		// } else {
 
 		echo "<h2>IP Range Information</h2>";
 		echo "<table class='section'>
@@ -100,7 +88,7 @@
 		echo "<a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Ban\" onclick=\"return confirm('Are you sure you want to ban all ".number_format($ip_count)." IPs in range ".$ipRange."?')\">Click here</a> to ban all <b>".number_format($ip_count)."</b> IPs in range. Duplicates will be deleted from the database prior to adding firewall rules.<br />";
 		echo "<br /><br />";
 		if ($total_pages == 0) {
-			echo "No results from Firewall Ban found within IP range ".$ipRange;
+			echo "No <b>existing</b> results from Firewall Ban found within IP range <b>".$ipRange."</b>";
 		} else {
 			echo "Firewall Ban results for IP range \"<b>".$ipRange."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 			echo "<table class='section'>
@@ -111,7 +99,7 @@
 					<th>Country</th>
 					<th style=\"text-align:center;\">RS</th>
 				</tr>";
-			while($row = mysqli_fetch_array($res_data)){
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 
 				echo "<tr>";
 
@@ -139,7 +127,6 @@
 				echo "</ul>";
 			}
 		}
-		mysqli_close($con);
 	}
 	
 	// }

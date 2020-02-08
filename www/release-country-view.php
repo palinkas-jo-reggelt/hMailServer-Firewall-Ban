@@ -2,8 +2,9 @@
 
 <div class="section">
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -13,9 +14,9 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])){$button = $_GET ['submit'];}else{$button = "";}
-	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
-	if (isset($_GET['country'])) {$country = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['country'])));} else {$country = "";}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['search'])) {$search = $_GET['search'];} else {$search = "";}
+	if (isset($_GET['country'])) {$country = $_GET['country'];} else {$country = "";}
 
 	if (empty($country)){
 		echo "No country selected. Please try again or see administator.<br /><br />";
@@ -23,13 +24,29 @@
 
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
-		$total_pages_sql = "SELECT Count( * ) AS count FROM hm_fwban WHERE `country` LIKE '%{$country}%' AND (flag IS NULL OR flag=3)";
-		$result = mysqli_query($con,$total_pages_sql);
-		$total_rows = mysqli_fetch_array($result)[0];
+		$total_pages_sql = $pdo->prepare("
+			SELECT 
+				Count( * ) AS count 
+			FROM hm_fwban 
+			WHERE country LIKE '%{$country}%' AND (flag IS NULL OR flag=3)
+		");
+		$total_pages_sql->execute();
+		$total_rows = $total_pages_sql->fetchColumn();
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, country, flag FROM hm_fwban WHERE `country` LIKE '%{$country}%' AND (flag IS NULL OR flag=3) ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
-		$res_data = mysqli_query($con,$sql);
+		$sql = $pdo->prepare("
+			SELECT 
+				id, 
+				".DBFormatDate('timestamp', '%y/%m/%d %T')." as TimeStamp, 
+				ipaddress, 
+				ban_reason, 
+				country, 
+				flag 
+			FROM hm_fwban 
+			WHERE country LIKE '%{$country}%' AND (flag IS NULL OR flag=3) 
+			".DBLimitRowsWithOffset('TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
+		);
+		$sql->execute();
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
@@ -48,29 +65,31 @@
 					<th>Country</th>
 					<th>RS</th>
 				</tr>";
-			while($row = mysqli_fetch_array($res_data)){
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+				echo "<tr>";
 
-			echo "<tr>";
+				echo "<td>" . $row['TimeStamp'] . "</td>";
+				echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
+				echo "<td>" . $row['ban_reason'] . "</td>";
+				echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
+				if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
+				else echo "<td>YES</td>";
 
-			echo "<td>" . $row['TimeStamp'] . "</td>";
-			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-			echo "<td>" . $row['ban_reason'] . "</td>";
-			echo "<td><a href=\"https://ipinfo.io/" . $row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
-			if($row['flag'] === NULL || $row['flag'] == 3) echo "<td><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
-			else echo "<td>YES</td>";
-
-			echo "</tr>";
+				echo "</tr>";
 			}
 			echo "</table>";
 
-		echo "<ul>";
-			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=1\">First </a><li>";}
-			if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".($page - 1)."\">Prev </a></li>";}
-			if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".($page + 1)."\">Next </a></li>";}
-			if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".$total_pages."\">Last</a></li>";}
-		echo "</ul>";
+			if ($total_pages == 1){
+				echo "";
+			} else {
+				echo "<ul>";
+					if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=1\">First </a><li>";}
+					if($page <= 1){echo "<li>Prev </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".($page - 1)."\">Prev </a></li>";}
+					if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".($page + 1)."\">Next </a></li>";}
+					if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".$total_pages."\">Last</a></li>";}
+				echo "</ul>";
+			}
 		}
-		mysqli_close($con);
 	}
 	echo "<br />";
 ?>

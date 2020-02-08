@@ -1,5 +1,3 @@
-<?php include("cred.php") ?>
-
 <html>
 <head>
 <title>hMailServer Firewall Ban</title>
@@ -16,19 +14,22 @@
 <div class="section">
 
 <?php
+	include_once("config.php");
+	include_once("functions.php");
+
 	if (isset($_GET['ip'])) {$ip = $_GET ['ip'];} else {$ip = "";}
 
-	// echo "IP: ".$ip."<br />";
-	// $ptr = gethostbyaddr($ip);
-	// if ($ptr == $ip){
-		// echo "PTR: No PTR <br />";
-	// } else {
-		// echo "PTR: ".$ptr."<br />";
-	// }	
-
-	$sql = "SELECT DATE(timestamp) AS dateptr, ban_reason, helo, ptr FROM hm_fwban WHERE ipaddress = '$ip'";
-	$res_data = mysqli_query($con,$sql);
-	while($row = mysqli_fetch_array($res_data)){
+	$sql = $pdo->prepare("
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS dateptr, 
+			ban_reason, 
+			helo, 
+			ptr 
+		FROM hm_fwban 
+		WHERE ipaddress = '$ip'
+	");
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		echo "IP: ".$ip."<br />";
 		echo "PTR: ".$row['ptr']."<br />";
 		echo "HELO: ".$row['helo']."<br />";

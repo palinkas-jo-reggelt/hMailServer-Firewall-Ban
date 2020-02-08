@@ -1,4 +1,5 @@
-<?php include("cred.php") ?>
+<?php include_once("config.php") ?>
+<?php include_once("functions.php") ?>
 <script type="text/javascript">
 google.load("visualization", "1", {packages:["corechart", "line"]});
 google.setOnLoadCallback(drawChart);
@@ -8,7 +9,16 @@ function drawChart() {
 	data.addColumn('number', 'Hits');
 	data.addRows([
 <?php 
-	$query = "SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday FROM hm_fwban WHERE DATE(timestamp) < DATE(NOW()) GROUP BY daily ASC";
+	$query = "
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
+			".DBFormatDate('timestamp', '%Y')." AS year,
+			(".DBFormatDate('timestamp', '%c')." - 1) AS month,
+			".DBFormatDate('timestamp', '%e')." AS day,
+			COUNT(id) AS ipperday 
+		FROM hm_fwban 
+		WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
+		GROUP BY daily ASC";
 	$exec = mysqli_query($con,$query);
 	while($row = mysqli_fetch_array($exec)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";

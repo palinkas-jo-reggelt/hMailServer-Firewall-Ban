@@ -1,6 +1,7 @@
 <?php include("head-r.php") ?>
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -11,9 +12,9 @@
 		$display_pagination = 0;
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['dateFrom'])) {$dateFrom = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateFrom'])));} else {$dateFrom = "";}
-	if (isset($_GET['dateTo'])) {$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));} else {$dateTo = "";}
-	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
+	if (isset($_GET['dateFrom'])) {$dateFrom = $_GET['dateFrom'];} else {$dateFrom = "";}
+	if (isset($_GET['dateTo'])) {$dateTo = $_GET['dateTo'];} else {$dateTo = "";}
+	if (isset($_GET['RS'])) {$RS = $_GET['RS'];} else {$RS = "";}
   
 	echo "<div class='section'>";
 	echo "<h2>Search a date range:</h2>";
@@ -47,13 +48,55 @@
 		elseif ($RS=="YES"){$RS_SQL = " AND (flag=1 OR flag=2)";}
 		else {$RS_SQL = "";}
 	
-		$total_pages_sql = "SELECT Count(*) AS count FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL."";
-		$result = mysqli_query($con,$total_pages_sql);
-		$total_rows = mysqli_fetch_array($result)[0];
+		$total_pages_sql = $pdo->prepare("
+			SELECT 
+				Count(*) AS count 
+			FROM hm_fwban 
+			WHERE timestamp BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL
+		);
+		$total_pages_sql->execute();
+		$total_rows = $total_pages_sql->fetchColumn();
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		$sql = "SELECT id, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, ipaddress, ban_reason, country, flag, helo FROM hm_fwban WHERE `timestamp` BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." ORDER BY TimeStamp DESC LIMIT $offset, $no_of_records_per_page";
-		$res_data = mysqli_query($con,$sql);
+		$sql = $pdo->prepare("
+			SELECT
+				a.tsf,
+				a.ipaddress,
+				a.ban_reason,
+				a.country,
+				a.flag,
+				a.helo,
+				a.ptr,
+				b.returnhits
+			FROM
+			(
+				SELECT 
+					".DBFormatDate('timestamp', '%y/%m/%d %T')." AS tsf, 
+					timestamp, 
+					ipaddress, 
+					ban_reason, 
+					country, 
+					flag, 
+					helo, 
+					ptr
+				FROM hm_fwban 
+				WHERE timestamp BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." 
+				ORDER BY timestamp DESC 
+			) AS a
+			LEFT JOIN
+			(
+				SELECT 
+					COUNT(ipaddress) AS returnhits, 
+					ipaddress, 
+					timestamp
+				FROM hm_fwban_rh
+				GROUP BY ipaddress
+				ORDER BY timestamp DESC
+			) AS b
+			ON a.ipaddress = b.ipaddress
+			".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page)
+		);
+		$sql->execute();
 
 		if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
 		elseif ($RS=="NO"){$RSres=" with release status \"<b>NO</b>\"";} 
@@ -73,25 +116,26 @@
 					<th>RH</th>
 					<th>RS</th>
 				</tr>";
-			while($row = mysqli_fetch_array($res_data)){
-				$res_repeat = mysqli_query($con,"SELECT COUNT(ipaddress) FROM hm_fwban_rh WHERE ipaddress='".$row['ipaddress']."'");
-				$repeats = mysqli_fetch_array($res_repeat)[0];
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				echo "<tr>";
-				echo "<td>" . $row['TimeStamp'] . "</td>";
+
+				echo "<td>".$row['tsf']."</td>";
 				echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
-				echo "<td>" . $row['ban_reason'] . "</td>";
+				echo "<td>".$row['ban_reason']."</td>";
 				echo "<td><a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a></td>";
 				echo "<td>".$row['helo']."</td>";
-				echo "<td style=\"text-align:right;\">".number_format($repeats)."</td>";
+				if ($row['returnhits']===NULL){echo "<td style=\"text-align:right;\">0</td>";}
+				else {echo "<td style=\"text-align:right;\"><a href=\"repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".number_format($row['returnhits'])."</a></td>";}
 				if($row['flag'] === NULL || $row['flag'] == 3 || $row['flag'] == 7) echo "<td style=\"text-align:center;\"><a href=\"./release-ip.php?submit=Release&ipRange=".$row['ipaddress']."\" onclick=\"return confirm('Are you sure you want to release ".$row['ipaddress']."?')\">No</a></td>";
 				elseif($row['flag'] == 1 || $row['flag'] == 2) echo "<td style=\"text-align:center;\">YES</td>";
 				elseif($row['flag'] == 4) echo "<td style=\"text-align:center;\">NEW</td>";
 				elseif($row['flag'] == 6 || $row['flag'] == 5) echo "<td style=\"text-align:center;\">SAF</td>";
 				else echo "<td style=\"text-align:center;\">ERR</td>";
+
 				echo "</tr>";
 			}
 			echo "</table>";
-			if ($total_pages == 1){echo "";}
+			if ($total_pages < 2){echo "";}
 			else {
 				echo "<ul>";
 				if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=1\">First </a><li>";}
@@ -106,7 +150,6 @@
 				RS = Release Status<br /><br />";
 			}
 		}
-	mysqli_close($con);
 	}
 	echo "<br />";
 	echo "</div>";
