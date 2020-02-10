@@ -22,16 +22,16 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 ###   MYSQL VARIABLES   ########################################################
 #                                                                              #
-$DatabaseType     = 'MYSQL'                                                    #
+$DatabaseType     = 'MYSQL'            #<-- Options: "MYSQL" or "MSSQL"        #
 $SQLAdminUserName = 'hmailserver'                                              #
 $SQLAdminPassword = 'supersecretpassword'                                      #
 $SQLDatabase      = 'hmailserver'                                              #
-$SQLHost          = 'localhost'                                                #
+$SQLHost          = '127.0.0.1'                                                #
 $SQLPort          = 3306                                                       #
 #                                                                              #
 ###   FIREWALL VARIABLES   #####################################################
 #                                                                              #
-$LANSubnet   = '192.168.99' # <-- 3 octets only, please                        #
+$LANSubnet   = '192.168.1'  # <-- 3 octets only, please                        #
 $MailPorts   = '25|465|587|110|995|143|993' # <-- add custom ports if in use   #
 $FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'           #
 #                                                                              #

@@ -22,7 +22,6 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 	* TO BE USED ONLY ON ACTIVE FIREWALL BAN INSTALLATIONS 
 	* Do not run on fresh installations
 	* Automatically selects first day through yesterday
-	* Creates 3 files for each day so run script from its own folder to keep file structure orderly
 	
 .EXAMPLE
 
@@ -37,6 +36,17 @@ Catch {
 	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
 
+$ConsFolder = "$PSScriptRoot\ConsolidateRules"
+
+#	Create ConsolidateRules folder if it doesn't exist
+If (-not(Test-Path $ConsFolder)) {
+	md $ConsFolder
+}
+
+#	Delete all files in the Consolidated Rules folder before beginning
+Get-ChildItem -Path $ConsFolder -Include * | foreach { $_.Delete()}
+
+#	Find earliest ban date 
 $Query = "SELECT MIN(timestamp) AS mindate FROM hm_fwban WHERE flag IS NULL"
 RunSQLQuery $Query | ForEach {
 	$MinDate = (Get-Date -date $_.mindate)
@@ -46,9 +56,15 @@ $A = 0
 
 Do {
 	$BanDate = $MinDate.AddDays($A).ToString("yyyy-MM-dd")
-	$ConsRules = "$PSScriptRoot\hmsFWBRule-$BanDate.csv"
+	$ConsRules = "$ConsFolder\hMS FWBan $BanDate.csv"
 
-	$Query = "SELECT id, ipaddress FROM hm_fwban WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL"
+	$Query = "
+		SELECT 
+			id, 
+			ipaddress 
+		FROM hm_fwban 
+		WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL
+		"
 	RunSQLQuery $Query | Export-CSV $ConsRules
 
 	Import-CSV $ConsRules | ForEach {

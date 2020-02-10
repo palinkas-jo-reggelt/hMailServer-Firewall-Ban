@@ -33,10 +33,15 @@ Catch {
 	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
 
+$ConsFolder = "$PSScriptRoot\ConsolidateRules"
+
 #	Create ConsolidateRules folder if it doesn't exist
-If (-not(Test-Path "$PSScriptRoot\ConsolidateRules")) {
-	md "$PSScriptRoot\ConsolidateRules"
+If (-not(Test-Path $ConsFolder)) {
+	md $ConsFolder
 }
+
+#	Delete all files in the Consolidated Rules folder before beginning
+Get-ChildItem -Path $ConsFolder -Include * | foreach { $_.Delete()}
 
 #	Get BanDate (Yesterday) and establish csv
 $BanDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd")
@@ -52,10 +57,11 @@ $Rows = 400
 $Limit = [math]::ceiling($CountIP / $Rows)
 
 Do {
-	$X = ($N).ToString("000")
-	$ConsRules = "$PSScriptRoot\ConsolidateRules\hmsFWBRule-"+$BanDate+"_"+$X+".csv"
+	$X = ($N).ToString("00")
+	$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
 	$Query = "
-		SELECT ipaddress 
+		SELECT 
+			ipaddress 
 		FROM hm_fwban 
 		WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL 
 		ORDER BY timestamp DESC
@@ -67,12 +73,11 @@ Do {
 }
 Until ($N -eq $Limit)
 
-$Location = "$PSScriptRoot\ConsolidateRules"
-$RegexName = 'hmsFWBRule\-202[0-9]\-[0-9][0-9]\-[0-9][0-9]_[0-9]{3}\.csv$'
+$RegexName = '^hMS\sFWBan\s202[0-9]\-[0-9]{2}\-[0-9]{2}_[0-9]{2}\.csv$'
 $RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
-Get-ChildItem $Location | Where-Object {$_.name -match $RegexName} | ForEach {
+Get-ChildItem $ConsFolder | Where-Object {$_.name -match "hMS FWBan $BanDate_"} | ForEach {
 	$FileName = $_.name
-	$FilePathName = "$Location\$FileName"
+	$FilePathName = "$ConsFolder\$FileName"
 	$RuleName = ($FileName).Replace(".csv", "")
 	import-csv -Path $FilePathName | ForEach {
 		$IP = $_.ipaddress

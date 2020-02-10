@@ -41,9 +41,9 @@ If (-not(Test-Path "$PSScriptRoot\RetroAddRuleName")) {
 }
 
 $NewLine = [System.Environment]::NewLine
-$RegexIP = '^(([0-9]{1,3}\.){3}[0-9]{1,3})$'
-$RegexDateName = 'hms\sFWBan\s20[0-9][0-9]\-[0-9][0-9]\-[0-9][0-9]$'
-$RegexIPName = '^(([0-9]{1,3}\.){3}[0-9]{1,3})$'
+$RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
+$RegexDateName = '(hmsFWBRule\-|hMS\sFWBan\s)(20\d{2}\-\d{2}\-\d{2})(_\d{3})?$'
+$RegexIPName  = '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
 $RegexFileName = 'hms\sFWBan\s20[0-9][0-9]\-[0-9][0-9]\-[0-9][0-9].txt$'
 $Location = "$PSScriptRoot\RetroAddRuleName"
 
@@ -72,7 +72,7 @@ Get-ChildItem $Location | Where-Object {$_.name -match $RegexFileName} | ForEach
 }
 
 # 	Add "rulename" column to hm_fwban
-$Query = "ALTER TABLE hm_fwban ADD rulename VARCHAR(192) NULL $(IF (IsMySQL) {"AFTER helo"});" #MSSQL does not have this option, To achieve this, must create a new table with desired column order, copy data, drop old table, rename new table with right name.
+$Query = "ALTER TABLE hm_fwban ADD rulename VARCHAR(192) NULL;"
 RunSQLQuery($Query)
 
 #	Pick up any missed entries (bans without firewall rules)

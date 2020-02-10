@@ -29,7 +29,7 @@ Catch {
 	Write-Output "Error while loading supporting PowerShell Scripts" | Out-File -Path "$PSScriptRoot\PSError.log"
 }
 
-If (IsMSSQL) {
+If ($DatabaseType -eq "MSSQL") {
 
 	#	Create hm_fwban table if it doesn't exist
 	$Query = "
@@ -78,7 +78,8 @@ If (IsMSSQL) {
 	"
 	RunSQLQuery $Query
 }
-elseif (ISMySQL) {
+
+If ($DatabaseType -eq "MYSQL") {
 
 	#	Create hm_fwban table if it doesn't exist
 	$Query = "

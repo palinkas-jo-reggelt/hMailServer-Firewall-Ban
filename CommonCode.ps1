@@ -51,27 +51,19 @@ Function EmailResults {
 #######################################
 
 Function RunSQLQuery($Query){
-    if (IsMSSQL) {
-        MSSQLQuery($Query)
-    } elseif (IsMySQL){
+    If ($DatabaseType -eq "MYSQL") {
         MySQLQuery($Query)
-    } else {
+    } ElseIf ($DatabaseType -eq "MSSQL"){
+        MySQLQuery($Query)
+    } Else {
         Out-Null
     }
-}
-
-Function IsMSSQL(){
-    return $DatabaseType -eq "MSSQL"
-}
-
-Function IsMySQL(){
-    return $DatabaseType -eq "MySQL"
 }
 
 Function MySQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server="+$SQLHost+";port="+$SQLPort+";uid="+$SQLAdminUserName+";pwd="+$SQLAdminPassword+";database="+$SQLDatabase
+	$ConnectionString = "server=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";pwd=" + $SQLAdminPassword + ";database=" + $SQLDatabase
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
@@ -94,7 +86,7 @@ Function MySQLQuery($Query) {
 Function MSSQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-    $ConnectionString = "Data Source="+$SQLHost+";port="+$SQLPort+";uid="+$SQLAdminUserName+";password="+$SQLAdminPassword+";Initial Catalog="+$SQLDatabase
+    $ConnectionString = "Data Source=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object System.Data.SqlClient.SQLConnection($connectionString)
@@ -115,9 +107,9 @@ Function MSSQLQuery($Query) {
 
 Function DBCastDateTimeFieldAsDate($fieldName){
     $Return = ""
-    if (IsMySQL) {
+    If ($DatabaseType -eq "MYSQL") {
         $Return = "DATE($fieldName)"
-    } elseif (IsMSSQL){
+    } ElseIf ($DatabaseType -eq "MSSQL"){
         $Return = "CAST($fieldName AS DATE)"
     }
     return $Return
@@ -132,9 +124,9 @@ Function DBSubtractIntervalFromDate(){
     )
 
     $Return = ""
-    if (IsMySQL) {
+    If ($DatabaseType -eq "MYSQL") {
         $Return = "'$dateString' - interval $intervalValue $intervalName"
-    } elseif (IsMSSQL){
+    } ElseIf ($DatabaseType -eq "MSSQL"){
         $Return = "DATEADD($intervalName,-$intervalValue, '$dateString')"
     }
     return $Return
@@ -149,9 +141,9 @@ Function DBSubtractIntervalFromField(){
     )
 
     $Return = ""
-    if (IsMySQL) {
+    If ($DatabaseType -eq "MYSQL") {
         $Return = "$fieldName - interval $intervalValue $intervalName"
-    } elseif (IsMSSQL){
+    } ElseIf ($DatabaseType -eq "MSSQL"){
         $Return = "DATEADD($intervalName,-$intervalValue, $fieldName)"
     }
     return $Return
@@ -159,9 +151,9 @@ Function DBSubtractIntervalFromField(){
 
 Function DBGetCurrentDateTime(){
     $Return = ""
-    if (IsMySQL) {
+    If ($DatabaseType -eq "MYSQL") {
         $Return = "NOW()"
-    } elseif (IsMSSQL){
+    } ElseIf ($DatabaseType -eq "MSSQL"){
         $Return = "GETDATE()"
     }
     return $Return
@@ -171,19 +163,17 @@ Function DBLimitRowsWithOffset(){
     param(
         $offset,
         $numRows
-    )
+	)
 
-    $QueryLimit = ""
+	$QueryLimit = ""
 
-    IF (IsMySQL)
-	{
+    If ($DatabaseType -eq "MYSQL") {
 		$QueryLimit = "LIMIT $offset, $numRows"
-	} elseif (IsMSSQL) {
-		$QueryLimit = "    OFFSET $offset ROWS 
+    } ElseIf ($DatabaseType -eq "MSSQL"){
+		$QueryLimit = "OFFSET $offset ROWS 
 		   	           FETCH NEXT $numRows ROWS ONLY"
-    }
-    
-    return $QueryLimit
+	}
+	return $QueryLimit
 }
 
 #######################################
