@@ -170,9 +170,12 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$thismonth}-01 00:00:00' AND NOW()
-		");
+			FROM 
+				hm_fwban 
+			WHERE 
+				timestamp BETWEEN '{$thismonth}-01 00:00:00' AND ".DBGetCurrentDateTime()."
+			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<a href=\"./search.php?search=".$thismonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> so far this month<br />"; 
@@ -184,7 +187,8 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'
-		");
+			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<a href=\"./search.php?search=".$lastmonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($lastmonth))."<br />"; 
@@ -196,7 +200,8 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'
-		");
+			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<a href=\"./search.php?search=".$twomonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($twomonthsago))."<br />"; 
@@ -208,7 +213,8 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'
-		");
+			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<a href=\"./search.php?search=".$threemonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($threemonthsago))."<br />";
@@ -220,7 +226,8 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'
-		");
+			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br />"; 
@@ -231,18 +238,18 @@
 			echo "";
 		} else {
 			$sql = $pdo->prepare("
+			SELECT 
+				ROUND(AVG(numhits), 0) AS avghits 
+			FROM (
 				SELECT 
-					ROUND(AVG(numhits), 0) AS avghits 
-				FROM (
-					SELECT 
-						COUNT(id) as numhits,
-						".DBCastDateTimeFieldAsMonth('timestamp')."
-					FROM hm_fwban 
-					WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
-					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
-					".DBLimitRowsWithOffset(DBCastDateTimeFieldAsMonth('timestamp'),'DESC',0,0,0,3)."
-				) d
-			");
+					COUNT(id) as numhits,
+					".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
+				FROM hm_fwban 
+				WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
+				GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
+				".DBLimitRowsWithOffset(DBCastDateTimeFieldAsMonth('timestamp'),'DESC',0,0,0,3)."
+			) d
+		");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				echo "Monthly average last 3 months: ".number_format($row['avghits'])." hits<br />"; 
@@ -258,7 +265,7 @@
 				FROM (
 					SELECT 
 						COUNT(id) as numhits,
-						".DBCastDateTimeFieldAsMonth('timestamp')."
+						".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
 					FROM hm_fwban 
 					WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
 					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
@@ -327,22 +334,22 @@
 		$num_dups_sql->execute();
 		$num_dups = $num_dups_sql->fetchColumn();
 
-		$sql = $pdo->prepare("
-			SELECT 
-				ipaddress, 
-				COUNT(ipaddress) AS dupip, 
-				MAX(".DBFormatDate('timestamp', '%y/%c/%e').") AS dupdate, 
-				country 
-			FROM hm_fwban 
-			GROUP BY ipaddress 
-			HAVING dupip > 1 
-			".DBLimitRowsWithOffset('dupdate','DESC',0,0,0,5)
-		);
-		$sql->execute();
 		if ($num_dups == 0){
 			echo "There are no duplicate IPs to report.<br /><br />";
 		}else{
-		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+			$sql = $pdo->prepare("
+				SELECT 
+					ipaddress, 
+					COUNT(ipaddress) AS dupip, 
+					MAX(".DBFormatDate('timestamp', '%y/%c/%e').") AS dupdate, 
+					country 
+				FROM hm_fwban 
+				GROUP BY ipaddress 
+				HAVING dupip > 1 
+				".DBLimitRowsWithOffset('dupdate','DESC',0,0,0,5)
+			);
+			$sql->execute();
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
 			}
 			if ($num_dups > 5){echo "<br />See all ".$num_dups." <a href=\"./duplicates.php\">Duplicate Entries</a>.<br /><br />";}
@@ -403,8 +410,8 @@
 			$sql = $pdo->prepare("
 				SELECT 
 					ban_reason, 
-					COUNT(ban_reason) AS value_occurrence, 
-					flag 
+					COUNT(ban_reason) AS value_occurrence--, 
+					--flag 
 				FROM hm_fwban 
 				WHERE (flag=1 OR flag=2 OR flag=5 OR flag=6) 
 				GROUP BY ban_reason 
@@ -588,7 +595,7 @@
 					ipaddress
 				FROM hm_fwban_rh 
 				GROUP BY ipaddress 
-				ORDER BY countip DESC 
+				--ORDER BY countip DESC 
 			) AS a
 			JOIN
 			(

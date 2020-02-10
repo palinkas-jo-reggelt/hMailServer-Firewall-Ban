@@ -3,7 +3,7 @@
 	If ($Database['driver'] == 'mysql') {
 		$pdo = new PDO("mysql:host=".$Database['host'].";port=".$Database['port'].";dbname=".$Database['dbname'], $Database['username'], $Database['password']);
 	} ElseIf ($Database['driver'] == 'mssql') {
-		$pdo = new PDO("sqlsrv:Server=".$Database['host'].";Port=".$Database['Port'].";Database=".$Database['dbname'], $Database['username'], $Database['password']);
+		$pdo = new PDO("sqlsrv:Server=".$Database['host'].",".$Database['port'].";Database=".$Database['dbname'], $Database['username'], $Database['password']);
 	} ElseIf ($Database['driver'] == 'odbc') {
 		$pdo = new PDO("odbc:Driver={".$Database['dsn']."};Server=".$Database['host'].";Port=".$Database['port'].";Database=".$Database['dbname'].";User=".$Database['username'].";Password=".$Database['password'].";");
 	} Else {
@@ -69,7 +69,7 @@
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "HOUR(".$fieldName.")";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "CAST(".$fieldName." AS HOUR)";
+			$Return = DBFormatDate($fieldName, '%H');
 		}
 		return $Return;
 	}
@@ -80,7 +80,7 @@
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "MONTH(".$fieldName.")";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "CAST(".$fieldName." AS MONTH)";
+			$Return = DBFormatDate($fieldName, '%c');
 		}
 		return $Return;
 	}
@@ -91,8 +91,8 @@
 
 		$dateFormatSpecifiers = array (
 			'%Y'                => 'yyyy',
-			'%c'                => 'M',
-			'%e'                => 'd',
+			'%c'                => 'MM',
+			'%e'                => 'dd',
 			'Y-m-d'             => 'yyyy-MM-dd',
 			'%y/%m/%d'          => 'yy/M/d',
 			'Y-m'               => 'yyyy-MM',
@@ -100,12 +100,13 @@
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/M/d',
+			'%H'				=> 'HH',
 		);
 
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "DATE_FORMAT(".$fieldName.", '".$formatSpecifier."')";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "FORMAT('".$fieldName."', '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
+			$Return = "FORMAT(".$fieldName.", '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
 		}
 		return $Return;
 	}
