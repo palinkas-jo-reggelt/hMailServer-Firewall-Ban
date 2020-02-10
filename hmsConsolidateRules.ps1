@@ -57,8 +57,13 @@ $Rows = 400
 $Limit = [math]::ceiling($CountIP / $Rows)
 
 Do {
-	$X = ($N).ToString("00")
-	$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
+	$X = ($N).ToString("0")
+	If ($N -eq 0){
+		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+".csv"
+	}
+	Else {
+		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
+	}
 	$Query = "
 		SELECT 
 			ipaddress 
@@ -73,8 +78,8 @@ Do {
 }
 Until ($N -eq $Limit)
 
-$RegexName = '^hMS\sFWBan\s202[0-9]\-[0-9]{2}\-[0-9]{2}_[0-9]{2}\.csv$'
-$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
+$RegexName = '^hMS\sFWBan\s202[0-9]\-[0-9]{2}\-[0-9]{2}(_[0-9]{1,3})?\.csv$'
+$RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
 Get-ChildItem $ConsFolder | Where-Object {$_.name -match "hMS FWBan $BanDate_"} | ForEach {
 	$FileName = $_.name
 	$FilePathName = "$ConsFolder\$FileName"
