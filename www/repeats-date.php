@@ -1,6 +1,7 @@
 <?php include("head-r.php") ?>
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -11,9 +12,9 @@
 		$display_pagination = 0;
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['dateFrom'])) {$dateFrom = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateFrom'])));} else {$dateFrom = "";}
-	if (isset($_GET['dateTo'])) {$dateTo = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['dateTo'])));} else {$dateTo = "";}
-	if (isset($_GET['RS'])) {$RS = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['RS'])));} else {$RS = "";}
+	if (isset($_GET['dateFrom'])) {$dateFrom = $_GET['dateFrom'];} else {$dateFrom = "";}
+	if (isset($_GET['dateTo'])) {$dateTo = $_GET['dateTo'];} else {$dateTo = "";}
+	if (isset($_GET['RS'])) {$RS = $_GET['RS'];} else {$RS = "";}
   
 	echo "<div class='section'>";
 	echo "<h2>Search a date range for connections blocked by firewall:</h2>";
@@ -37,37 +38,46 @@
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
 		
-		$total_pages_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh WHERE DATE(timestamp) BETWEEN '{$dateFrom}%' AND '{$dateTo}%'";
-		$result = mysqli_query($con,$total_pages_sql);
-		$total_rows = mysqli_fetch_array($result)[0];
+		$total_pages_sql = $pdo->prepare("
+			SELECT 
+				COUNT(DISTINCT(ipaddress)) 
+			FROM hm_fwban_rh 
+			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." BETWEEN '{$dateFrom}%' AND '{$dateTo}%'
+		");
+		$total_pages_sql->execute();
+		$total_rows = $total_pages_sql->fetchColumn();
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-		// $sql = "SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp FROM hm_fwban_rh WHERE DATE(timestamp) BETWEEN '{$dateFrom}%' AND '{$dateTo}%' GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
-
-		$sql = "
-		SELECT
-			a.TimeStamp,
-			a.ipaddress,
-			b.ban_reason,
-			b.country,
-			a.countip
-		FROM
-		(
-			SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d') as TimeStamp
-			FROM hm_fwban_rh
-			WHERE DATE(timestamp) BETWEEN '2019-11-01%' AND '2019-11-03%' 
-			GROUP BY ipaddress
-		) AS a
-		JOIN
-		(
-			SELECT ipaddress, country, ban_reason
-			FROM hm_fwban
-		) AS b
-		ON a.ipaddress = b.ipaddress
-		GROUP BY a.ipaddress
-		ORDER BY a.TimeStamp DESC
-		LIMIT ".$offset.", ".$no_of_records_per_page;
-		$res_data = mysqli_query($con,$sql);
+		$sql = $pdo->prepare("
+			SELECT
+				a.TimeStamp,
+				a.ipaddress,
+				b.ban_reason,
+				b.country,
+				a.countip
+			FROM
+			(
+				SELECT 
+					ipaddress, 
+					COUNT(ipaddress) AS countip, 
+					".DBFormatDate('timestamp', '%y/%m/%d')." as TimeStamp
+				FROM hm_fwban_rh
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." BETWEEN '".$dateFrom."%' AND '".$dateTo."%' 
+				GROUP BY ipaddress
+			) AS a
+			JOIN
+			(
+				SELECT 
+					ipaddress, 
+					country, 
+					ban_reason
+				FROM hm_fwban
+			) AS b
+			ON a.ipaddress = b.ipaddress
+			GROUP BY a.ipaddress
+			".DBLimitRowsWithOffset('a.TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
+		);
+		$sql->execute();
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
@@ -82,7 +92,7 @@
 					<th>Country</th>
 					<th>RH</th>
 				</tr>";
-			while($row = mysqli_fetch_array($res_data)){
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				echo "<tr>";
 				echo "<td>".$row['TimeStamp']."</td>";
 				echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
@@ -108,7 +118,6 @@
 						RS = Released Status<br />";
 			}
 		}
-	mysqli_close($con);
 	}
 	echo "<br />";
 	echo "</div>";

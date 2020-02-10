@@ -1,7 +1,9 @@
 <?php include("head.php") ?>
 <div class="section">
-<?php include("cred.php") ?>
 <?php
+	include("config.php");
+	include("functions.php");
+
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
 	} else {
@@ -10,13 +12,34 @@
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
 
-	$total_pages_sql = "SELECT count(*) AS duplicate_count FROM ( SELECT ipaddress FROM hm_fwban GROUP BY ipaddress HAVING COUNT(ipaddress) > 1 ) AS t";
-	$result = mysqli_query($con,$total_pages_sql);
-	$total_rows = mysqli_fetch_array($result)[0];
+	$total_pages_sql = $pdo->prepare("
+		SELECT 
+			count(*) AS duplicate_count 
+		FROM ( 
+			SELECT 
+				ipaddress 
+			FROM hm_fwban 
+			GROUP BY ipaddress 
+			HAVING COUNT(ipaddress) > 1 
+		) AS t
+	";
+	$total_pages_sql->execute();
+	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT ipaddress, COUNT(ipaddress) AS dupip, DATE_FORMAT(timestamp, '%Y/%m/%d %T') AS dupdate, country, helo FROM hm_fwban GROUP BY ipaddress HAVING dupip > 1 ORDER BY dupdate DESC, dupip DESC LIMIT $offset, $no_of_records_per_page";
-	$res_data = mysqli_query($con,$sql);
+	$sql = $pdo->prepare("
+		SELECT 
+			ipaddress, 
+			COUNT(ipaddress) AS dupip, 
+			".DBFormatDate('timestamp', '%Y/%m/%d %T')." AS dupdate
+			country, 
+			helo 
+		FROM hm_fwban 
+		GROUP BY ipaddress 
+		HAVING dupip > 1 
+		".DBLimitRowsWithOffset('dupdate','DESC','dupip','DESC',$offset,$no_of_records_per_page)
+	;
+	$sql->execute();
 
 	if ($total_rows == 0){
 		echo "<br />No duplicate entries found.";
@@ -30,7 +53,7 @@
 				<th>HELO</th>
 				<th>Duplicates</th>
 			</tr>";
-		while($row = mysqli_fetch_array($res_data)){
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<tr>";
 			echo "<td>" . $row['dupdate'] . "</td>";
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";

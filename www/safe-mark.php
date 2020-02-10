@@ -2,8 +2,9 @@
 
 <div class="section">
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -13,10 +14,13 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])){$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['id'])) {$id = $_GET['id'];} else {$id = "";}
 	if (isset($_GET['ipRange'])) {
-		if(preg_match("/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
-			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange']))));
+		if(preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
+			$ipRange = $_GET['ipRange']."/32";
+		} else if (preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))$/", ($_GET['ipRange']))) {
+			$ipRange = $_GET['ipRange'];
 		} else {
 			$ipRange = "";
 		}
@@ -24,25 +28,65 @@
 		$ipRange = "";
 	}
 
-	if (empty($ipRange)){echo "<br /><br />Error: IP range empty. Please see administrator.<br /><br />";}
-	else {
-		$sqlcount = "SELECT COUNT(DISTINCT(`ipaddress`)) AS `value_occurrence` FROM `hm_fwban` WHERE `ipaddress` = '{$ipRange}'";
-		$res_count = mysqli_query($con,$sqlcount);
-		$total_rows = mysqli_fetch_array($res_count)[0];
-		if ($total_rows > 0) { 
-			echo "<br />IP range <a href=\"./search.php?submit=Search&search=".$ipRange."\">\"<b>".$ipRange."</b>\"</a> has been permanently released and marked safe from future firewall bans.<br />";
-			$sql = "SELECT `id` FROM `hm_fwban` WHERE `ipaddress` LIKE '{$ipRange}%'";
-			$res_data = mysqli_query($con,$sql);
-			while($row = mysqli_fetch_array($res_data)){
-				$sql = "UPDATE hm_fwban SET flag=5 WHERE id=".$row['id'];
-				$result = mysqli_query($con,$sql);
-				if(!$result){ die('Could not update data: ' . mysqli_error()); }
+	$ips = ipRangeFinder($ipRange);
+	$iplo = $ips[0];
+	$iphi = $ips[1];
+
+	$range = explode("/", $ipRange);
+	$rcidr = $range[1]; 
+	$ip_count = 1 << (32 - $rcidr);
+
+	echo "<H2>Release IP Range</H2>";
+	echo $ipRange." : IP Range<br /><br />";
+	echo $iplo." : Network Address<br />";
+	echo $iphi." : Broadcast Address<br />";
+	echo $ip_count." : Number of IPs in range<br /><br />";
+	echo "Begin Update:<br /><br />";
+
+
+	if (empty($ipRange)){
+		echo "Error: IP range empty. Please see administrator.<br /><br />";
+	} else {
+
+		$start = ip2long($iplo);
+		for ($i = 0; $i < $ip_count; $i++) {
+
+			$ip = long2ip($start + $i);
+			
+			$sql = $pdo->prepare("
+				SELECT 
+					id, 
+					ipaddress, 
+					flag 
+				FROM hm_fwban 
+				WHERE INET_ATON(ipaddress) = INET_ATON('".$ip."')
+			");
+			$sql->execute();
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+				$ipaddressdb = $row['ipaddress'];
+				$flag = $row['flag'];
+				$id = $row['id'];
 			}
-		} else {
-			echo "<br /><br />Error: IP range \"<b>".$ipRange."</b>\" could not be found in database. Please try again.";
+			if (!empty($ipaddressdb)){
+				if (!(($flag==1)||($flag==2)||($flag==5)||($flag==6))){
+					$sql_update_bansafe = $pdo->exec("
+						UPDATE hm_fwban SET flag=5 WHERE id=".$id
+					);
+					echo "IP ".$ip." marked banned - updated to SAFE and added to list for firewall rule removal<br />";
+				} else if ($flag==5||$flag=6){
+					echo "IP ".$ip." marked SAFE - no action neccessary<br />";
+				} else {
+					$sql_update_relsafe = $pdo->exec("
+						UPDATE hm_fwban SET flag=5 WHERE id=".$id
+					);
+					echo "IP ".$ip." previously released - updated to SAFE status<br />";
+				}					
+			}
+			$ipaddressdb = "";
+			$flag = "";
+			$id = "";
 		}
 	}
-	mysqli_close($con);
 ?>
 </div>
 

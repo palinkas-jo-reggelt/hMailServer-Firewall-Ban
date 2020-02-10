@@ -1,4 +1,5 @@
-<?php include("cred.php") ?>
+<?php include_once("config.php") ?>
+<?php include_once("functions.php") ?>
 <script type="text/javascript">
 google.load("visualization", "1", {packages:["corechart", "line"]});
 google.setOnLoadCallback(drawChart);
@@ -9,7 +10,7 @@ function drawChart() {
 	data.addColumn('number', 'IPs Blocked');
 	data.addRows([
 <?php 
-	$query = "
+	$sql = $pdo->prepare("
 		SELECT 
 			a.daily,
 			a.year,
@@ -19,29 +20,35 @@ function drawChart() {
 			b.blockperday
 		FROM
 		(
-			SELECT DATE(timestamp) AS daily, DATE_FORMAT(timestamp, '%Y') AS year, (DATE_FORMAT(timestamp, '%c') - 1) AS month, DATE_FORMAT(timestamp, '%e') AS day, COUNT(id) AS ipperday 
-				FROM hm_fwban 
-				WHERE DATE(timestamp) < DATE(NOW())
-				GROUP BY DATE(timestamp)
-				ORDER BY DATE(timestamp) ASC
+			SELECT 
+				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
+				".DBFormatDate('timestamp', '%Y')." AS year,
+				(".DBFormatDate('timestamp', '%c')." - 1) AS month,
+				".DBFormatDate('timestamp', '%e')." AS day,
+				COUNT(id) AS ipperday 
+			FROM hm_fwban 
+			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
+			ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC
 		) AS a
 		LEFT JOIN
 		(
-			SELECT DATE(timestamp) AS daily, COUNT(DISTINCT(ipaddress)) AS blockperday  
-				FROM hm_fwban_rh 
-				WHERE DATE(timestamp) < DATE(NOW()) 
-				GROUP BY DATE(timestamp)
+			SELECT 
+				".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
+				COUNT(DISTINCT(ipaddress)) AS blockperday  
+			FROM hm_fwban_rh 
+			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
 		) AS b
 		ON a.daily = b.daily
 		ORDER BY a.daily
-	";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
+	");
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		if (is_null($row['blockperday'])){$blockperday = 0;} else {$blockperday = $row['blockperday'];}
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday'].", ".$blockperday."],";
 	}
 ?>
-
 	]);
 
 	var chart = new google.visualization.LineChart(document.getElementById('chart_combined'));

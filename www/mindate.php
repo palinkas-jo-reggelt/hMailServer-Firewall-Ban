@@ -1,8 +1,17 @@
-<?php include("cred.php") ?>
 <?php
-	$query = "SELECT DATE(timestamp) Date FROM hm_fwban ORDER BY DATE(timestamp) ASC LIMIT 1";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
-		echo "'".$row['Date']."',";
+	include_once("config.php");
+	include_once("functions.php");
+
+	$sql = $pdo->prepare("
+		SELECT 
+			".DBCastDateTimeFieldAsDate('timestamp')." AS date 
+		FROM hm_fwban 
+		ORDER BY DATE(timestamp) ASC 
+		LIMIT 1
+		".DBLimitRowsWithOffset(DBCastDateTimeFieldAsDate('timestamp'),'ASC',0,0,0,1)
+	);
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+		echo "'".$row['date']."',";
 	}
 ?>

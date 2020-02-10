@@ -1,5 +1,4 @@
 <?php include("head.php") ?>
-<?php include("cred.php") ?>
 
 <div class="wrapper">
 <div class="section">
@@ -25,68 +24,76 @@
 	</form>
 
 <?php
+	include("config.php");
+	include("functions.php");
 
-if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-if (isset($_GET['days'])) {$days = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['days'])));} else {$days = 0;}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['days'])) {$days = $_GET['days'];} else {$days = 0;}
 
-$tsql = "SELECT COUNT(DISTINCT(ipaddress))from hm_fwban";
-$tres_data = mysqli_query($con,$tsql);
-$TotalIPs = mysqli_fetch_array($tres_data)[0];
+	$tsql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(ipaddress)) 
+		FROM hm_fwban
+	");
+	$tsql->execute();
+	$TotalIPs = $tsql->fetchColumn();
 
-$nsql = "SELECT COUNT(DISTINCT(ipaddress))from hm_fwban_rh";
-$nres_data = mysqli_query($con,$nsql);
-$AllReturnIPs = mysqli_fetch_array($nres_data)[0];
+	$nsql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(ipaddress)) 
+		FROM hm_fwban_rh
+	");
+	$nsql->execute();
+	$AllReturnIPs = $nsql->fetchColumn();
 
-$NeverIPs = ($TotalIPs - $AllReturnIPs);
-$PercentNever = sprintf("%.2f%%", ($NeverIPs / $TotalIPs) * 100);
+	$NeverIPs = ($TotalIPs - $AllReturnIPs);
+	$PercentNever = sprintf("%.2f%%", ($NeverIPs / $TotalIPs) * 100);
 
-echo "<br /><br />";
-echo "Total Number of Firewall Bans: ".number_format($TotalIPs)."<br /><br />";
-echo "Number of Firewall Bans that have never returned: ".number_format($NeverIPs)." (".$PercentNever.")<br /><br />";
+	echo "<br /><br />";
+	echo "Total Number of Firewall Bans: ".number_format($TotalIPs)."<br /><br />";
+	echo "Number of Firewall Bans that have never returned: ".number_format($NeverIPs)." (".$PercentNever.")<br /><br />";
 
-echo "<table class='section'>
-	<tr>
-		<th>Number of IPs</th>
-		<th>Percent Returns</th>
-		<th>Returned At Least</th>
-	</tr>";
+	echo "<table class='section'>
+		<tr>
+			<th>Number of IPs</th>
+			<th>Percent Returns</th>
+			<th>Returned At Least</th>
+		</tr>";
 
-$a = 0;
+	$a = 0;
 
-If ($days == 0){
-	echo "";
-} Else {
-	do{
-		$sql = "SELECT COUNT(*) AS countips 
+	If ($days == 0){
+		echo "";
+	} Else {
+		do{
+			$sql = $pdo->prepare("
+				SELECT COUNT(*) AS countips 
 				FROM (
 					SELECT 
 						ipaddress, 
-						COUNT(DISTINCT(DATE(timestamp))) AS countdate 
+						COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) AS countdate 
 					FROM hm_fwban_rh 
 					GROUP BY ipaddress 
 					HAVING countdate > ".$a."
 				) AS returnhits
-			   ";
-		$res_data = mysqli_query($con,$sql);
-		$ReturnIPs = mysqli_fetch_array($res_data)[0];
-		$PercentReturns = sprintf("%.2f%%", ($ReturnIPs / $TotalIPs) * 100);
-		echo "<tr>";
-		echo "<td style=\"text-align:right;\"><a href=\"./blocks-view.php?submit=Search&days=".($a + 1)."\">".number_format($ReturnIPs)."</a></td>";
-		echo "<td style=\"text-align:right;\">".$PercentReturns."</td>";
-		If ($a == 0){$sd = "";} Else {$sd = "s";}
-		echo "<td style=\"text-align:center;\">".($a + 1)." day".$sd."</td>";
-		echo "</tr>";
+			   ");
+			$sql->execute();
+			$ReturnIPs = $sql->fetchColumn();
+			$PercentReturns = sprintf("%.2f%%", ($ReturnIPs / $TotalIPs) * 100);
+			echo "<tr>";
+			echo "<td style=\"text-align:right;\"><a href=\"./blocks-view.php?submit=Search&days=".($a + 1)."\">".number_format($ReturnIPs)."</a></td>";
+			echo "<td style=\"text-align:right;\">".$PercentReturns."</td>";
+			If ($a == 0){$sd = "";} Else {$sd = "s";}
+			echo "<td style=\"text-align:center;\">".($a + 1)." day".$sd."</td>";
+			echo "</tr>";
 
-		$a++;
+			$a++;
 
-	} while($a < $days); 
-}
+		} while($a < $days); 
+	}
 
-echo "</table>";
+	echo "</table>";
 
 ?>
-	<br /><br /><br /><br />
-</div> <!-- end section -->
-</div> <!-- end wrapper -->
-
+	<br />
 <?php include("foot.php") ?>

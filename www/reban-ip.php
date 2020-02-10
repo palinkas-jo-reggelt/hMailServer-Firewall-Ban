@@ -2,8 +2,9 @@
 
 <div class="section">
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -14,25 +15,17 @@
 		$display_pagination = 0;
 	}
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
-	if (isset($_GET['id'])) {$id = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['id']))));} else {$id = "";}
+	if (isset($_GET['id'])) {$id = $_GET['id'];} else {$id = "";}
 	if (isset($_GET['ipRange'])) {
 		if(preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", ($_GET['ipRange']))) {
-			$ipRange = (mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange']))))."/32";
+			$ipRange = $_GET['ipRange']."/32";
 		} else if (preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))$/", ($_GET['ipRange']))) {
-			$ipRange = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['ipRange'])));
+			$ipRange = $_GET['ipRange'];
 		} else {
 			$ipRange = "";
 		}
 	} else {
 		$ipRange = "";
-	}
-
-	function ipRangeFinder($cidr) {
-	   $range = array();
-	   $cidr = explode('/', $cidr);
-	   $range[0] = long2ip((ip2long($cidr[0])) & ((-1 << (32 - (int)$cidr[1]))));
-	   $range[1] = long2ip((ip2long($range[0])) + pow(2, (32 - (int)$cidr[1])) - 1);
-	   return $range;
 	}
 
 	$ips = ipRangeFinder($ipRange);
@@ -60,23 +53,31 @@
 
 			$ip = long2ip($start + $i);
 			
-			$sql_existing = "SELECT id, ipaddress, flag FROM hm_fwban WHERE INET_ATON(ipaddress) = INET_ATON('".$ip."')";
-			$res_existing = mysqli_query($con,$sql_existing);
-			while($row = mysqli_fetch_array($res_existing)){
+			$sql_existing = $pdo->prepare("
+				SELECT 
+					id, 
+					ipaddress, 
+					flag 
+				FROM hm_fwban 
+				WHERE INET_ATON(ipaddress) = INET_ATON('".$ip."')
+			");
+			$sql_existing->execute();
+			while($row = $sql_existing->fetch(PDO::FETCH_ASSOC)){
+
 				$ipaddressdb = $row['ipaddress'];
 				$flag = $row['flag'];
 				$id = $row['id'];
 			}
 			if (empty($ipaddressdb)){
-				$sql_new_cidr_ban = "INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (NOW(),'".$ip."','Manual')";
-				$result = mysqli_query($con,$sql_new_cidr_ban);
-				if(!$result){ die("Could not insert data: ".mysqli_error()); }
+				$sql_new_cidr_ban = $pdo->exec("
+					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (NOW(),'".$ip."','Manual')"
+				);
 				echo "IP ".$ip." added to ban list for firewall rule insertion<br />";
 			} else {
 				if (($flag==1)||($flag==2)){
-					$sql_update_manban = "UPDATE hm_fwban SET flag=3 WHERE id=".$id;
-					$result = mysqli_query($con,$sql_update_manban);
-					if(!$result){ die("Could not update data: ".mysqli_error()); }
+					$sql_update_manban = $pdo->exec("
+						UPDATE hm_fwban SET flag=3 WHERE id=".$id
+					);
 					echo "IP ".$ip." previously released - updating and added to list for firewall rule insertion<br />";
 				} else if (($flag==5)||($flag==6)){
 					echo "IP ".$ip." marked SAFE - no action taken<br />";
@@ -88,7 +89,6 @@
 			$flag = "";
 			$id = "";
 		}
-		mysqli_close($con);
 	}
 ?>
 </div>

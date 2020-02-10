@@ -3,8 +3,9 @@
 <div class="section">
 <h2>Search Repeat Hits (Connections Dropped at Firewall)</h2>
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -14,13 +15,10 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
-	if (isset($_GET['flag'])) {$flag = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['flag'])));} else {$flag = "";}
-	if (isset($_GET['search'])) {$search = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['search'])));} else {$search = "";}
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['flag'])) {$flag = $_GET['flag'];} else {$flag = "";}
+	if (isset($_GET['search'])) {$search = $_GET['search'];} else {$search = "";}
+
 	if ($search==""){$search_sql="";}else{$search_sql=" WHERE ipaddress LIKE '{$search}%' OR timestamp LIKE '{$search}%'";}
 	if ($search==""){$search_page="";}else{$search_page="&search=".$search;}
 	if ($search==""){$search_list="";}else{$search_list=" matching <b>\"".$search."\"</b>";}
@@ -37,37 +35,44 @@
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
-	$total_pages_sql = "SELECT COUNT(DISTINCT(ipaddress)) FROM hm_fwban_rh".$search_sql."";
-	$result = mysqli_query($con,$total_pages_sql);
-	$total_rows = mysqli_fetch_array($result)[0];
+	$total_pages_sql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(ipaddress)) 
+			FROM hm_fwban_rh".$search_sql
+		);
+	$total_pages_sql->execute();
+	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	// $sql = "SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp FROM hm_fwban_rh".$search_sql." GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
-
-	$sql = "
-	SELECT
-		a.TimeStamp,
-		a.ipaddress,
-		b.ban_reason,
-		b.country,
-		a.countip
-	FROM
-	(
-		SELECT DISTINCT(ipaddress), COUNT(ipaddress) AS countip, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp
-		FROM hm_fwban_rh
-		".$search_sql."
-		GROUP BY ipaddress 
-	) AS a
-	JOIN
-	(
-		SELECT ipaddress, country, ban_reason
-		FROM hm_fwban
-	) AS b
-	ON a.ipaddress = b.ipaddress
-	ORDER BY a.TimeStamp DESC
-	LIMIT ".$offset.", ".$no_of_records_per_page;
-
-	$res_data = mysqli_query($con,$sql);
+	$sql = $pdo->prepare("
+		SELECT
+			a.TimeStamp,
+			a.ipaddress,
+			b.ban_reason,
+			b.country,
+			a.countip
+		FROM
+		(
+			SELECT 
+				DISTINCT(ipaddress), 
+				COUNT(ipaddress) AS countip, 
+				".DBFormatDate('MAX(timestamp)', '%y/%m/%d %T')." as TimeStamp
+			FROM hm_fwban_rh
+			".$search_sql."
+			GROUP BY ipaddress 
+		) AS a
+		JOIN
+		(
+			SELECT 
+				ipaddress, 
+				country, 
+				ban_reason
+			FROM hm_fwban
+		) AS b
+		ON a.ipaddress = b.ipaddress
+		".DBLimitRowsWithOffset('a.TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
+	);
+	$sql->execute();
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
@@ -83,7 +88,7 @@
 				<th>FB</th>
 			</tr>";
 
-		while($row = mysqli_fetch_array($res_data)){
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<tr>";
 			echo "<td>".$row['TimeStamp']."</td>";
 			echo "<td><a href=\"./repeats-IP.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
@@ -110,9 +115,6 @@
 					RS = Released Status<br />";
 		}
 	}
-
-	mysqli_close($con);
-
 	echo "<br />";
 ?>
 </div>

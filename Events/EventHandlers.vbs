@@ -1,19 +1,6 @@
 Option Explicit
 
 '******************************************************************************************************************************
-'********** Settings                                                                                                 **********
-'******************************************************************************************************************************
-
-' 	COM authentication
-
-Private Const ADMIN = "Administrator"
-Private Const PASSWORD = "supersecretpassword"
-Private Const EVENTDIR = "C:\Program Files (x86)\hMailServer\Events"
-Private Const LOGDIR   = "C:\Program Files (x86)\hMailServer\Logs"
-Private Const TEMPDIR  = "C:\Program Files (x86)\hMailServer\Temp"
-Private Const idsTable = "hm_ids"
-
-'******************************************************************************************************************************
 '********** Functions                                                                                                **********
 '******************************************************************************************************************************
 
@@ -102,7 +89,7 @@ End Function
 '	Function GetDatabaseObject - https://www.hmailserver.com/forum/viewtopic.php?p=212052
 Function GetDatabaseObject()
    Dim oApp : Set oApp = CreateObject("hMailServer.Application")
-   Call oApp.Authenticate(ADMIN, PASSWORD)
+   Call oApp.Authenticate(ConfigIni.GetKeyValue("hMailServer","AdminUser"), ConfigIni.GetKeyValue("hMailServer","AdminPassword"))
    Set GetDatabaseObject = oApp.Database
 End Function
 
@@ -117,16 +104,22 @@ Function idsAddIP(sIPAddress)
 	Set oGeoip = Json.Decode(oXML.responseText)
 	ReturnCode = oXML.Status
 	On Error Goto 0
+	Dim idsTable
+	idsTable = ConfigIni.GetKeyValue("hMailServer","idsTable")
 
 	Dim strSQL, oDB : Set oDB = GetDatabaseObject
-	strSQL = "INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country) VALUES (NOW(),'" & sIPAddress & "',1,'" & oGeoip("country") & "') ON DUPLICATE KEY UPDATE hits=(hits+1),timestamp=NOW();"
+	If IsMySQL Then
+		strSQL = "INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country) VALUES (" & DBGetCurrentDateTime() & ",'" & sIPAddress & "',1,'" & oGeoip("country") & "') ON DUPLICATE KEY UPDATE hits=(hits+1),timestamp=" & DBGetCurrentDateTime() & ";"
+	ElseIf IsMSSQL Then
+		strSQL = "IF NOT EXISTS (SELECT 1 FROM " & idsTable & " WHERE ipaddress = '" & sIPAddress & "') INSERT INTO " & idsTable & " (timestamp,ipaddress,hits,country) VALUES (" & DBGetCurrentDateTime() & ",'" & sIPAddress & "',1,'" & oGeoip("country") & "') ELSE UPDATE " & idsTable & " SET hits=(hits+1), timestamp=" & DBGetCurrentDateTime() & " WHERE ipaddress= '" & sIPAddress & "';"
+	End If
 	Call oDB.ExecuteSQL(strSQL)
 	Set oDB = Nothing
 End Function
 
 Function idsDelIP(sIPAddress)
     Dim strSQL, oDB : Set oDB = GetDatabaseObject
-    strSQL = "DELETE FROM " & idsTable & " WHERE ipaddress = '" & sIPAddress & "';"
+    strSQL = "DELETE FROM " & ConfigIni.GetKeyValue("hMailServer","idsTable") & " WHERE ipaddress = '" & sIPAddress & "';"
     Call oDB.ExecuteSQL(strSQL)
     Set oDB = Nothing
 End Function
@@ -138,8 +131,8 @@ Function AutoBan(sIPAddress, sReason, iDuration, sType) : AutoBan = False
    '   "yyyy" Year, "m" Month, "d" Day, "h" Hour, "n" Minute, "s" Second
    '
    Dim oApp : Set oApp = CreateObject("hMailServer.Application")
-   Call oApp.Authenticate(ADMIN, PASSWORD)
-   With LockFile(TEMPDIR & "\autoban.lck")
+   Call oApp.Authenticate(ConfigIni.GetKeyValue("hMailServer","AdminUser"), ConfigIni.GetKeyValue("hMailServer","AdminPassword"))
+   With LockFile(ConfigIni.GetKeyValue("hMailServer","TempDir") & "\autoban.lck")
       On Error Resume Next
       Dim oSecurityRange : Set oSecurityRange = oApp.Settings.SecurityRanges.ItemByName("(" & sReason & ") " & sIPAddress)
       If Err.Number = 9 Then
@@ -183,7 +176,7 @@ Function FWBan(sIPAddress, sReason, sHELO)
    On Error Goto 0
 
    Dim strSQL, oDB : Set oDB = GetDatabaseObject
-   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,country,helo,flag) VALUES (NOW(),'" & sIPAddress & "','" & sReason & "','" & oGeoip("country") & "','" & sHELO & "','4');"
+   strSQL = "INSERT INTO hm_FWBan (timestamp,ipaddress,ban_reason,country,helo,flag) VALUES (" & DBGetCurrentDateTime() & ",'" & sIPAddress & "','" & sReason & "','" & oGeoip("country") & "','" & sHELO & "','4');"
    Call oDB.ExecuteSQL(strSQL)
 End Function
 
@@ -195,6 +188,25 @@ Function PTRLookup(strIP)
 	If strLookup = Empty Then strPTR = "No.PTR.Record" Else strPTR = strLookup End If
 	PTRLookup = strPTR
 End Function
+
+
+'******************************************************************************************************************************
+'********** Load Setting from ini file                                                                               **********
+'******************************************************************************************************************************
+Public ConfigIni 
+Set ConfigIni = Nothing
+
+Sub LoadIniIfNeeded()
+	If ConfigIni Is Nothing Then
+		Include("C:\Program Files (x86)\hMailServer\Events\IniFile.vbs")
+		Set ConfigIni = New IniFile
+		Call ConfigIni.Load("C:\Program Files (x86)\hMailServer\Events\Config.INI", False)
+	End If
+End Sub
+
+Call LoadIniIfNeeded()
+
+Include("C:\Program Files (x86)\hMailServer\Events\CommonCode.vbs")
 
 
 '******************************************************************************************************************************

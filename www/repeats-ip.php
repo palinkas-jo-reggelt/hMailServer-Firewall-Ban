@@ -2,8 +2,9 @@
 
 <div class="section">
 
-<?php include("cred.php") ?>
 <?php
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -13,58 +14,62 @@
 		$total_pages = 1;
 		$display_pagination = 0;
 	}
-	if (isset($_GET['submit'])) {
-		$button = $_GET ['submit'];
-	} else {
-		$button = "";
-	}
-	if (isset($_GET['repeatIP'])) {
-	$repeatIP = mysqli_real_escape_string($con, preg_replace('/\s+/', ' ',trim($_GET['repeatIP'])));
-	} else {
-		$repeatIP = "";
-	}
-  
+	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
+	if (isset($_GET['repeatIP'])) {$repeatIP = $_GET['repeatIP'];} else {$repeatIP = "";}
+
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
-	$total_pages_sql = "SELECT COUNT(DISTINCT(DATE(timestamp))) FROM hm_fwban_rh WHERE ipaddress='{$repeatIP}'";
-	$result = mysqli_query($con,$total_pages_sql);
-	$total_rows = mysqli_fetch_array($result)[0];
+	$total_pages_sql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) 
+		FROM hm_fwban_rh 
+		WHERE ipaddress='{$repeatIP}'
+	");
+	$total_pages_sql->execute();
+	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$total_hits_sql = "SELECT COUNT(ipaddress) FROM hm_fwban_rh WHERE ipaddress='{$repeatIP}'";
-	$total_hits_result = mysqli_query($con,$total_hits_sql);
-	$total_hits = mysqli_fetch_array($total_hits_result)[0];
+	$total_hits_sql = $pdo->prepare("
+		SELECT 
+			COUNT(ipaddress) 
+		FROM hm_fwban_rh 
+		WHERE ipaddress='{$repeatIP}'
+	");
+	$total_hits_sql->execute();
+	$total_hits = $total_hits_sql->fetchColumn();
 	
-	$sql = "
-	SELECT
-		a.day,
-		a.ipaddress,
-		b.ban_reason,
-		b.country,
-		a.countip
-	FROM
-	(
-		SELECT ipaddress, COUNT(ipaddress) AS countip, DATE_FORMAT(DATE(timestamp), '%y/%m/%d') as day
-		FROM hm_fwban_rh
-		WHERE ipaddress = '{$repeatIP}'
-		GROUP BY day 
-	) AS a
-	JOIN
-	(
-		SELECT ipaddress, country, ban_reason
-		FROM hm_fwban
-	) AS b
-	ON a.ipaddress = b.ipaddress
-	GROUP BY a.day 
-	ORDER BY a.day DESC
-	LIMIT ".$offset.", ".$no_of_records_per_page;
-	$res_data = mysqli_query($con,$sql);
+	$sql = $pdo->prepare("
+		SELECT
+			a.day,
+			a.ipaddress,
+			b.ban_reason,
+			b.country,
+			a.countip
+		FROM
+		(
+			SELECT 
+				ipaddress, 
+				COUNT(ipaddress) AS countip, 
+				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%y/%m/%d')." AS day
+			FROM hm_fwban_rh
+			WHERE ipaddress = '{$repeatIP}'
+			GROUP BY day 
+		) AS a
+		JOIN
+		(
+			SELECT 
+				ipaddress, 
+				country, 
+				ban_reason
+			FROM hm_fwban
+		) AS b
+		ON a.ipaddress = b.ipaddress
+		GROUP BY a.day 
+		".DBLimitRowsWithOffset('a.day','DESC',0,0,$offset,$no_of_records_per_page)
+	);
+	$sql->execute();
 
-	if ($total_rows == 1){
-		$singular = '';
-	} else {
-		$singular= 's';
-	}
+	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		
 	if ($total_rows == 0){
 		echo "<br /><br />There are no repeat dropped IPs to report.";
@@ -79,7 +84,7 @@
 				<th>FB</th>
 			</tr>";
 
-		while($row = mysqli_fetch_array($res_data)){
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<tr>";
 			echo "<td>".$row['day']."</td>";
 			echo "<td><a href=\"search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a></td>";
@@ -105,9 +110,6 @@
 					RS = Released Status<br />";
 		}
 	}
-
-	mysqli_close($con);
-
 	echo "<br />";
 ?>
 </div>

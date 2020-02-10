@@ -1,4 +1,5 @@
-<?php include("cred.php") ?>
+<?php include_once("config.php") ?>
+<?php include_once("functions.php") ?>
 <script type="text/javascript">
 google.charts.load('current', {packages: ['corechart', 'bar']});
 google.charts.setOnLoadCallback(drawChart);
@@ -9,9 +10,23 @@ function drawChart() {
 	data.addColumn('number', 'Avg Hits');
 	data.addRows([
 <?php 
-	$query = "SELECT hour, ROUND(AVG(numhits), 1) AS avghits FROM (SELECT DATE(`timestamp`) AS day, HOUR(`timestamp`) AS hour, COUNT(*) as numhits FROM hm_fwban GROUP BY day, hour ) d GROUP BY hour ORDER BY hour ASC";
-	$exec = mysqli_query($con,$query);
-	while($row = mysqli_fetch_array($exec)){
+	$sql = $pdo->prepare("
+		SELECT 
+			hour, 
+			ROUND(AVG(numhits), 1) AS avghits 
+		FROM (
+			SELECT 
+				".DBCastDateTimeFieldAsDate('timestamp')." AS day, 
+				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
+				COUNT(*) as numhits 
+			FROM hm_fwban 
+			GROUP BY day, hour 
+		) d 
+		GROUP BY hour 
+		ORDER BY hour ASC
+	");
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		echo "[[".$row['hour'].", 0, 0], ".$row['avghits']."],";
 	}
 ?>

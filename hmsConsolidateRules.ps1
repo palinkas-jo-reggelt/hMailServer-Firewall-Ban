@@ -24,64 +24,30 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
-
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
+}
+Catch {
+	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
 
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError-ConsolidateRules.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
-}
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
+$ConsFolder = "$PSScriptRoot\ConsolidateRules"
 
 #	Create ConsolidateRules folder if it doesn't exist
-If (-not(Test-Path "$PSScriptRoot\ConsolidateRules")) {
-	md "$PSScriptRoot\ConsolidateRules"
+If (-not(Test-Path $ConsFolder)) {
+	md $ConsFolder
 }
+
+#	Delete all files in the Consolidated Rules folder before beginning
+Get-ChildItem -Path $ConsFolder -Include * | foreach { $_.Delete()}
 
 #	Get BanDate (Yesterday) and establish csv
 $BanDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd")
 
-$Query = "SELECT COUNT(id) AS countid FROM hm_fwban WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL"
-MySQLQuery $Query | ForEach {
+$Query = "SELECT COUNT(id) AS countid FROM hm_fwban WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL"
+RunSQLQuery $Query | ForEach {
 	[int]$CountIP = $_.countid
 }
 
@@ -91,32 +57,37 @@ $Rows = 400
 $Limit = [math]::ceiling($CountIP / $Rows)
 
 Do {
-	$X = ($N).ToString("000")
-	$ConsRules = "$PSScriptRoot\ConsolidateRules\hmsFWBRule-"+$BanDate+"_"+$X+".csv"
+	$X = ($N).ToString("0")
+	If ($N -eq 0){
+		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+".csv"
+	}
+	Else {
+		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
+	}
 	$Query = "
-		SELECT ipaddress 
+		SELECT 
+			ipaddress 
 		FROM hm_fwban 
-		WHERE DATE(timestamp) LIKE '$BanDate%' AND flag IS NULL 
+		WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL 
 		ORDER BY timestamp DESC
-		LIMIT $($N * $Rows), $Rows
+		$(DBLimitRowsWithOffset $($N * $Rows) $Rows)
 	"
-	MySQLQuery $Query | Export-CSV $ConsRules
+	RunSQLQuery $Query | Export-CSV $ConsRules
 	
 	$N++
 }
 Until ($N -eq $Limit)
 
-$Location = "$PSScriptRoot\ConsolidateRules"
-$RegexName = 'hmsFWBRule\-202[0-9]\-[0-9][0-9]\-[0-9][0-9]_[0-9]{3}\.csv$'
-$RegexIP = '(([0-9]{1,3}\.){3}[0-9]{1,3})'
-Get-ChildItem $Location | Where-Object {$_.name -match $RegexName} | ForEach {
+$RegexName = '^hMS\sFWBan\s202[0-9]\-[0-9]{2}\-[0-9]{2}(_[0-9]{1,3})?\.csv$'
+$RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
+Get-ChildItem $ConsFolder | Where-Object {$_.name -match "hMS FWBan $BanDate_"} | ForEach {
 	$FileName = $_.name
-	$FilePathName = "$Location\$FileName"
+	$FilePathName = "$ConsFolder\$FileName"
 	$RuleName = ($FileName).Replace(".csv", "")
 	import-csv -Path $FilePathName | ForEach {
 		$IP = $_.ipaddress
 		$Query = "UPDATE hm_fwban SET rulename = '$RuleName' WHERE ipaddress = '$IP'"
-		MySQLQuery($Query)
+		RunSQLQuery($Query)
 		Write-Output $IP
 	}  | Out-File "$FilePathName.txt"
 

@@ -25,79 +25,33 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 
 #>
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
-
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
+}
+Catch {
+	Write-Output "Error while loading supporting PowerShell Scripts" | Out-File -Path "$PSScriptRoot\PSError.log"
 }
 
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
-}
+#	Establish Duplicate Rules Folder
+$DupFolder = "$PSScriptRoot\DuplicateRules"
 
-<#  https://gist.github.com/Stephanevg/a951872bd13d91c0eefad7ad52994f47  #>
-Function Get-NetshFireWallrule {
-	Param(
-		[String]$RuleName
-	)
-	$Rules = & netsh advfirewall firewall show rule name="$ruleName"
-	$return = @()
-		$HAsh = [Ordered]@{}
-		foreach ($Rule in $Rules){
-			switch -Regex ($Rule){
-				'^Rule Name:\s+(?<RuleName>.*$)'{$Hash.RuleName = $MAtches.RuleName}
-				'^RemoteIP:\s+(?<RemoteIP>.*$)'{$Hash.RemoteIP = $Matches.RemoteIP;$obj = New-Object psobject -Property $Hash;$return += $obj}
-			}
-		}
-	return $return
+#	Create ConsolidateRules folder if it doesn't exist
+If (-not(Test-Path $DupFolder)) {
+	md $DupFolder
 }
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 #	Establish files and regex
-$FWRuleList = "$PSScriptRoot\fwrulelist.txt"
-$DupList = "$PSScriptRoot\fwduplist.txt"
-$RegexIP = '^(([0-9]{1,3}\.){3}[0-9]{1,3})$'
+$FWRuleList = "$DupFolder\fwrulelist.txt"
+$DupList = "$DupFolder\fwduplist.txt"
+$RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
+$RegexConsName = 'hMS\sFWBan\s20[0-9]{2}\-[0-9]{2}\-[0-9]{2}(_[0-9]{2})?'
+$NL = [System.Environment]::NewLine
 
 #	Read rules from firewall and output only ones with IP name (unconsolidated rules)
 Get-NetshFireWallrule ("all") | ForEach {
-	If ($_.RuleName -match $RegexIP){
+	If (($_.RuleName -match $RegexIP) -or ($_.RuleName -match $RegexConsName)){
 		Write-Output $_.RuleName
 	}
 } | out-file $FWRuleList
@@ -106,24 +60,31 @@ Get-NetshFireWallrule ("all") | ForEach {
 $A = Get-Content $FWRuleList
 $HT = @{}
 $A | ForEach {$HT["$_"] += 1}
-$HT.Keys | Where {$HT["$_"] -gt 1} | ForEach { Write-Output $_ } | Out-File $DupList
-
-#	Delete rules from duplicate list and re-create them as a single rule
-Get-Content $DupList | ForEach {
-	& netsh advfirewall firewall delete rule name=`"$_`"
-	& netsh advfirewall firewall add rule name="$_" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$_
+#	For each duplicate, get RemoteIPs and delete firewall ALL duplicate rules
+$HT.Keys | Where {$HT["$_"] -gt 1} | ForEach {
+	$RuleName = $_
+	$RuleNameFile = "$DupFolder\$RuleName.txt"
+	Get-NetshFireWallrule $RuleName | ForEach {
+		Write-Output $_.RemoteIP
+	} | Out-File $RuleNameFile
+	& netsh advfirewall firewall delete rule name=`"$RuleName`"
 }
 
-#	Read IP named rule list again and look for orphans
-Get-Content $FWRuleList | ForEach {
-	$IP = $_
-	#	Query all IPs and find flag status
-	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP'"
-	MySQLQuery $Query | ForEach {
-		$Flag = $_.flag
-	}
-	#	If flag not null, then rule should not exist, so delete it
-	If ($Flag -ne $NULL) {
-		& netsh advfirewall firewall delete rule name=`"$IP`"
+#	Look in Duplicate Rules folder and massage the data
+Get-ChildItem $DupFolder | Where-Object {($_.name -match "$RegexIP.txt") -or ($_.name -match "$RegexConsName.txt")} | ForEach {
+	$RuleNameFileIP = $_.name
+	$RuleData = Get-Content -Path "$DupFolder\$RuleNameFileIP" | Select-Object -First 1
+	#	Make sure txt file is populated with IP data (if not, you'll have a rule banning all local and all remote IPs)
+	If ($RuleData -match $RegexIP){
+		#	Remove duplicate RemoteIP strings, remove /32 from RemoteIP, remove NewLines, remove comma at end of RemoteIP string, then add one firewall rule to replace duplicates
+		Get-Content -Path "$DupFolder\$RuleNameFileIP" | Select -First 1 | Out-File "$DupFolder\$RuleNameFileIP.ip.txt"
+		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace '\/32','' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
+		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace $NL,'' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
+		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace ',$','' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
+		$FWRN = $RuleNameFileIP.Split(".")[0]
+		& netsh advfirewall firewall add rule name="$FWRN" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$(Get-Content "$FWRN.txt.ip.txt")
 	}
 }
+
+#	Delete all files in the Duplicate Rules Folder because they cause trouble on the next run.
+Get-ChildItem -Path $DupFolder -Include * | foreach { $_.Delete()}
