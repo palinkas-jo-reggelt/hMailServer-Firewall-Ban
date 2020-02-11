@@ -40,6 +40,21 @@ If (-not(Test-Path "$PSScriptRoot\RetroAddRuleName")) {
 	md "$PSScriptRoot\RetroAddRuleName"
 }
 
+# 	Add "rulename" column to hm_fwban
+$Query = "ALTER TABLE hm_fwban ADD rulename VARCHAR(192) NULL;"
+RunSQLQuery($Query)
+
+#	Count IPs that should get rulenames
+$Query = "
+	SELECT 
+		COUNT(rulename) AS countnull 
+	FROM hm_fwban 
+	WHERE flag IS NULL
+"
+RunSQLQuery($Query) | ForEach {
+	[int]$CountStart = $_.countnull
+}
+
 $NewLine = [System.Environment]::NewLine
 $RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
 $RegexDateName = '(hmsFWBRule\-|hMS\sFWBan\s)(20\d{2}\-\d{2}\-\d{2})(_\d{3})?$'
@@ -71,10 +86,6 @@ Get-ChildItem $Location | Where-Object {$_.name -match $RegexFileName} | ForEach
 	}
 }
 
-# 	Add "rulename" column to hm_fwban
-$Query = "ALTER TABLE hm_fwban ADD rulename VARCHAR(192) NULL;"
-RunSQLQuery($Query)
-
 #	Pick up any missed entries (bans without firewall rules)
 $Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag IS NULL AND rulename IS NULL"
 RunSQLQuery $Query | foreach {
@@ -85,11 +96,29 @@ RunSQLQuery $Query | foreach {
 	RunSQLQuery $Query
 }
 
+#	Count Results
+$Query = "
+	SELECT 
+		COUNT(rulename) AS countrulename 
+	FROM hm_fwban 
+	WHERE rulename IS NOT NULL AND flag IS NULL
+"
+RunSQLQuery($Query) | ForEach {
+	[int]$CountEnd = $_.countrulename
+}
+
+$ResultCount = $CountStart - $CountEnd
+If ($ResultCount -eq 0){
+	$ResultMsg = "Successfully added $($CountEnd)ToString.('#,###') rulenames"
+} Else {
+	$ResultMsg = "UPDATE FAILED to add $(($CountStart - $CountEnd)ToString.('#,###')) rulenames - check DB Error Logs for more info"
+}
+
 $EndTime = (Get-Date -f G)
 $OperationTime = New-Timespan $StartTime $EndTime
 If (($Duration).Hours -eq 1) {$sh = ""} Else {$sh = "s"}
 If (($Duration).Minutes -eq 1) {$sm = ""} Else {$sm = "s"}
 If (($Duration).Seconds -eq 1) {$ss = ""} Else {$ss = "s"}
 
-$Msg = ("Retroactive RuleName update complete.`n`nUpdate completed in {0:%h} hour$sh {0:%m} minute$sm {0:%s} second$ss" -f $OperationTime)
+$EmailBody = ("Retroactive RuleName update complete `n`nResults: $ResultMsg`n`nUpdate completed in {0:%h} hour$sh {0:%m} minute$sm {0:%s} second$ss" -f $OperationTime)
 EmailResults

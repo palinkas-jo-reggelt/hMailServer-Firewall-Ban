@@ -111,7 +111,9 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
-- 0.71 updated stats.php
+- 0.74 housekeeping
+- 0.73 pulled MSSQL changes to php from lcamilo
+- 0.72 updated stats.php
 - 0.71 housekeeping to powershell scripts; fixed firewall rule deduplicator so it actually deduplicates
 - 0.70 revamped PHP to support MSSQL
 - 0.69 oops... forgot to add config.ps1
