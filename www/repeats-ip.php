@@ -53,7 +53,7 @@
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%y/%m/%d')." AS day
 			FROM hm_fwban_rh
 			WHERE ipaddress = '{$repeatIP}'
-			GROUP BY day 
+			GROUP BY ".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%y/%m/%d').", ipaddress
 		) AS a
 		JOIN
 		(
@@ -64,7 +64,7 @@
 			FROM hm_fwban
 		) AS b
 		ON a.ipaddress = b.ipaddress
-		GROUP BY a.day 
+		GROUP BY a.day, a.ipaddress, b.ban_reason, b.country, a.countip 
 		".DBLimitRowsWithOffset('a.day','DESC',0,0,$offset,$no_of_records_per_page)
 	);
 	$sql->execute();

@@ -38,15 +38,27 @@ folder.
 */
 
 $Database = array (
-	'dbtype'      => 'mysql',
-	'host'        => 'localhost',
-	'username'    => 'hmailserver',
-	'password'    => 'supersecretpassword',
-	'dbname'      => 'hmailserver',
-	'driver'      => 'mysql',
-	'port'        => '3306',
+	'dbtype'      => 'mssql',
+	'host'        => '69.162.84.204',
+	'username'    => 'user_webapps',
+	'password'    => 'Xups12Uia654',
+	'dbname'      => 'dbhMAIL',
+	'driver'      => 'mssql',
+	'port'        => '41433',
 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
 );
+
+// $Database = array (
+// 	'dbtype'      => 'mysql',
+// 	'host'        => 'localhost',
+// 	'username'    => 'hmailserver',
+// 	'password'    => 'supersecretpassword',
+// 	'dbname'      => 'hmailserver',
+// 	'driver'      => 'mysql',
+// 	'port'        => '3306',
+// 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
+// );
+
 
 ?>
 
@@ -55,7 +67,7 @@ $Database = array (
 	If ($Database['driver'] == 'mysql') {
 		$pdo = new PDO("mysql:host=".$Database['host'].";port=".$Database['port'].";dbname=".$Database['dbname'], $Database['username'], $Database['password']);
 	} ElseIf ($Database['driver'] == 'mssql') {
-		$pdo = new PDO("sqlsrv:Server=".$Database['host'].";Port=".$Database['Port'].";Database=".$Database['dbname'], $Database['username'], $Database['password']);
+		$pdo = new PDO("sqlsrv:Server=".$Database['host'].",".$Database['port'].";Database=".$Database['dbname'], $Database['username'], $Database['password']);
 	} ElseIf ($Database['driver'] == 'odbc') {
 		$pdo = new PDO("odbc:Driver={".$Database['dsn']."};Server=".$Database['host'].";Port=".$Database['port'].";Database=".$Database['dbname'].";User=".$Database['username'].";Password=".$Database['password'].";");
 	} Else {
@@ -121,7 +133,7 @@ $Database = array (
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "HOUR(".$fieldName.")";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "CAST(".$fieldName." AS HOUR)";
+			$Return = DBFormatDate($fieldName, '%H');
 		}
 		return $Return;
 	}
@@ -132,7 +144,7 @@ $Database = array (
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "MONTH(".$fieldName.")";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "CAST(".$fieldName." AS MONTH)";
+			$Return = DBFormatDate($fieldName, '%c');
 		}
 		return $Return;
 	}
@@ -143,24 +155,27 @@ $Database = array (
 
 		$dateFormatSpecifiers = array (
 			'%Y'                => 'yyyy',
-			'%c'                => 'M',
-			'%e'                => 'd',
+			'%c'                => 'MM',
+			'%e'                => 'dd',
 			'Y-m-d'             => 'yyyy-MM-dd',
-			'%y/%m/%d'          => 'yy/M/d',
+			'%y/%m/%d'          => 'yyyy/MM/dd',
 			'Y-m'               => 'yyyy-MM',
 			'%Y-%m'             => 'yyyy-MM',
+			'%y/%m/%d %T'		=> 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
-			'%y/%c/%e'          => 'yy/M/d',
+			'%y/%c/%e'          => 'yyyy/MM/dd',
+			'%H'				=> 'HH',
 		);
 
 		if ($Database['dbtype'] == 'mysql') {
 			$Return = "DATE_FORMAT(".$fieldName.", '".$formatSpecifier."')";
 		} elseif ($Database['dbtype'] == 'mssql') {
-			$Return = "FORMAT('".$fieldName."', '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
+			$Return = "FORMAT(".$fieldName.", '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
 		}
 		return $Return;
 	}
+
 
 ?>
 
@@ -186,6 +201,7 @@ function drawChart() {
 	data.addColumn('number', 'IPs Blocked');
 	data.addRows([
 <?php 
+
 	$sql = $pdo->prepare("
 		SELECT 
 			a.daily,
@@ -198,14 +214,13 @@ function drawChart() {
 		(
 			SELECT 
 				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
-				".DBFormatDate('timestamp', '%Y')." AS year,
-				(".DBFormatDate('timestamp', '%c')." - 1) AS month,
-				".DBFormatDate('timestamp', '%e')." AS day,
+				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
+				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".($Database['dbtype'] == 'mysql' ? "- 1" : ""). ") AS month,
+				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 				COUNT(id) AS ipperday 
 			FROM hm_fwban 
 			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
 			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-			ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC
 		) AS a
 		LEFT JOIN
 		(
@@ -259,6 +274,7 @@ function drawChart() {
 	data.addColumn('number', 'Avg Hits');
 	data.addRows([
 <?php 
+
 	$sql = $pdo->prepare("
 		SELECT 
 			hour, 
@@ -269,7 +285,7 @@ function drawChart() {
 				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
 				COUNT(*) as numhits 
 			FROM hm_fwban 
-			GROUP BY day, hour 
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp').", ".DBCastDateTimeFieldAsHour('timestamp')." 
 		) d 
 		GROUP BY hour 
 		ORDER BY hour ASC
@@ -300,6 +316,7 @@ function drawChart() {
 	data.addColumn('number', 'Blocks');
 	data.addRows([
 <?php 
+
 	$sql = $pdo->prepare("
 		SELECT 
 			hour, 
@@ -310,7 +327,7 @@ function drawChart() {
 				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
 				COUNT(*) as numhits 
 			FROM hm_fwban_rh 
-			GROUP BY day, hour
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp').", ".DBCastDateTimeFieldAsHour('timestamp')."
 		) d 
 		GROUP BY hour 
 		ORDER BY hour ASC
@@ -340,16 +357,17 @@ function drawChart() {
 	data.addColumn('number', 'Blocks');
 	data.addRows([
 <?php 
+
 	$sql = $pdo->prepare("
 		SELECT 
 			".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
-			".DBFormatDate('timestamp', '%Y')." AS year,
-			(".DBFormatDate('timestamp', '%c')." - 1) AS month,
-			".DBFormatDate('timestamp', '%e')." AS day,
+			".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
+			(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." - 1) AS month,
+			".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 			COUNT(DISTINCT(ipaddress)) AS ipperday 
 		FROM hm_fwban_rh 
 		WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
-		GROUP BY daily 
+		GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')." 
 		ORDER BY daily ASC
 	");
 	$sql->execute();
@@ -632,26 +650,28 @@ li {
 		echo "<br />";
 		$mindate_sql = $pdo->prepare("
 			SELECT 
-				MIN(DATE(timestamp)) AS mindate 
+				MIN(". DBCastDateTimeFieldAsDate('timestamp') .") AS mindate 
 			FROM hm_fwban
 		");
 		$mindate_sql->execute();
 		$mindate = $mindate_sql->fetchColumn();
+
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -7 day"))){
 			echo "";
 		} else {
+
 			$sql = $pdo->prepare("
-			SELECT 
-				ROUND(AVG(numhits), 0) AS avghits 
-			FROM (
 				SELECT 
-					COUNT(id) as numhits,
-					".DBCastDateTimeFieldAsDate('timestamp')."
-				FROM hm_fwban 
-				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
-				GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-				".DBLimitRowsWithOffset(DBCastDateTimeFieldAsDate('timestamp'),'DESC',0,0,0,7)."
-			) d
+					ROUND(AVG(numhits), 0) AS avghits 
+				FROM (
+					SELECT 
+						COUNT(id) as numhits,
+						".DBCastDateTimeFieldAsDate('timestamp')." as timestamp
+					FROM hm_fwban 
+					WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
+					GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
+					".DBLimitRowsWithOffset(DBCastDateTimeFieldAsDate('timestamp'),'DESC',0,0,0,7)."
+				) d
 			");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -668,7 +688,7 @@ li {
 			FROM (
 				SELECT 
 					COUNT(id) as numhits,
-					".DBCastDateTimeFieldAsDate('timestamp')."
+					".DBCastDateTimeFieldAsDate('timestamp')." timestamp
 				FROM hm_fwban 
 				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
 				GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
@@ -691,12 +711,14 @@ li {
 		<h2>This Year's Monthly Hits:</h2>
 
 	<?php
+
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$thismonth}-01 00:00:00' AND NOW()
+			WHERE timestamp BETWEEN '{$thismonth}-01 00:00:00' AND ".DBGetCurrentDateTime()."
+			GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -709,6 +731,7 @@ li {
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'
+			GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -721,6 +744,7 @@ li {
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'
+			GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -733,6 +757,7 @@ li {
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'
+			GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -745,6 +770,7 @@ li {
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'
+			GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -761,7 +787,7 @@ li {
 				FROM (
 					SELECT 
 						COUNT(id) as numhits,
-						".DBCastDateTimeFieldAsMonth('timestamp')."
+						".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
 					FROM hm_fwban 
 					WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
 					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
@@ -783,7 +809,7 @@ li {
 				FROM (
 					SELECT 
 						COUNT(id) as numhits,
-						".DBCastDateTimeFieldAsMonth('timestamp')."
+						".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
 					FROM hm_fwban 
 					WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
 					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
@@ -853,7 +879,7 @@ li {
 				MAX(".DBFormatDate('timestamp', '%y/%c/%e').") AS dupdate, 
 				country 
 			FROM hm_fwban 
-			GROUP BY ipaddress 
+			GROUP BY ipaddress, country
 			HAVING dupip > 1 
 			".DBLimitRowsWithOffset('dupdate','DESC',0,0,0,5)
 		);
@@ -919,7 +945,7 @@ li {
 					flag 
 				FROM hm_fwban 
 				WHERE (flag=1 OR flag=2 OR flag=5 OR flag=6) 
-				GROUP BY ban_reason 
+				GROUP BY ban_reason, flag
 				ORDER BY value_occurrence DESC
 			");
 			$sql->execute();
@@ -1102,7 +1128,6 @@ li {
 					ipaddress
 				FROM hm_fwban_rh 
 				GROUP BY ipaddress 
-				ORDER BY countip DESC 
 			) AS a
 			JOIN
 			(

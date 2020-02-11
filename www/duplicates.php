@@ -22,7 +22,7 @@
 			GROUP BY ipaddress 
 			HAVING COUNT(ipaddress) > 1 
 		) AS t
-	";
+	");
 	$total_pages_sql->execute();
 	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
@@ -31,14 +31,14 @@
 		SELECT 
 			ipaddress, 
 			COUNT(ipaddress) AS dupip, 
-			".DBFormatDate('timestamp', '%Y/%m/%d %T')." AS dupdate
+			".DBFormatDate('timestamp', '%Y/%m/%d %T')." AS dupdate,
 			country, 
 			helo 
 		FROM hm_fwban 
-		GROUP BY ipaddress 
-		HAVING dupip > 1 
+		GROUP BY ipaddress, ".DBFormatDate('timestamp', '%Y/%m/%d %T').", country, helo
+		HAVING COUNT(ipaddress) > 1 
 		".DBLimitRowsWithOffset('dupdate','DESC','dupip','DESC',$offset,$no_of_records_per_page)
-	;
+	);
 	$sql->execute();
 
 	if ($total_rows == 0){
@@ -75,7 +75,7 @@
 			echo "<br /><br />";
 		}
 	}
-	mysqli_close($con);
+	//mysqli_close($con);
 ?>
 </div>
 <?php include("foot.php") ?>

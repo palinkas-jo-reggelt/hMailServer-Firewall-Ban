@@ -81,17 +81,14 @@
 					ptr
 				FROM hm_fwban 
 				WHERE timestamp BETWEEN '{$dateFrom} 00:00:00' AND '{$dateTo} 23:59:59'".$RS_SQL." 
-				ORDER BY timestamp DESC 
 			) AS a
 			LEFT JOIN
 			(
 				SELECT 
 					COUNT(ipaddress) AS returnhits, 
-					ipaddress, 
-					timestamp
+					ipaddress
 				FROM hm_fwban_rh
 				GROUP BY ipaddress
-				ORDER BY timestamp DESC
 			) AS b
 			ON a.ipaddress = b.ipaddress
 			".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page)

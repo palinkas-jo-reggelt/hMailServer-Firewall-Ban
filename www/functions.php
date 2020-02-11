@@ -94,12 +94,13 @@
 			'%c'                => 'MM',
 			'%e'                => 'dd',
 			'Y-m-d'             => 'yyyy-MM-dd',
-			'%y/%m/%d'          => 'yy/M/d',
+			'%y/%m/%d'          => 'yyyy/MM/dd',
 			'Y-m'               => 'yyyy-MM',
 			'%Y-%m'             => 'yyyy-MM',
+			'%y/%m/%d %T'		=> 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
-			'%y/%c/%e'          => 'yy/M/d',
+			'%y/%c/%e'          => 'yyyy/MM/dd',
 			'%H'				=> 'HH',
 		);
 
@@ -111,5 +112,28 @@
 		return $Return;
 	}
 
+	Function DBIpStringToIntField($fieldName){
+		global $Database;
+		$Return = "";
+
+		if ($Database['dbtype'] == 'mysql') {
+			$Return = "INET_ATON(".$fieldName.")";
+		} elseif ($Database['dbtype'] == 'mssql') {
+			$Return = "dbo.ipStringToInt(".$fieldName.")";
+		}
+		return $Return;
+	}
+
+	Function DBIpStringToIntValue($ipString){
+		global $Database;
+		$Return = "";
+
+		if ($Database['dbtype'] == 'mysql') {
+			$Return = "INET_ATON('".$ipString."')";
+		} elseif ($Database['dbtype'] == 'mssql') {
+			$Return = "dbo.ipStringToInt('".$ipString."')";
+		}
+		return $Return;
+	}
 
 ?>
