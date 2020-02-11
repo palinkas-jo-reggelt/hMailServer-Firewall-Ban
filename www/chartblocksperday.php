@@ -9,18 +9,21 @@ function drawChart() {
 	data.addColumn('number', 'Blocks');
 	data.addRows([
 <?php 
-	$sql = $pdo->prepare("
-		SELECT 
-			".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
-			".DBFormatDate('timestamp', '%Y')." AS year,
-			(".DBFormatDate('timestamp', '%c')." - 1) AS month,
-			".DBFormatDate('timestamp', '%e')." AS day,
-			COUNT(DISTINCT(ipaddress)) AS ipperday 
-		FROM hm_fwban_rh 
-		WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
-		GROUP BY daily 
-		ORDER BY daily ASC
-	");
+
+	$query = "
+	SELECT 
+		".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
+		".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
+		(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." - 1) AS month,
+		".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
+		COUNT(DISTINCT(ipaddress)) AS ipperday 
+	FROM hm_fwban_rh 
+	WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
+	GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')." 
+	ORDER BY daily ASC
+";
+
+	$sql = $pdo->prepare($query);
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";

@@ -58,7 +58,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		$search="";
 		$ban_reason_sql=" AND ban_reason LIKE '{$ban_reason}'";
 	}
-	
+
 	$total_pages_sql = $pdo->prepare("
 		SELECT Count( * ) AS count 
 		FROM hm_fwban 
@@ -90,18 +90,15 @@ To search for a date range <a href="./search-date.php">click here</a>.
 				ptr
 			FROM hm_fwban 
 			WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
-			ORDER BY timestamp DESC 
-		) AS a
+		)  a
 		LEFT JOIN
 		(
 			SELECT 
 				COUNT(ipaddress) AS returnhits, 
-				ipaddress, 
-				timestamp
+				ipaddress
 			FROM hm_fwban_rh
 			GROUP BY ipaddress
-			ORDER BY timestamp DESC
-		) AS b
+		)  b
 		ON a.ipaddress = b.ipaddress
 		".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page));
 	$sql->execute();
@@ -133,7 +130,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 				<th>IP Address</th>
 				<th>Reason</th>
 				<th>Country</th>
-				<th>HELO</th>
+				<th>PTR</th>
 				<th>FB</th>
 				<th>RS</th>
 			</tr>";

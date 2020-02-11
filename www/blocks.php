@@ -74,9 +74,9 @@
 						COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) AS countdate 
 					FROM hm_fwban_rh 
 					GROUP BY ipaddress 
-					HAVING countdate > ".$a."
+					HAVING COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) > ".$a."
 				) AS returnhits
-			   ");
+			");
 			$sql->execute();
 			$ReturnIPs = $sql->fetchColumn();
 			$PercentReturns = sprintf("%.2f%%", ($ReturnIPs / $TotalIPs) * 100);

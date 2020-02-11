@@ -42,10 +42,9 @@
 			".DBFormatDate('timestamp', '%y/%m/%d %T')." AS TimeStamp,
 			country, 
 			hits 
-		FROM hm_ids".$search_sql." 
-		GROUP BY ipaddress 
-		".DBLimitRowsWithOffset('timestamp','DESC',0,0,$offset,$no_of_records_per_page)
-	);
+		FROM hm_ids ".$search_sql." 
+		GROUP BY ipaddress, ".DBFormatDate('timestamp', '%y/%m/%d %T').", country, hits
+		".DBLimitRowsWithOffset('timestamp','DESC',0,0,$offset,$no_of_records_per_page));
 	$sql->execute();
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}

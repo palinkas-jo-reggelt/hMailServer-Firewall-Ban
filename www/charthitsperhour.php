@@ -10,6 +10,7 @@ function drawChart() {
 	data.addColumn('number', 'Avg Hits');
 	data.addRows([
 <?php 
+
 	$sql = $pdo->prepare("
 		SELECT 
 			hour, 
@@ -20,7 +21,7 @@ function drawChart() {
 				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
 				COUNT(*) as numhits 
 			FROM hm_fwban 
-			GROUP BY day, hour 
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp').", ".DBCastDateTimeFieldAsHour('timestamp')." 
 		) d 
 		GROUP BY hour 
 		ORDER BY hour ASC
