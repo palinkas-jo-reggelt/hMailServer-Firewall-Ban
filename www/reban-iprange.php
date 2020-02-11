@@ -41,15 +41,16 @@
 
 		$no_of_records_per_page = 20;
 		$offset = ($page-1) * $no_of_records_per_page;
+
 		$total_pages_sql = $pdo->prepare("
 			SELECT COUNT(*) AS count 
 			FROM hm_fwban 
-			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
-			ORDER BY INET_ATON(ipaddress) ASC
+			WHERE ".DBIpStringToIntField('ipaddress')." BETWEEN ".DBIpStringToIntValue($iplo)." AND ".DBIpStringToIntValue($iphi)."
 		");
 		$total_pages_sql->execute();
 		$total_rows = $total_pages_sql->fetchColumn();
 		$total_pages = ceil($total_rows / $no_of_records_per_page);
+
 
 		$sql = $pdo->prepare("
 			SELECT 
@@ -60,7 +61,7 @@
 				country, 
 				flag 
 			FROM hm_fwban 
-			WHERE INET_ATON(ipaddress) BETWEEN INET_ATON('".$iplo."') AND INET_ATON('".$iphi."') 
+			WHERE ".DBIpStringToIntField('ipaddress')." BETWEEN ".DBIpStringToIntValue($iplo)." AND ".DBIpStringToIntValue($iphi)." 
 			".DBLimitRowsWithOffset('TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
 		);
 		$sql->execute();

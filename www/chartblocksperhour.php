@@ -20,7 +20,7 @@ function drawChart() {
 				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
 				COUNT(*) as numhits 
 			FROM hm_fwban_rh 
-			GROUP BY day, hour
+			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp').", ".DBCastDateTimeFieldAsHour('timestamp')."
 		) d 
 		GROUP BY hour 
 		ORDER BY hour ASC

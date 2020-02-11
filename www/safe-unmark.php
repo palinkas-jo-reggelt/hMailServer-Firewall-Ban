@@ -59,7 +59,7 @@
 					ipaddress, 
 					flag 
 				FROM hm_fwban 
-				WHERE INET_ATON(ipaddress) = INET_ATON('".$ip."')
+				WHERE ".DBIpStringToIntField('ipaddress')." = ".DBIpStringToIntValue($ip)."
 			");
 			$sql_existing->execute();
 			while($row = $sql_existing->fetch(PDO::FETCH_ASSOC)){

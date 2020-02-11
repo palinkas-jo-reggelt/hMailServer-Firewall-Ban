@@ -59,7 +59,7 @@
 					ipaddress, 
 					flag 
 				FROM hm_fwban 
-				WHERE INET_ATON(ipaddress) = INET_ATON('".$ip."')
+				WHERE ".DBIpStringToIntField('ipaddress')." = ".DBIpStringToIntValue($ip)."
 			");
 			$sql_existing->execute();
 			while($row = $sql_existing->fetch(PDO::FETCH_ASSOC)){
@@ -70,7 +70,7 @@
 			}
 			if (empty($ipaddressdb)){
 				$sql_new_cidr_ban = $pdo->exec("
-					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (NOW(),'".$ip."','Manual')"
+					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (".DBGetCurrentDateTime().",'".$ip."','Manual')"
 				);
 				echo "IP ".$ip." added to ban list for firewall rule insertion<br />";
 			} else {

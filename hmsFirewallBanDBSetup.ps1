@@ -65,18 +65,73 @@ If ($DatabaseType -eq "MSSQL") {
 
 	#	Create hm_ids table if it doesn't exist
 	$Query = "
-	IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_ids')
-	BEGIN
-		CREATE TABLE hm_ids (
-			timestamp datetime NOT NULL,
-			ipaddress varchar(15) NOT NULL PRIMARY KEY,
-			hits int NOT NULL,
-			country varchar(64) DEFAULT NULL,
-			helo varchar(128) DEFAULT NULL
-		)
-	END;
+		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_ids')
+		BEGIN
+			CREATE TABLE hm_ids (
+				timestamp datetime NOT NULL,
+				ipaddress varchar(15) NOT NULL PRIMARY KEY,
+				hits int NOT NULL,
+				country varchar(64) DEFAULT NULL,
+				helo varchar(128) DEFAULT NULL
+			)
+		END;
+		"
+	RunSQLQuery $Query
+
+	#Create MSSQL Function equivalent to INET_ATON() from MySQL
+	#first drop if exists
+	$Query = "
+	IF EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'ipStringToInt')
+		DROP FUNCTION dbo.ipStringToInt 
 	"
 	RunSQLQuery $Query
+	#then create
+	$Query = "
+		CREATE FUNCTION dbo.ipStringToInt 
+		( 
+			@ip CHAR(15) 
+		) 
+		RETURNS INT 
+		AS 
+		BEGIN 
+			DECLARE @rv INT, 
+				@o1 INT, 
+				@o2 INT, 
+				@o3 INT, 
+				@o4 INT, 
+				@base INT 
+		
+			SELECT 
+				@o1 = CONVERT(INT, PARSENAME(@ip, 4)), 
+				@o2 = CONVERT(INT, PARSENAME(@ip, 3)), 
+				@o3 = CONVERT(INT, PARSENAME(@ip, 2)), 
+				@o4 = CONVERT(INT, PARSENAME(@ip, 1)) 
+		
+			IF (@o1 BETWEEN 0 AND 255) 
+				AND (@o2 BETWEEN 0 AND 255) 
+				AND (@o3 BETWEEN 0 AND 255) 
+				AND (@o4 BETWEEN 0 AND 255) 
+			BEGIN      
+				SELECT @base = CASE 
+					WHEN @o1 < 128 THEN 
+						(@o1 * 16777216) 
+					ELSE 
+						-(256 - @o1) * 16777216 
+					END 
+		
+				SET @rv = @base +  
+					(@o2 * 65536) +  
+					(@o3 * 256) + 
+					(@o4) 
+			END 
+			ELSE 
+				SET @rv = -1 
+			RETURN @rv 
+		END
+	"
+	RunSQLQuery $Query
+
+
 }
 
 If ($DatabaseType -eq "MYSQL") {

@@ -10,6 +10,7 @@ function drawChart() {
 	data.addColumn('number', 'IPs Blocked');
 	data.addRows([
 <?php 
+ 
 	$sql = $pdo->prepare("
 		SELECT 
 			a.daily,
@@ -22,14 +23,14 @@ function drawChart() {
 		(
 			SELECT 
 				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
-				".DBFormatDate('timestamp', '%Y')." AS year,
-				(".DBFormatDate('timestamp', '%c')." - 1) AS month,
-				".DBFormatDate('timestamp', '%e')." AS day,
+				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
+				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".($Database['dbtype'] == 'mysql' ? "- 1" : "").") AS month,
+				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 				COUNT(id) AS ipperday 
 			FROM hm_fwban 
 			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
 			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-			ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC
+			".($Database['dbtype'] == 'mysql' ? "ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC" : "")."
 		) AS a
 		LEFT JOIN
 		(

@@ -25,6 +25,10 @@
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
+
+	#what this must be?
+	$search = "???";
+
 	$total_pages_sql = $pdo->prepare("
 		SELECT COUNT(*) AS countips 
 		FROM (
@@ -41,7 +45,7 @@
 					COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) AS countdate 
 				FROM hm_fwban_rh 
 				GROUP BY ipaddress 
-				HAVING countdate > ".($days - 1)."
+				HAVING COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) > ".($days - 1)."
 			) AS a
 			LEFT JOIN
 			(
@@ -72,7 +76,7 @@
 				COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) AS countdate 
 			FROM hm_fwban_rh 
 			GROUP BY ipaddress 
-			HAVING countdate > ".($days - 1)."
+			HAVING COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) > ".($days - 1)."
 		) AS a
 		LEFT JOIN
 		(
@@ -83,8 +87,8 @@
 			FROM hm_fwban
 		) AS b
 		ON a.ipaddress = b.ipaddress
-		".DBLimitRowsWithOffset(0,0,0,0,$offset,$no_of_records_per_page)
-	);
+		".DBLimitRowsWithOffset('countip','DESC',0,0,$offset,$no_of_records_per_page)."
+	");
 	$sql->execute();
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}

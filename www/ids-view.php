@@ -3,8 +3,11 @@
 <div class="section">
 <h2>Search IDS Hits</h2>
 
-<?php include("cred.php") ?>
+
 <?php
+
+	include_once("config.php");
+	include_once("functions.php");
 
 	if (isset($_GET['page'])) {
 		$page = $_GET['page'];
@@ -37,12 +40,30 @@
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
 	$total_pages_sql = "SELECT COUNT(ipaddress) FROM hm_ids".$search_sql."";
-	$result = mysqli_query($con,$total_pages_sql);
-	$total_rows = mysqli_fetch_array($result)[0];
+
+	$sql = $pdo->prepare($total_pages_sql);
+	$sql->execute();
+	$total_rows = $sql->fetchColumn();
+
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
 
-	$sql = "SELECT ipaddress, DATE_FORMAT(timestamp, '%y/%m/%d %H:%i.%s') as TimeStamp, country, helo, hits FROM hm_ids".$search_sql." GROUP BY ipaddress ORDER BY timestamp DESC LIMIT $offset, $no_of_records_per_page";
-	$res_data = mysqli_query($con,$sql);
+	$query = "
+		SELECT 
+			ipaddress, 
+			".DBFormatDate('timestamp', '%y/%m/%d %T')." as TimeStamp, 
+			country, 
+			helo, 
+			hits 
+		FROM 
+			hm_ids ".$search_sql." 
+		GROUP BY 
+			ipaddress, ".DBFormatDate('timestamp', '%y/%m/%d %T').", country, helo, hits
+		".DBLimitRowsWithOffset('timestamp','DESC',0,0,$offset,$no_of_records_per_page)
+	;
+
+	$sql = $pdo->prepare($query);
+	$sql->execute();
+
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
@@ -58,7 +79,7 @@
 				<th>Hits</th>
 			</tr>";
 
-		while($row = mysqli_fetch_array($res_data)){
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			echo "<tr>";
 			echo "<td>".$row['TimeStamp']."</td>";
 			echo "<td>".$row['ipaddress']."</td>";
@@ -80,8 +101,6 @@
 			echo "</ul>";
 		}
 	}
-
-	mysqli_close($con);
 
 	echo "<br />";
 ?>
