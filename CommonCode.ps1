@@ -54,7 +54,7 @@ Function RunSQLQuery($Query){
     If ($DatabaseType -eq "MYSQL") {
         MySQLQuery($Query)
     } ElseIf ($DatabaseType -eq "MSSQL"){
-        MySQLQuery($Query)
+        MSSQLQuery($Query)
     } Else {
         Out-Null
     }
@@ -86,9 +86,8 @@ Function MySQLQuery($Query) {
 Function MSSQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-    $ConnectionString = "Data Source=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
+    $ConnectionString = "Data Source=" + $SQLHost + "," + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
 	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object System.Data.SqlClient.SQLConnection($connectionString)
 		$Connection.Open()
 		$Command = New-Object System.Data.SqlClient.SqlCommand($Query, $Connection)
