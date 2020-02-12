@@ -42,6 +42,9 @@ If (-not(Test-Path $DupFolder)) {
 	md $DupFolder
 }
 
+#	Delete all files in the Duplicate Rules Folder - don't want to confuse rule creation
+Get-ChildItem -Path $DupFolder -Include * | foreach { $_.Delete()}
+
 #	Establish files and regex
 $FWRuleList = "$DupFolder\fwrulelist.txt"
 $DupList = "$DupFolder\fwduplist.txt"
@@ -81,10 +84,19 @@ Get-ChildItem $DupFolder | Where-Object {($_.name -match "$RegexIP.txt") -or ($_
 		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace '\/32','' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
 		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace $NL,'' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
 		(Get-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt") -Replace ',$','' | Set-Content -Path "$DupFolder\$RuleNameFileIP.ip.txt"
-		$FWRN = $RuleNameFileIP.Split(".")[0]
-		& netsh advfirewall firewall add rule name="$FWRN" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$(Get-Content "$FWRN.txt.ip.txt")
+		#	Duplicate rule could be either today's IP name or consolidated date name.
+		If ($RuleNameFileIP -match $RegexIP){
+			$FWRNIP = $RuleNameFileIP.Split(".")
+			$FWRN = $FWRNIP[0]+"."+$FWRNIP[1]+"."+$FWRNIP[2]+"."+$FWRNIP[3]
+		} Else {
+			$FWRN = $RuleNameFileIP.Split(".")[0]
+		}
+		#	Double check rule has RemoteIP data in case something went wrong with naming scheme
+		If ((Get-Content -Path "$DupFolder\$RuleNameFileIP") -match $RegexIP){
+			& netsh advfirewall firewall add rule name="$FWRN" description="Rule added $((get-date).ToString('MM/dd/yy')) - DUP" dir=in interface=any action=block remoteip=$(Get-Content -Path "$DupFolder\$FWRN.txt.ip.txt")
+		} Else {
+			$EmailBody = "Warning! hmsDuplicateRuleFinder attempting to create rule $FWRN which has NO remote IP! Can result in blocking 100% of inbound traffic - locking you OUT. Contact developer at https://github.com/palinkas-jo-reggelt/hMailServer-Firewall-Ban/issues for solution."
+			EmailResults
+		}
 	}
 }
-
-#	Delete all files in the Duplicate Rules Folder because they cause trouble on the next run.
-Get-ChildItem -Path $DupFolder -Include * | foreach { $_.Delete()}
