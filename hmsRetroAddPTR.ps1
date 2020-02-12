@@ -36,7 +36,7 @@ Catch {
 $StartTime = (Get-Date -f G)
 
 # 	Add "ptr" column to hm_fwban
-$Query = "ALTER TABLE hm_fwban ADD ptr VARCHAR(192) NULL $(IF (IsMySQL) {"AFTER helo"});" #MSSQL does not have this option, To achieve this, must create a new table with desired column order, copy data, drop old table, rename new table with right name.
+$Query = "ALTER TABLE hm_fwban ADD ptr VARCHAR(192) NULL;"
 RunSQLQuery($Query)
 
 $Query = "SELECT COUNT(ID) AS countnull FROM hm_fwban WHERE ptr IS NULL"
@@ -78,5 +78,5 @@ If (($Duration).Hours -eq 1) {$sh = ""} Else {$sh = "s"}
 If (($Duration).Minutes -eq 1) {$sm = ""} Else {$sm = "s"}
 If (($Duration).Seconds -eq 1) {$ss = ""} Else {$ss = "s"}
 
-$Msg = ("Retroactive PTR update complete.`n`nResults: $CountRes `n`nUpdate completed in {0:%h} hour$sh {0:%m} minute$sm {0:%s} second$ss" -f $OperationTime)
+$EmailBody = ("Retroactive PTR update complete.`n`nResults: $CountRes `n`nUpdate completed in {0:%h} hour$sh {0:%m} minute$sm {0:%s} second$ss" -f $OperationTime)
 EmailResults

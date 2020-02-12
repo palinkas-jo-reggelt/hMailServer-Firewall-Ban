@@ -36,6 +36,9 @@ Catch {
 	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
 
+#	Set start time
+$StartTime = (Get-Date -f G)
+
 $ConsFolder = "$PSScriptRoot\ConsolidateRules"
 
 #	Create ConsolidateRules folder if it doesn't exist
@@ -86,3 +89,17 @@ Do {
 	$A++
 
 } Until ($BanDate -match $((Get-Date).AddDays(-1).ToString("yyyy-MM-dd")))
+
+$Query = "SELECT COUNT(ID) AS countnull FROM hm_fwban WHERE ptr IS NULL"
+RunSQLQuery($Query) | ForEach {
+	$CountEnd = $_.countnull
+}
+
+$EndTime = (Get-Date -f G)
+$OperationTime = New-Timespan $StartTime $EndTime
+If (($Duration).Hours -eq 1) {$sh = ""} Else {$sh = "s"}
+If (($Duration).Minutes -eq 1) {$sm = ""} Else {$sm = "s"}
+If (($Duration).Seconds -eq 1) {$ss = ""} Else {$ss = "s"}
+
+$EmailBody = ("Retroactive Rule Consolidation complete.`n`nUpdate completed in {0:%h} hour$sh {0:%m} minute$sm {0:%s} second$ss" -f $OperationTime)
+EmailResults

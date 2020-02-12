@@ -36,7 +36,7 @@ Catch {
 #######################################
 
 Function EmailResults {
-	$Subject = "Retroactive PTR Results" 
+	$Subject = "hMS Firewall Ban Notification" 
 	$Body = (Get-Content -Path $EmailBody | Out-String )
 	$SMTPClient = New-Object Net.Mail.SmtpClient($SMTPServer, $SMTPPort) 
 	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($SSL)
