@@ -1,7 +1,7 @@
 <?php include("head.php") ?>
 
 <div class="section">
-<h2>Search Repeat Hits (Connections Dropped at Firewall)</h2>
+<h2>Repeat Hits (Connections Dropped at Firewall)</h2>
 
 <?php
 	include("config.php");
@@ -25,9 +25,6 @@
 
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
-
-	#what this must be?
-	$search = "???";
 
 	$total_pages_sql = $pdo->prepare("
 		SELECT COUNT(*) AS countips 
@@ -87,13 +84,13 @@
 			FROM hm_fwban
 		) AS b
 		ON a.ipaddress = b.ipaddress
-		".DBLimitRowsWithOffset('countip','DESC',0,0,$offset,$no_of_records_per_page)."
-	");
+		".DBLimitRowsWithOffset('countip','DESC',0,0,$offset,$no_of_records_per_page)
+	);
 	$sql->execute();
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "<br />There are no repeat drops to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+		echo "<br />There are no IPs repeatedly dropped at the firewall at least <b>".$days."</b> days.";
 	} else {
 		echo number_format($total_rows)." IP".$singular." repeatedly dropped at firewall on at least ".$days." distinct days. (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
 		echo "<table class='section'>

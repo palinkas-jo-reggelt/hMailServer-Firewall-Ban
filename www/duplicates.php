@@ -75,7 +75,6 @@
 			echo "<br /><br />";
 		}
 	}
-	//mysqli_close($con);
 ?>
 </div>
 <?php include("foot.php") ?>
