@@ -174,7 +174,7 @@
 				hm_fwban 
 			WHERE 
 				timestamp BETWEEN '{$thismonth}-01 00:00:00' AND ".DBGetCurrentDateTime()."
-			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -187,7 +187,7 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'
-			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -200,7 +200,7 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'
-			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -213,7 +213,7 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'
-			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -226,7 +226,7 @@
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
 			FROM hm_fwban 
 			WHERE timestamp BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'
-			".($Database['dbtype'] == 'mysql' ? "" : "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."")
+			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){

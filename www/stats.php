@@ -85,9 +85,9 @@ $Database = array (
 			$orderStmt = " ORDER BY ".$orderBy1." ".$orderByDir1.", ".$orderBy2." ".$orderByDir2;
 		}
 		
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$QueryLimit = " ".$orderStmt." LIMIT ".$offset.", ".$numRows;
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$QueryLimit = " ".$orderStmt." OFFSET ".$offset." ROWS FETCH NEXT ".$numRows." ROWS ONLY";
 		} else {
 			$QueryLimit = "";
@@ -98,9 +98,9 @@ $Database = array (
 	Function DBGetCurrentDateTime(){
 		global $Database;
 		$Return = "";
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$Return = "NOW()";
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$Return = "GETDATE()";
 		}
 		return $Return;
@@ -109,9 +109,9 @@ $Database = array (
 	Function DBCastDateTimeFieldAsDate($fieldName){
 		global $Database;
 		$Return = "";
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$Return = "DATE(".$fieldName.")";
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$Return = "CAST(".$fieldName." AS DATE)";
 		}
 		return $Return;
@@ -120,9 +120,9 @@ $Database = array (
 	Function DBCastDateTimeFieldAsHour($fieldName){
 		global $Database;
 		$Return = "";
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$Return = "HOUR(".$fieldName.")";
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$Return = DBFormatDate($fieldName, '%H');
 		}
 		return $Return;
@@ -131,9 +131,9 @@ $Database = array (
 	Function DBCastDateTimeFieldAsMonth($fieldName){
 		global $Database;
 		$Return = "";
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$Return = "MONTH(".$fieldName.")";
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$Return = DBFormatDate($fieldName, '%c');
 		}
 		return $Return;
@@ -158,9 +158,9 @@ $Database = array (
 			'%H'				=> 'HH',
 		);
 
-		if ($Database['dbtype'] == 'mysql') {
+		if (IsMySQL()) {
 			$Return = "DATE_FORMAT(".$fieldName.", '".$formatSpecifier."')";
-		} elseif ($Database['dbtype'] == 'mssql') {
+		} elseif (IsMSSQL()) {
 			$Return = "FORMAT(".$fieldName.", '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
 		}
 		return $Return;
@@ -205,7 +205,7 @@ function drawChart() {
 			SELECT 
 				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
-				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".($Database['dbtype'] == 'mysql' ? "- 1" : ""). ") AS month,
+				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".(IsMySQL() ? "- 1" : ""). ") AS month,
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 				COUNT(id) AS ipperday 
 			FROM hm_fwban 

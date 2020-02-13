@@ -24,13 +24,13 @@ function drawChart() {
 			SELECT 
 				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
-				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".($Database['dbtype'] == 'mysql' ? "- 1" : "").") AS month,
+				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".(IsMySQL() ? "- 1" : "").") AS month,
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 				COUNT(id) AS ipperday 
 			FROM hm_fwban 
 			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
 			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-			".($Database['dbtype'] == 'mysql' ? "ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC" : "")."
+			".(IsMySQL() == 'mysql' ? "ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC" : "")."
 		) AS a
 		LEFT JOIN
 		(
