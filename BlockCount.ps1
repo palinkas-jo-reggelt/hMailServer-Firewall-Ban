@@ -23,62 +23,14 @@ ____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _
 
 #>
 
-<# https://stackoverflow.com/a/422529 #>
-Function Parse-IniFile ($file) {
-	$ini = @{}
-
-	$section = "NO_SECTION"
-	$ini[$section] = @{}
-
-	switch -regex -file $file {
-		"^\[(.+)\]$" {
-			$section = $matches[1].Trim()
-			$ini[$section] = @{}
-		}
-		"^\s*([^#].+?)\s*=\s*(.*)" {
-			$name,$value = $matches[1..2]
-			if (!($name.StartsWith(";"))) {
-				$ini[$section][$name] = $value.Trim()
-			}
-		}
-	}
-	$ini
+# Include required files
+Try {
+	.("$PSScriptRoot\Config.ps1")
+	.("$PSScriptRoot\CommonCode.ps1")
 }
-
-Function MySQLQuery($Query) {
-	$Today = (Get-Date).ToString("yyyyMMdd")
-	$DBErrorLog = "$PSScriptRoot\$Today-DBError-BlockCount.log"
-	$ConnectionString = "server=" + $ini['Database']['Host'] + ";port=3306;uid=" + $ini['Database']['Username'] + ";pwd=" + $ini['Database']['Password'] + ";database=" + $ini['Database']['DBase']
-	Try {
-		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
-		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection
-		$Connection.ConnectionString = $ConnectionString
-		$Connection.Open()
-		$Command = New-Object MySql.Data.MySqlClient.MySqlCommand($Query, $Connection)
-		$DataAdapter = New-Object MySql.Data.MySqlClient.MySqlDataAdapter($Command)
-		$DataSet = New-Object System.Data.DataSet
-		$RecordCount = $dataAdapter.Fill($dataSet, "data")
-		$DataSet.Tables[0]
-	}
-	Catch {
-		Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to run query : $query `n$Error[0]" | out-file $DBErrorLog -append
-	}
-	Finally {
-		$Connection.Close()
-	}
+Catch {
+	Write-Output "$((get-date).ToString(`"yy/MM/dd HH:mm:ss.ff`")) : ERROR : Unable to load supporting PowerShell Scripts : $query `n$Error[0]" | out-file "$PSScriptRoot\PSError.log" -append
 }
-
-Function EmailResults {
-	$Subject = "Firewall Ban Block Count Analysis Results" 
-	$Body = (Get-Content -Path $EmailBody | Out-String )
-	$SMTPClient = New-Object Net.Mail.SmtpClient($ini['Email']['SMTPServer'], $ini['Email']['SMTPPort']) 
-	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($ini['Email']['SSL'])
-	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($ini['Email']['SMTPAuthUser'], $ini['Email']['SMTPAuthPass']); 
-	$SMTPClient.Send($ini['Email']['FromAddress'], $ini['Email']['Recipient'], $Subject, $Body)
-}
-
-#	Load User Variables
-$ini = Parse-IniFile("$PSScriptRoot\Config.INI")
 
 $EmailBody = "$PSScriptRoot\BlockCountEmailBody.txt"
 
@@ -159,3 +111,5 @@ Do {
 } Until ($ReturnIPs -lt 1)
 
 EmailResults
+
+Remove-Item $EmailBody

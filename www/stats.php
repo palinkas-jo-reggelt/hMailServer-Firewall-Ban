@@ -6,7 +6,9 @@ ____ _ ____ ____ _ _ _  _  _    _       ___   _  _  _
 |___ | |__/ |___ | | | /_\ |    |       |__] /_\ |\ | 
 |    | |  \ |___ |_|_|/   \|___ |___    |__]/   \| \| 
 
-***                 STATS.PHP                     ***
+******                                         ******
+******              STATS.PHP                  ******
+******                                         ******
 
 Information file for public display. Contains no links 
 nor any way of manipulating the firewall. For informational
@@ -38,27 +40,15 @@ folder.
 */
 
 $Database = array (
-	'dbtype'      => 'mssql',
-	'host'        => '69.162.84.204',
-	'username'    => 'user_webapps',
-	'password'    => 'Xups12Uia654',
-	'dbname'      => 'dbhMAIL',
-	'driver'      => 'mssql',
-	'port'        => '41433',
+	'dbtype'      => 'mysql',
+	'host'        => 'localhost',
+	'username'    => 'hmailserver',
+	'password'    => 'supersecretpassword',
+	'dbname'      => 'hmailserver',
+	'driver'      => 'mysql',
+	'port'        => '3306',
 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
 );
-
-// $Database = array (
-// 	'dbtype'      => 'mysql',
-// 	'host'        => 'localhost',
-// 	'username'    => 'hmailserver',
-// 	'password'    => 'supersecretpassword',
-// 	'dbname'      => 'hmailserver',
-// 	'driver'      => 'mysql',
-// 	'port'        => '3306',
-// 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
-// );
-
 
 ?>
 

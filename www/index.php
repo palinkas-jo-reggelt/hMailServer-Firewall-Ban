@@ -410,8 +410,7 @@
 			$sql = $pdo->prepare("
 				SELECT 
 					ban_reason, 
-					COUNT(ban_reason) AS value_occurrence--, 
-					--flag 
+					COUNT(ban_reason) AS value_occurrence
 				FROM hm_fwban 
 				WHERE (flag=1 OR flag=2 OR flag=5 OR flag=6) 
 				GROUP BY ban_reason 
@@ -595,7 +594,7 @@
 					ipaddress
 				FROM hm_fwban_rh 
 				GROUP BY ipaddress 
-				--ORDER BY countip DESC 
+				ORDER BY countip DESC 
 			) AS a
 			JOIN
 			(

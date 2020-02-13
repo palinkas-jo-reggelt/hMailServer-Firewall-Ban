@@ -94,13 +94,13 @@
 			'%c'                => 'MM',
 			'%e'                => 'dd',
 			'Y-m-d'             => 'yyyy-MM-dd',
-			'%y/%m/%d'          => 'yyyy/MM/dd',
+			'%y/%m/%d'          => 'yy/MM/dd',
 			'Y-m'               => 'yyyy-MM',
 			'%Y-%m'             => 'yyyy-MM',
-			'%y/%m/%d %T'		=> 'yyyy-MM-dd HH:mm:ss',
+			'%y/%m/%d %T'		=> 'yy-MM-dd HH:mm:ss',
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
-			'%y/%c/%e'          => 'yyyy/MM/dd',
+			'%y/%c/%e'          => 'yy/MM/dd',
 			'%H'				=> 'HH',
 		);
 

@@ -100,7 +100,8 @@ To search for a date range <a href="./search-date.php">click here</a>.
 			GROUP BY ipaddress
 		)  b
 		ON a.ipaddress = b.ipaddress
-		".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page));
+		".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page)
+	);
 	$sql->execute();
 	
 	if ($RS=="YES"){$RSres=" with release status \"<b>YES</b>\"";} 
@@ -130,7 +131,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 				<th>IP Address</th>
 				<th>Reason</th>
 				<th>Country</th>
-				<th>PTR</th>
+				<th>HELO</th>
 				<th>FB</th>
 				<th>RS</th>
 			</tr>";
