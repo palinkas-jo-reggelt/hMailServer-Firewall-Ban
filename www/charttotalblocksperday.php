@@ -13,7 +13,7 @@ function drawChart() {
 		SELECT 
 			".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
 			".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
-			(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".($Database['dbtype'] == 'mysql' ? "- 1" : "").") AS month,
+			(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".(IsMySQL() ? "- 1" : "").") AS month,
 			".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
 			COUNT(ipaddress) AS ipperday 
 		FROM hm_fwban_rh 

@@ -62,7 +62,8 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	$total_pages_sql = $pdo->prepare("
 		SELECT Count( * ) AS count 
 		FROM hm_fwban 
-		WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql.$RS_SQL);
+		WHERE (".(IsMSSQL() ? DBCastDateTimeFieldAsDate('timestamp') : 'timestamp')." LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql.$RS_SQL
+	);
 	$total_pages_sql->execute();
 	$total_rows = $total_pages_sql->fetchColumn();
 	$total_pages = ceil($total_rows / $no_of_records_per_page);
@@ -89,7 +90,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 				helo, 
 				ptr
 			FROM hm_fwban 
-			WHERE (timestamp LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
+			WHERE (".(IsMSSQL() ? DBCastDateTimeFieldAsDate('timestamp') : 'timestamp')." LIKE '%{$search}%' OR ipaddress LIKE '%{$search}%' OR ban_reason LIKE '%{$search}%' OR country LIKE '%{$search}%' OR helo LIKE '%{$search}%' OR ptr LIKE '%{$search}%')".$ban_reason_sql."".$RS_SQL." 
 		)  a
 		LEFT JOIN
 		(
