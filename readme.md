@@ -19,6 +19,8 @@ For new installations, just follow the instructions.
 
 For UPGRADING, run hmsRetroAddBlocksIPTable.ps1 BEFORE upgrading the other files.
 
+Add hmsUpdateChartTables.ps1 to nightly scheduled task.
+
 
 ## !! NEW !! MUST READ !!
 
