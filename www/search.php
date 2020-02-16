@@ -95,9 +95,9 @@ To search for a date range <a href="./search-date.php">click here</a>.
 		LEFT JOIN
 		(
 			SELECT 
-				COUNT(ipaddress) AS returnhits, 
+				hits AS returnhits, 
 				ipaddress
-			FROM hm_fwban_rh
+			FROM hm_fwban_blocks_ip
 			GROUP BY ipaddress
 		)  b
 		ON a.ipaddress = b.ipaddress

@@ -1,14 +1,13 @@
 <?php include("head-g.php") ?>
 
-<div class="wrapper">
 <div class="section">
 	<div class="secleft">
 		<h2>Hits per day from inception:</h2>
-		<div id="chart_combined"></div>
+		<div id="chart_combined_staticdata"></div>
 	</div>
 	<div class="secright">
 		<h2>Total blocks per day (block frequency):</h2>
-		<div id="chart_totalblocksperday"></div>
+		<div id="chart_totalblocksperday_staticdata"></div>
 	</div>
 	<div class="clear"></div>
 </div>
@@ -16,11 +15,11 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Average hits per hour from inception:</h2>
-		<div id="chart_hitsperhour"></div>
+		<div id="chart_hitsperhour_staticdata"></div>
 	</div>
 	<div class="secright">
 		<h2>Average blocks per hour from inception:</h2>
-		<div id="chart_blocksperhour"></div>
+		<div id="chart_blocksperhour_staticdata"></div>
 	</div>
 	<div class="clear"></div>
 </div>
@@ -573,55 +572,9 @@
 	<?php
 		include_once("config.php");
 		include_once("functions.php");
+		include_once("blocksdata.php");
 
-		$num_repeats_sql = $pdo->prepare("
-			SELECT 
-				COUNT(DISTINCT(ipaddress)) 
-			FROM hm_fwban_rh
-		");
-		$num_repeats_sql->execute();
-		$num_repeats = $num_repeats_sql->fetchColumn();
-
-		$sql_repeats = $pdo->prepare("
-			SELECT
-				a.ipaddress,
-				a.countip,
-				b.country
-			FROM
-			(
-				SELECT 
-					COUNT(ipaddress) AS countip, 
-					ipaddress
-				FROM hm_fwban_rh 
-				GROUP BY ipaddress 
-				ORDER BY countip DESC 
-			) AS a
-			JOIN
-			(
-				SELECT ipaddress, country 
-				FROM hm_fwban
-			) AS b
-			ON a.ipaddress = b.ipaddress
-			".DBLimitRowsWithOffset('countip','DESC',0,0,0,5)."
-		");
-		$sql_repeats->execute();
-		if ($num_repeats == 0){
-			echo "There are no repeat firewall drops to report.<br /><br />";
-		}else{
-			while($row = $sql_repeats->fetch(PDO::FETCH_ASSOC)){
-				if ($row['countip']==1){$singular="";}else{$singular="s";}
-				echo number_format($row['countip'])." knock".$singular." by <a href=\"./repeats-ip.php?submit=Search&repeatIP=".$row['ipaddress']."\">".$row['ipaddress']."</a> from ".$row['country']."<br />";
-			}
-			if ($num_repeats > 5){
-				$sql_num_repeats = $pdo->prepare("
-					SELECT 
-						COUNT(ipaddress) 
-					FROM hm_fwban_rh
-				");
-				$sql_num_repeats->execute();
-				$total_repeats = $sql_num_repeats->fetchColumn();
-				echo "<a href=\"./repeats-view.php\"><br />".number_format($num_repeats)." IPs</a> have repeatedly attempted to gain access unsuccessfully a total of ".number_format($total_repeats)." times.<br /><br />";}
-		}
+		echo $topfive;
 	?>
 	<br />
 	</div> 

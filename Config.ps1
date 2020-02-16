@@ -40,6 +40,10 @@ $FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'           #
 $Interval  = 5   # <-- (minutes) must match the frequency of Win Sched Task    #
 $IDSExpire = 12  # <-- (days) expire IDS entries that have not resulted in ban #
 #                                                                              #
+###   PHP VARIABLES   ##########################################################
+#                                                                              #
+$wwwFolder = "C:\xampp\htdocs\mydomain\fwban" # <-- www folder location        #
+#                                                                              #
 ###   EMAIL VARIABLES   ########################################################
 #                                                                              #
 $FromAddress  = 'notifier.account@gmail.com'                                   #

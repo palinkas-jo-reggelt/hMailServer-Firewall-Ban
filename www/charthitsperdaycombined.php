@@ -8,51 +8,9 @@ function drawChart() {
 	data.addColumn('date', 'Date');
 	data.addColumn('number', 'IPs Added');
 	data.addColumn('number', 'IPs Blocked');
-	data.addRows([
-<?php 
- 
-	$sql = $pdo->prepare("
-		SELECT 
-			a.daily,
-			a.year,
-			a.month,
-			a.day,
-			a.ipperday,
-			b.blockperday
-		FROM
-		(
-			SELECT 
-				".DBCastDateTimeFieldAsDate('timestamp')." AS daily,
-				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
-				(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." ".(IsMySQL() ? "- 1" : "").") AS month,
-				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
-				COUNT(id) AS ipperday 
-			FROM hm_fwban 
-			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
-			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-			".(IsMySQL() == 'mysql' ? "ORDER BY ".DBCastDateTimeFieldAsDate('timestamp')." ASC" : "")."
-		) AS a
-		LEFT JOIN
-		(
-			SELECT 
-				".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
-				COUNT(DISTINCT(ipaddress)) AS blockperday  
-			FROM hm_fwban_rh 
-			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
-			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
-		) AS b
-		ON a.daily = b.daily
-		ORDER BY a.daily
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		if (is_null($row['blockperday'])){$blockperday = 0;} else {$blockperday = $row['blockperday'];}
-		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday'].", ".$blockperday."],";
-	}
-?>
-	]);
+	data.addRows([<?php include_once("charthitsperdaycombineddata.php") ?>]);
 
-	var chart = new google.visualization.LineChart(document.getElementById('chart_combined'));
+	var chart = new google.visualization.LineChart(document.getElementById('chart_combined_staticdata'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,
