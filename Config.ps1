@@ -38,7 +38,7 @@ $FirewallLog = 'C:\scripts\hmailserver\FWBan\Firewall\pfirewall.log'           #
 ###   INTERVAL VARIABLES   #####################################################
 #                                                                              #
 $Interval  = 5   # <-- (minutes) must match the frequency of Win Sched Task    #
-$IDSExpire = 12  # <-- (days) expire IDS entries that have not resulted in ban #
+$IDSExpire = 12  # <-- (hours) expire IDS entries that have not resulted in ban#
 #                                                                              #
 ###   PHP VARIABLES   ##########################################################
 #                                                                              #
