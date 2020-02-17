@@ -62,7 +62,7 @@ If ((get-service hMailServer).Status -ne 'Running') { exit }
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
 
 #	Pickup entries marked SAFE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=5"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=5"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -73,7 +73,7 @@ RunSQLQuery $Query | foreach {
 }
 
 #	Pickup entries marked for RELEASE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=2"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=2"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -131,7 +131,7 @@ RunSQLQuery $Query | foreach {
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND (t1.flag=3 OR t1.flag=7)"
 RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
+$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -223,7 +223,11 @@ $FirewallLogObjects | foreach-object {
 	If (($_.Action -match 'DROP') -and ($_.DestinationPort -match $MailPorts) -and ($_.SourceIP -notmatch $LSRegex)) {
 		$IP = $_.SourceIP
 		$DateTime = $_.Date + " " + $_.Time
-		$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$DateTime';"
+		If ($DatabaseType -eq "MYSQL"){
+			$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$ipaddress',1,'$timestamp') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$timestamp';"
+		} ElseIf ($DatabaseType -eq "MSSQL") {
+			$Query = "IF NOT EXISTS (SELECT 1 FROM hm_fwban_blocks_ip WHERE ipaddress='$ipaddress') INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$ipaddress',1,'$timestamp') ELSE UPDATE hm_fwban_blocks_ip SET hits=(hits+1),lasttimestamp='$timestamp'  WHERE ipaddress='$ipaddress';"
+		}
 		RunSQLQuery $Query
 		$Query = "SELECT id FROM hm_fwban_blocks_ip WHERE ipaddress = '$IP'"
 		RunSQLQuery $Query | ForEach {

@@ -123,7 +123,7 @@
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/MM/dd',
-			'%H'				=> 'HH',
+			'%H'                => 'HH',
 			'%M %D, %Y'         => 'Month D, YYYY',			
 		);
 

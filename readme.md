@@ -124,6 +124,8 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.80 housekeeping 
+- 0.79 mssql changes by lcamilo
 - 0.78 added count of blocks to index.php
 - 0.77 added new table, added data caching for charts and other common references to hm_fwban_rh
 - 0.76 cleanup PHP from adding MSSQL changes

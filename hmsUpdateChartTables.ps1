@@ -159,9 +159,6 @@ $Query = "
 	GROUP BY hour 
 	ORDER BY hour ASC
 "
-
-Write-Host $Query
-
 RunSQLQuery $Query | ForEach {
 	$hour = $_.hour
 	$avghits = $_.avghits
