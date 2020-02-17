@@ -575,6 +575,18 @@
 		include_once("blocksdata.php");
 
 		echo $topfive;
+		
+		$sql = $pdo->prepare("
+			SELECT 
+				".DBFormatDate(DBCastDateTimeFieldAsDate('MIN(lasttimestamp)'), '%M %D, %Y')." AS mindate,
+				COUNT(ipaddress) AS countip,
+				SUM(hits) AS counthits
+			FROM hm_fwban_blocks_ip
+			");
+		$sql->execute();
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+			echo "<br>".number_format($row['countip'])." IPs attempted to connect but were dropped at the firewall a total of ".number_format($row['counthits'])." times since ".$row['mindate']; 
+		}
 	?>
 	<br />
 	</div> 
