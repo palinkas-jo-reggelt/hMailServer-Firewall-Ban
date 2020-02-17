@@ -46,12 +46,12 @@ If (Test-Path $ChartBlocksPerHourData) {Remove-Item -Force -Path $ChartBlocksPer
 If (Test-Path $ChartBlocksPerDayData) {Remove-Item -Force -Path $ChartBlocksPerDayData}
 If (Test-Path $BlocksData) {Remove-Item -Force -Path $BlocksData}
 
-New-Item $ChartHitsPerDayCombinedData
-New-Item $ChartTotalBlocksPerDayData
-New-Item $ChartHitsPerHourData
-New-Item $ChartBlocksPerHourData
-New-Item $ChartBlocksPerDayData
-New-Item $BlocksData
+New-Item $ChartHitsPerDayCombinedData -ItemType "file"
+New-Item $ChartTotalBlocksPerDayData -ItemType "file"
+New-Item $ChartHitsPerHourData -ItemType "file"
+New-Item $ChartBlocksPerHourData -ItemType "file"
+New-Item $ChartBlocksPerDayData -ItemType "file"
+New-Item $BlocksData -ItemType "file"
 
 #	Hits Per Day Combined
 $Query = "
@@ -87,6 +87,7 @@ $Query = "
 	ON a.daily = b.daily
 	ORDER BY a.daily
 "
+
 RunSQLQuery $Query | ForEach {
 	$daily = $_.daily
 	$year = $_.year
@@ -110,6 +111,7 @@ $Query = "
 	GROUP BY $(DBCastDateTimeFieldAsDate 'timestamp')
 	ORDER BY daily ASC
 "
+
 RunSQLQuery $Query | ForEach {
 	$daily = $_.daily
 	$year = $_.year
@@ -152,11 +154,14 @@ $Query = "
 			$( DBCastDateTimeFieldAsHour 'timestamp') AS hour, 
 			COUNT(*) as numhits 
 		FROM hm_fwban_rh 
-		GROUP BY day, hour
+		GROUP BY $( DBCastDateTimeFieldAsDate 'timestamp'), $( DBCastDateTimeFieldAsHour 'timestamp')
 	) d 
 	GROUP BY hour 
 	ORDER BY hour ASC
 "
+
+Write-Host $Query
+
 RunSQLQuery $Query | ForEach {
 	$hour = $_.hour
 	$avghits = $_.avghits
@@ -172,10 +177,11 @@ $Query = "
 		$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%e') AS day,
 		COUNT(DISTINCT(ipaddress)) AS ipperday 
 	FROM hm_fwban_rh 
-	WHERE DATE(timestamp) < DATE(NOW()) 
-	GROUP BY DATE(timestamp) 
+	WHERE $( DBCastDateTimeFieldAsDate 'timestamp') < $(DBGetCurrentDateTime) 
+	GROUP BY $( DBCastDateTimeFieldAsDate 'timestamp') 
 	ORDER BY daily ASC
 "
+
 RunSQLQuery $Query | ForEach {
 	$daily = $_.daily
 	$year = $_.year
@@ -199,7 +205,7 @@ $Query = "
 			ipaddress
 		FROM hm_fwban_rh 
 		GROUP BY ipaddress 
-		ORDER BY countip DESC 
+		$(If ($DatabaseType -eq 'MYSQL') {'ORDER BY countip DESC '} Else {' '})
 	) AS a
 	JOIN
 	(
@@ -210,6 +216,7 @@ $Query = "
 	ORDER BY countip DESC
 	$( DBLimitRowsWithOffset 0 5)
 "
+
 RunSQLQuery $Query | ForEach {
 	$TopFiveIP = $_.ipaddress
 	$TopFiveCount = $_.countip
@@ -229,6 +236,7 @@ $Query = "
 	FROM hm_fwban_rh 
 	WHERE timestamp BETWEEN '$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd")) 00:00:00' AND '$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd")) 23:59:59'
 "
+
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
@@ -243,6 +251,7 @@ $Query = "
 	FROM hm_fwban_rh 
 	WHERE timestamp BETWEEN '$(((Get-Date).AddDays(-2)).ToString("yyyy-MM-dd")) 00:00:00' AND '$(((Get-Date).AddDays(-2)).ToString("yyyy-MM-dd")) 23:59:59'
 "
+
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks

@@ -54,7 +54,7 @@ Function RunSQLQuery($Query){
     If ($DatabaseType -eq "MYSQL") {
         MySQLQuery($Query)
     } ElseIf ($DatabaseType -eq "MSSQL"){
-        MySQLQuery($Query)
+        MSSQLQuery($Query)
     } Else {
         Out-Null
     }
@@ -86,7 +86,7 @@ Function MySQLQuery($Query) {
 Function MSSQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-    $ConnectionString = "Data Source=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
+    $ConnectionString = "Data Source=" + $SQLHost + "," + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object System.Data.SqlClient.SQLConnection($connectionString)
@@ -120,7 +120,7 @@ Function DBCastDateTimeFieldAsHour($fieldName){
     If ($DatabaseType -eq "MYSQL") {
 		$Return = "HOUR($fieldName)"
     } ElseIf ($DatabaseType -eq "MSSQL"){
-		$Return = DBFormatDate $fieldName, '%H'
+		$Return = "DATEPART(hour,$fieldName)"
 	}
 	return $Return;
 }
@@ -186,7 +186,13 @@ Function DBLimitRowsWithOffset(){
 	return $QueryLimit
 }
 
-Function DBFormatDate($fieldName, $formatSpecifier){
+Function DBFormatDate(){
+
+	param(
+		$fieldName, 
+		$formatSpecifier
+	)
+
 	$Return = ""
 
 	$dateFormatSpecifiers = @{
@@ -203,11 +209,11 @@ Function DBFormatDate($fieldName, $formatSpecifier){
 		'%y/%c/%e'             = 'yy/MM/dd'
 		'%H'                   = 'HH'
 	}
-
+	
     If ($DatabaseType -eq "MYSQL") {
 		$Return = "DATE_FORMAT($fieldName, '$formatSpecifier')"
     } ElseIf ($DatabaseType -eq "MSSQL"){
-		$Return = "FORMAT($fieldName, '$dateFormatSpecifiers[$formatSpecifier]', 'en-US')"
+		$Return = "FORMAT($fieldName, '$($dateFormatSpecifiers[$formatSpecifier])', 'en-US')"
 	}
 	return $Return
 }
