@@ -3,166 +3,48 @@
 <div class="section">
 	<div class="secleft">
 		<h2>IPs blocked per day from inception:</h2>
-		<div id="chart_blocksperday"></div>
+		<div id="chart_totalblocksperday_staticdata"></div>
 	</div>
 	<div class="secright">
 		<h2>Average blocks per hour from inception:</h2>
-		<div id="chart_blocksperhour"></div>
+		<div id="chart_blocksperhour_staticdata"></div>
 	</div>
 	<div class="clear"></div>
 </div>
 
 <div class="section">
+	<!-- START OF DAILY BLOCKS -->
 	<div class="secleft">
 	<h2>This Week's Daily Blocked IPs:</h2>
 
 <?php
 	include_once("config.php");
 	include_once("functions.php");
+	include_once("blocksdata.php");
 
-	$today = date('Y-m-d');
-	$yesterday = date('Y-m-d', strtotime(date('Y-m-d')." -1 day"));
-	$twodaysago = date('Y-m-d', strtotime(date('Y-m-d')." -2 day"));
-	$threedaysago = date('Y-m-d', strtotime(date('Y-m-d')." -3 day"));
-	$fourdaysago = date('Y-m-d', strtotime(date('Y-m-d')." -4 day"));
-	$thismonth = date('Y-m');
-	$lastmonth = date('Y-m', strtotime(date('Y-m')." -1 month"));
-	$twomonthsago = date('Y-m', strtotime(date('Y-m')." -2 month"));
-	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
-	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
-
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$today} 00:00:00' AND '{$today} 23:59:59'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$today."\">".number_format($row['ipsblocked'])." IPs blocked</a> Today attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$yesterday} 00:00:00' AND '{$yesterday} 23:59:59'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$yesterday."\">".number_format($row['ipsblocked'])." IPs blocked</a> Yesterday attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$twodaysago} 00:00:00' AND '{$twodaysago} 23:59:59'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$twodaysago."\">".number_format($row['ipsblocked'])." IPs blocked</a> on ".date("l", strtotime($twodaysago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$threedaysago} 00:00:00' AND '{$threedaysago} 23:59:59'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$threedaysago."\">".number_format($row['ipsblocked'])." IPs blocked</a> on ".date("l", strtotime($threedaysago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$fourdaysago} 00:00:00' AND '{$fourdaysago} 23:59:59'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$fourdaysago."\">".number_format($row['ipsblocked'])." IPs blocked</a> on ".date("l", strtotime($fourdaysago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
+	echo $dailyblocks;
+	echo "<br>Clicking count links will take you to \"repeats\" pages which have very high execution time if repeats database has a large number of rows.<br>"
 ?>
 	<br />
 	</div>
+	<!-- END OF DAILY BLOCKS -->
 
+
+	<!-- START OF MONTHLY BLOCKS -->
 	<div class="secright">
 		<h2>This Year's Monthly Blocks:</h2>
 
 <?php
 	include_once("config.php");
 	include_once("functions.php");
+	include_once("blocksdata.php");
 
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$thismonth}-01 00:00:00' AND NOW()
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$thismonth."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($thismonth))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$lastmonth."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($lastmonth))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$twomonthsago."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($twomonthsago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$threemonthsago."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($threemonthsago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
-	
-	$sql = $pdo->prepare("
-		SELECT 
-			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
-			COUNT(ipaddress) AS totalblocks 
-		FROM hm_fwban_rh 
-		WHERE timestamp BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$fourmonthsago."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($fourmonthsago))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
-	}
+	echo $monthlyblocks;
+	echo "<br>Clicking count links will take you to \"repeats\" pages which have very high execution time if repeats database has a large number of rows.<br>"
 ?>
 	<br />
 	</div>
+	<!-- END OF MONTHLY BLOCKS -->
 	<div class="clear"></div>
 </div>
 

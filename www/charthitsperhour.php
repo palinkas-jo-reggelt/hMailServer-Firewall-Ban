@@ -8,32 +8,9 @@ function drawChart() {
 	var data = new google.visualization.DataTable();
 	data.addColumn('timeofday', 'Hour');
 	data.addColumn('number', 'Avg Hits');
-	data.addRows([
-<?php 
+	data.addRows([<?php include_once("charthitsperhourdata.php") ?>]);
 
-	$sql = $pdo->prepare("
-		SELECT 
-			hour, 
-			ROUND(AVG(numhits), 1) AS avghits 
-		FROM (
-			SELECT 
-				".DBCastDateTimeFieldAsDate('timestamp')." AS day, 
-				".DBCastDateTimeFieldAsHour('timestamp')." AS hour, 
-				COUNT(*) as numhits 
-			FROM hm_fwban 
-			GROUP BY ".DBCastDateTimeFieldAsDate('timestamp').", ".DBCastDateTimeFieldAsHour('timestamp')." 
-		) d 
-		GROUP BY hour 
-		ORDER BY hour ASC
-	");
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "[[".$row['hour'].", 0, 0], ".$row['avghits']."],";
-	}
-?>
-	]);
-
-	var chart = new google.visualization.ColumnChart(document.getElementById('chart_hitsperhour'));
+	var chart = new google.visualization.ColumnChart(document.getElementById('chart_hitsperhour_staticdata'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,

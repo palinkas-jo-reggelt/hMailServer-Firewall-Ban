@@ -7,29 +7,7 @@ function drawChart() {
 	var data = new google.visualization.DataTable();
 	data.addColumn('date', 'Date');
 	data.addColumn('number', 'Blocks');
-	data.addRows([
-<?php 
-
-	$query = "
-	SELECT 
-		".DBCastDateTimeFieldAsDate('timestamp')." AS daily, 
-		".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%Y')." AS year,
-		(".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%c')." - 1) AS month,
-		".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%e')." AS day,
-		COUNT(DISTINCT(ipaddress)) AS ipperday 
-	FROM hm_fwban_rh 
-	WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())." 
-	GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')." 
-	ORDER BY daily ASC
-";
-
-	$sql = $pdo->prepare($query);
-	$sql->execute();
-	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "[new Date(".$row['year'].", ".$row['month'].", ".$row['day']."), ".$row['ipperday']."],";
-	}
-?>
-	]);
+	data.addRows([<?php include_once("chartblocksperdaydata.php") ?>]);
 
 	var chart = new google.visualization.LineChart(document.getElementById('chart_blocksperday'));
 	  chart.draw(data, {

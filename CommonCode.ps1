@@ -54,7 +54,7 @@ Function RunSQLQuery($Query){
     If ($DatabaseType -eq "MYSQL") {
         MySQLQuery($Query)
     } ElseIf ($DatabaseType -eq "MSSQL"){
-        MSSQLQuery($Query)
+        MySQLQuery($Query)
     } Else {
         Out-Null
     }
@@ -86,8 +86,9 @@ Function MySQLQuery($Query) {
 Function MSSQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-    $ConnectionString = "Data Source=" + $SQLHost + "," + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
+    $ConnectionString = "Data Source=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";password=" + $SQLAdminPassword + ";Initial Catalog=" + $SQLDatabase
 	Try {
+		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object System.Data.SqlClient.SQLConnection($connectionString)
 		$Connection.Open()
 		$Command = New-Object System.Data.SqlClient.SqlCommand($Query, $Connection)
@@ -112,6 +113,16 @@ Function DBCastDateTimeFieldAsDate($fieldName){
         $Return = "CAST($fieldName AS DATE)"
     }
     return $Return
+}
+
+Function DBCastDateTimeFieldAsHour($fieldName){
+	$Return = ""
+    If ($DatabaseType -eq "MYSQL") {
+		$Return = "HOUR($fieldName)"
+    } ElseIf ($DatabaseType -eq "MSSQL"){
+		$Return = DBFormatDate $fieldName, '%H'
+	}
+	return $Return;
 }
 
 Function DBSubtractIntervalFromDate(){
@@ -173,6 +184,32 @@ Function DBLimitRowsWithOffset(){
 		   	           FETCH NEXT $numRows ROWS ONLY"
 	}
 	return $QueryLimit
+}
+
+Function DBFormatDate($fieldName, $formatSpecifier){
+	$Return = ""
+
+	$dateFormatSpecifiers = @{
+		'%Y'                   = 'yyyy'
+		'%c'                   = 'MM'
+		'%e'                   = 'dd'
+		'Y-m-d'                = 'yyyy-MM-dd'
+		'%y/%m/%d'             = 'yy/MM/dd'
+		'Y-m'                  = 'yyyy-MM'
+		'%Y-%m'                = 'yyyy-MM'
+		'%y/%m/%d %T'          = 'yy-MM-dd HH:mm:ss'
+		'%Y/%m/%d %HH:%mm:%ss' = 'yyyy-MM-dd HH:mm:ss'
+		'%Y/%m/01'             = 'yyyy-MM-01'
+		'%y/%c/%e'             = 'yy/MM/dd'
+		'%H'                   = 'HH'
+	}
+
+    If ($DatabaseType -eq "MYSQL") {
+		$Return = "DATE_FORMAT($fieldName, '$formatSpecifier')"
+    } ElseIf ($DatabaseType -eq "MSSQL"){
+		$Return = "FORMAT($fieldName, '$dateFormatSpecifiers[$formatSpecifier]', 'en-US')"
+	}
+	return $Return
 }
 
 #######################################

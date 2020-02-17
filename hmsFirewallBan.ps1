@@ -223,8 +223,14 @@ $FirewallLogObjects | foreach-object {
 	If (($_.Action -match 'DROP') -and ($_.DestinationPort -match $MailPorts) -and ($_.SourceIP -notmatch $LSRegex)) {
 		$IP = $_.SourceIP
 		$DateTime = $_.Date + " " + $_.Time
-		$Query = "INSERT INTO hm_fwban_rh (timestamp, ipaddress) VALUES ('$DateTime', '$IP')"
+		$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$DateTime';"
 		RunSQLQuery $Query
+		$Query = "SELECT id FROM hm_fwban_blocks_ip WHERE ipaddress = '$IP'"
+		RunSQLQuery $Query | ForEach {
+			$IPID = $_.id
+			$Query = "INSERT INTO hm_fwban_rh (timestamp, ipaddress, ipid) VALUES ('$DateTime', '$IP', '$IPID')"
+			RunSQLQuery $Query
+		}
 	}
 }
 

@@ -13,6 +13,17 @@ Ban Spammers to Windows Defender Firewall. Use of various reject methods in Even
 
 ## !! NEW !! MUST READ !!
 
+Another major update. Due to a full-table-scan situation with hm_fwban_rh that I simply cannot mitigate, I created a new table to store common repeat hit data. The new table is properly keyed so queries are fast. 
+
+For new installations, just follow the instructions.
+
+For UPGRADING, run hmsRetroAddBlocksIPTable.ps1 BEFORE upgrading the other files.
+
+Add hmsUpdateChartTables.ps1 to nightly scheduled task.
+
+
+## !! NEW !! MUST READ !!
+
 Major update. I've overhauled several files in order to eliminate Powershell's NetFirewall commands, which are incompatible with Windows versions before 8.1 Server 2012. Additionally, I've added PTR to the database. Lastly, I made it possible for VERY busy systems to use this project by splitting consolidated firewall rules into groups of 400 IPs each. Therefore, if you are attempting to ban thousands of IPs per day, the firewall won't crash on rule creation.
 
 For NEW installations, just follow the instructions.
@@ -34,8 +45,8 @@ Obviously, if you're upgrading, you will want to copy all of the files to your i
 ## Prerequisites
 
 1) Working hMailServer 5.7.0
-2) Working MySQL with hmailserver database
-3) Working Apache
+2) Working MySQL OR MSSQL with hmailserver database
+3) Working Apache/IIS
 4) *May* require updating Powershell
 5) *May* require MySQL-Connector-Net found here: https://dev.mysql.com/downloads/connector/net/
 
@@ -46,7 +57,8 @@ Obviously, if you're upgrading, you will want to copy all of the files to your i
 2) Copy vbsjson.vbs to hMailServer Events folder (default location: C:\Program Files (x86)\hMailServer\Events)
 3) Install RvdH's DNS resolver (https://d-fault.nl/files/)
 4) Copy RvdH's Disconnect.exe to hMailServer Events folder (https://d-fault.nl/files/)
-5) Edit variables in hmsFirewallBan.ps1
+5) Edit variables in Config.ps1
+6) Run hmsFirewallBanDBSetup.ps1 to setup database tables.
 6) Change group policy for firewall log to log dropped connections. Set log location to match with path in hmsFirewallBan.ps1 (or change path in hmsFirewallBan.ps1). From cmd/administrator:
 ```
 netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
@@ -60,14 +72,15 @@ netsh advfirewall set allprofiles logging droppedconnections enable
 8) Create scheduled task to run DAILY AT 12:01 am with actions: 
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
+	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsUpdateChartTables.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-9) Copy the files in /www/ to your webserver and edit the db info in cred.php and edit .htaccess to allow your subnet.
+9) Copy the files in /www/ to your webserver and edit the db info in config.php and edit .htaccess to allow your subnet.
 10) Sit back and watch your firewall rule count grow while your spam logs get quiet.
 
 
-## MySQL Create Table
+## SQL Create Tables
 
-Moved to hmsFirewallBan.ps1 - will be created at first run.
+Moved to hmsFirewallBanDBSetup.ps1
 
    
 ## Flag Logic
@@ -111,6 +124,8 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.78 added count of blocks to index.php
+- 0.77 added new table, added data caching for charts and other common references to hm_fwban_rh
 - 0.76 cleanup PHP from adding MSSQL changes
 - 0.75 housekeeping
 - 0.74 housekeeping
@@ -174,4 +189,3 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 - 0.16 bug fixes
 - 0.15 Added review before release/reban
 - 0.14 & before:  too many to list/forgot
-
