@@ -224,9 +224,9 @@ $FirewallLogObjects | foreach-object {
 		$IP = $_.SourceIP
 		$DateTime = $_.Date + " " + $_.Time
 		If ($DatabaseType -eq "MYSQL"){
-			$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$ipaddress',1,'$timestamp') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$timestamp';"
+			$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$DateTime';"
 		} ElseIf ($DatabaseType -eq "MSSQL") {
-			$Query = "IF NOT EXISTS (SELECT 1 FROM hm_fwban_blocks_ip WHERE ipaddress='$ipaddress') INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$ipaddress',1,'$timestamp') ELSE UPDATE hm_fwban_blocks_ip SET hits=(hits+1),lasttimestamp='$timestamp'  WHERE ipaddress='$ipaddress';"
+			$Query = "IF NOT EXISTS (SELECT 1 FROM hm_fwban_blocks_ip WHERE ipaddress='$IP') INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ELSE UPDATE hm_fwban_blocks_ip SET hits=(hits+1),lasttimestamp='$DateTime'  WHERE ipaddress='$IP';"
 		}
 		RunSQLQuery $Query
 		$Query = "SELECT id FROM hm_fwban_blocks_ip WHERE ipaddress = '$IP'"
