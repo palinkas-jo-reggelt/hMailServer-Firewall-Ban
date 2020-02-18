@@ -51,19 +51,15 @@ RunSQLQuery $Query | ForEach {
 	[int]$CountIP = $_.countid
 }
 
-$NewLine = [System.Environment]::NewLine
 $N = 0
 $Rows = 400
 $Limit = [math]::ceiling($CountIP / $Rows)
 
-Do {
-	$X = ($N).ToString("0")
-	If ($N -eq 0){
-		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+".csv"
-	}
-	Else {
-		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
-	}
+If ($Limit -eq 0){
+	Exit
+}
+ElseIf ($Limit -eq 1){
+	$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+".csv"
 	$Query = "
 		SELECT 
 			ipaddress 
@@ -73,14 +69,29 @@ Do {
 		$(DBLimitRowsWithOffset $($N * $Rows) $Rows)
 	"
 	RunSQLQuery $Query | Export-CSV $ConsRules
-	
-	$N++
 }
-Until ($N -eq $Limit)
+Else {
+	Do {
+		$X = ($N).ToString("0")
+		$ConsRules = "$ConsFolder\hMS FWBan "+$BanDate+"_"+$X+".csv"
+		$Query = "
+			SELECT 
+				ipaddress 
+			FROM hm_fwban 
+			WHERE $(DBCastDateTimeFieldAsDate('timestamp')) LIKE '$BanDate%' AND flag IS NULL 
+			ORDER BY timestamp DESC
+			$(DBLimitRowsWithOffset $($N * $Rows) $Rows)
+		"
+		RunSQLQuery $Query | Export-CSV $ConsRules
+		
+		$N++
+	}
+	Until ($N -eq $Limit)
+}
 
 $RegexName = '^hMS\sFWBan\s202[0-9]\-[0-9]{2}\-[0-9]{2}(_[0-9]{1,3})?\.csv$'
 $RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
-Get-ChildItem $ConsFolder | Where-Object {$_.name -match "hMS FWBan $BanDate_"} | ForEach {
+Get-ChildItem $ConsFolder | Where-Object {$_.name -match "hMS FWBan $BanDate"} | ForEach {
 	$FileName = $_.name
 	$FilePathName = "$ConsFolder\$FileName"
 	$RuleName = ($FileName).Replace(".csv", "")

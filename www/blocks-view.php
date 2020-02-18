@@ -90,9 +90,9 @@
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "<br />There are no IPs repeatedly dropped at the firewall at least <b>".$days."</b> days.";
+		echo "<br>There are no IPs repeatedly dropped at the firewall at least <b>".$days."</b> days.";
 	} else {
-		echo number_format($total_rows)." IP".$singular." repeatedly dropped at firewall on at least ".$days." distinct days. (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo number_format($total_rows)." IP".$singular." repeatedly dropped at firewall on at least ".$days." distinct days. (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>IP Address</th>
@@ -113,7 +113,7 @@
 		echo "</table>";
 
 		if ($total_pages < 2){
-			echo "<br /><br />";
+			echo "<br><br>";
 		} else {
 			echo "<ul>";
 			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search".$days_page."&page=1\">First </a><li>";}
@@ -124,7 +124,7 @@
 		}
 	}
 
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 

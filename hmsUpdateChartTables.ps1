@@ -67,7 +67,7 @@ $Query = "
 		SELECT 
 			$( DBCastDateTimeFieldAsDate 'timestamp') AS daily,
 			$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%Y') AS year,
-			($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') $(If ($DatabaseType -eq 'MYSQL'){Write "- 1"})) AS month,
+			($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') - 1) AS month,
 			$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%e') AS day,
 			COUNT(id) AS ipperday 
 		FROM hm_fwban 
@@ -103,7 +103,7 @@ $Query = "
 	SELECT 
 		$( DBCastDateTimeFieldAsDate 'timestamp') AS daily,
 		$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%Y') AS year,
-		($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') $(If ($DatabaseType -eq 'MYSQL'){Write "- 1"})) AS month,
+		($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') - 1) AS month,
 		$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%e') AS day,
 		COUNT(ipaddress) AS ipperday 
 	FROM hm_fwban_rh 
@@ -170,7 +170,7 @@ $Query = "
 	SELECT 
 		$( DBCastDateTimeFieldAsDate 'timestamp') AS daily,
 		$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%Y') AS year,
-		($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') $(If ($DatabaseType -eq 'MYSQL'){Write "- 1"})) AS month,
+		($( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%c') - 1) AS month,
 		$( DBFormatDate (DBCastDateTimeFieldAsDate 'timestamp') '%e') AS day,
 		COUNT(DISTINCT(ipaddress)) AS ipperday 
 	FROM hm_fwban_rh 

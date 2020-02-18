@@ -72,9 +72,9 @@
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		
 	if ($total_rows == 0){
-		echo "<br /><br />There are no repeat dropped IPs to report.";
+		echo "<br><br>There are no repeat dropped IPs to report.";
 	} else {
-		echo "IP <b>".$repeatIP."</b> denied access ".number_format($total_hits)." times over ".number_format($total_rows)." day".$singular.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo "IP <b>".$repeatIP."</b> denied access ".number_format($total_hits)." times over ".number_format($total_rows)." day".$singular.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>Date</th>
@@ -96,7 +96,7 @@
 		echo "</table>";
 
 		if ($total_pages < 2){
-			echo "<br /><br />";
+			echo "<br><br>";
 		} else {
 			echo "<ul>";
 			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&repeatIP=".$repeatIP."&page=1\">First </a><li>";}
@@ -106,11 +106,11 @@
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
-			echo	"FB = Firewall Blocks<br />
-					RS = Released Status<br />";
+			echo	"FB = Firewall Blocks<br>
+					RS = Released Status<br>";
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 

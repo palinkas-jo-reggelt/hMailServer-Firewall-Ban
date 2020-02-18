@@ -19,7 +19,7 @@
 	if (isset($_GET['country'])) {$country = $_GET['country'];} else {$country = "";}
 
 	if (empty($country)){
-		echo "No country selected. Please try again or see administator.<br /><br />";
+		echo "No country selected. Please try again or see administator.<br><br>";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -53,10 +53,10 @@
 			echo "No unreleased results for \"<b>".$country."</b>\"";
 		} else {
 			echo "<h2>What would you like to release?</h2>";
-			echo "Click \"NO\" under column \"RS\" to release a single address.<br /><br />";
-			echo "<a href=\"./release-country.php?country=".$country."&submit=Release\" onclick=\"return confirm('Are you sure you want to release all IPs for ".$country."?')\">Click here</a> to release all.<br />";
-			echo "<br /><br />";
-			echo "Results for \"<b>".$country."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Click \"NO\" under column \"RS\" to release a single address.<br><br>";
+			echo "<a href=\"./release-country.php?country=".$country."&submit=Release\" onclick=\"return confirm('Are you sure you want to release all IPs for ".$country."?')\">Click here</a> to release all.<br>";
+			echo "<br><br>";
+			echo "Results for \"<b>".$country."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -91,7 +91,7 @@
 			}
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 

@@ -69,7 +69,7 @@
 		if (IsMySQL()) {
 			$Return = "HOUR(".$fieldName.")";
 		} elseif (IsMSSQL()) {
-			$Return = "DATEPART(hour,".$fieldName.")";
+			$Return = DBFormatDate($fieldName, '%H');
 		}
 		return $Return;
 	}
@@ -80,29 +80,7 @@
 		if (IsMySQL()) {
 			$Return = "MONTH(".$fieldName.")";
 		} elseif (IsMSSQL()) {
-			$Return = "DATEPART(month,".$fieldName.")";
-		}
-		return $Return;
-	}
-	
-	Function DBCastDateTimeFieldAsYear($fieldName){
-		global $Database;
-		$Return = "";
-		if (IsMySQL()) {
-			$Return = "YEAR(".$fieldName.")";
-		} elseif (IsMSSQL()) {
-			$Return = "DATEPART(year,".$fieldName.")";
-		}
-		return $Return;
-	}
-	
-	Function DBCastDateTimeFieldAsDay($fieldName){
-		global $Database;
-		$Return = "";
-		if (IsMySQL()) {
-			$Return = "DAY(".$fieldName.")";
-		} elseif (IsMSSQL()) {
-			$Return = "DATEPART(day,".$fieldName.")";
+			$Return = DBFormatDate($fieldName, '%c');
 		}
 		return $Return;
 	}
@@ -123,31 +101,14 @@
 			'%Y/%m/%d %T'       => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/MM/dd',
-			'%H'                => 'HH',
-			'%M %D, %Y'         => 'Month D, YYYY',			
+			'%H'				=> 'HH',
+			'%M %D, %Y'         => 'Month D, YYYY',
 		);
 
 		if (IsMySQL()) {
 			$Return = "DATE_FORMAT(".$fieldName.", '".$formatSpecifier."')";
 		} elseif (IsMSSQL()) {
-			switch ($formatSpecifier)
-			{
-				case '%Y':
-					$Return = DBCastDateTimeFieldAsYear($fieldName);
-					break;
-				case '%c':
-					$Return = DBCastDateTimeFieldAsMonth($fieldName);
-					break;
-				case '%e':
-					$Return = DBCastDateTimeFieldAsDay($fieldName);
-					break;
-				case '%H':
-					$Return = DBCastDateTimeFieldAsHour($fieldName);
-					break;
-				default:
-					$Return = "FORMAT(".$fieldName.", '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
-					break;
-			}
+			$Return = "FORMAT(".$fieldName.", '".$dateFormatSpecifiers[$formatSpecifier]."', 'en-US')";
 		}
 		return $Return;
 	}

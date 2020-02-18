@@ -19,9 +19,9 @@
 	if (isset($_GET['dateTo'])) {$dateTo = $_GET['dateTo'];} else {$dateFrom = "";}
 
 	if (empty($dateFrom)){
-		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} elseif (empty($dateTo)){
-			echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+			echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} else {
 		
 		$sqlcount = $pdo->prepare("
@@ -33,7 +33,7 @@
 		$sqlcount->execute();
 		$total_rows = $sqlcount->fetchColumn();
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for date range <a href=\"search-date.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=NO\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been marked for re-BAN to the firewall.<br />";
+			echo "<br>".number_format($total_rows)." hits for date range <a href=\"search-date.php?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=NO\">\"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"</a> have been marked for re-BAN to the firewall.<br>";
 			$sql = $pdo->prepare("
 				SELECT 
 					id 
@@ -47,7 +47,7 @@
 				);
 			}
 		} else {
-			echo "<br />Error: Date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\" contains no entries in database that were previously released. Please try again.";
+			echo "<br>Error: Date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\" contains no entries in database that were previously released. Please try again.";
 		}
 	}
 ?>

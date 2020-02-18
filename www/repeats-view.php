@@ -19,7 +19,8 @@
 	if (isset($_GET['flag'])) {$flag = $_GET['flag'];} else {$flag = "";}
 	if (isset($_GET['search'])) {$search = $_GET['search'];} else {$search = "";}
 
-	if ($search==""){$search_sql="";}else{$search_sql=" WHERE ipaddress LIKE '{$search}%' OR timestamp LIKE '{$search}%'";}
+	if ($search==""){$search_sql="";}else{$search_sql=" WHERE ipaddress LIKE '{$search}%' OR ".(IsMSSQL() ? DBCastDateTimeFieldAsDate('timestamp') : 'timestamp')." LIKE '{$search}%'";} 
+	// if ($search==""){$search_sql="";}else{$search_sql=" WHERE ipaddress LIKE '{$search}%' OR timestamp LIKE '{$search}%'";}
 	if ($search==""){$search_page="";}else{$search_page="&search=".$search;}
 	if ($search==""){$search_list="";}else{$search_list=" matching <b>\"".$search."\"</b>";}
 	if ($search==""){$search_all="All ";}else{$search_all="";}
@@ -76,9 +77,9 @@
 
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
-		echo "<br />There are no repeat drops to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+		echo "<br>There are no repeat drops to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
 	} else {
-		echo $search_all."".number_format($total_rows)." IP".$singular." repeatedly dropped at firewall".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo $search_all."".number_format($total_rows)." IP".$singular." repeatedly dropped at firewall".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>Last Hit</th>
@@ -101,7 +102,7 @@
 		echo "</table>";
 
 		if ($total_pages < 2){
-			echo "<br /><br />";
+			echo "<br><br>";
 		} else {
 			echo "<ul>";
 			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=1\">First </a><li>";}
@@ -111,11 +112,11 @@
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
-			echo	"FB = Firewall Blocks<br />
-					RS = Released Status<br />";
+			echo	"FB = Firewall Blocks<br>
+					RS = Released Status<br>";
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 

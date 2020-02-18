@@ -20,9 +20,9 @@
 	if (isset($_GET['dateTo'])) {$dateTo = $_GET['dateTo'];} else {$dateFrom = "";}
 
 	if (empty($dateFrom)){
-		echo "<br /><br />You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "<br><br>You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} elseif (empty($dateTo)){
-		echo "<br /><br />You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "<br><br>You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -54,13 +54,13 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No previously released results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
+			echo "<br><br>No previously released results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
 		} else {
 			echo "<h2>What would you like to ban?</h2>";
-			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
-			echo "<a href=\"./reban-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Reban\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for date range ".$dateFrom." to ".$dateTo."?')\">Click here</a> to re-ban all.<br />";
-			echo "<br /><br />";
-			echo "Results for released IPs in date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br><br>";
+			echo "<a href=\"./reban-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Reban\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for date range ".$dateFrom." to ".$dateTo."?')\">Click here</a> to re-ban all.<br>";
+			echo "<br><br>";
+			echo "Results for released IPs in date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -92,10 +92,10 @@
 				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".($page + 1)."\">Next </a></li>";}
 				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&page=".$total_pages."\">Last</a></li>";}
 			echo "</ul>";
-			echo "<br />RS = Released Status (removal from firewall). Clicking on \"YES\" will re-ban the IP.<br /><br />";
+			echo "<br>RS = Released Status (removal from firewall). Clicking on \"YES\" will re-ban the IP.<br><br>";
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 <?php include("foot.php") ?>

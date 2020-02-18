@@ -18,7 +18,7 @@
   
 	echo "<div class='section'>";
 	echo "<h2>Search a date range for connections blocked by firewall:</h2>";
-	echo "Enter start & end dates and click to search.<br /><br />";
+	echo "Enter start & end dates and click to search.<br><br>";
 	echo "<form autocomplete='off' action='repeats-date.php' method='GET'>";
 	echo "<table>";
 	echo "<tr><td>Starting Date: </td><td><input type='text' id='dateFrom' name='dateFrom' placeholder='Starting Date...' value='".$dateFrom."' /></td></tr>";
@@ -30,9 +30,9 @@
 	echo "<div class='section'>";
 
 	if (empty($dateFrom)){
-		echo "Note: Range can be a single day, but start and end dates must both be filled in.<br /><br />";
+		echo "Note: Range can be a single day, but start and end dates must both be filled in.<br><br>";
 	} elseif (empty($dateTo)){
-		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} else {
   
 		$no_of_records_per_page = 20;
@@ -81,9 +81,9 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
+			echo "<br><br>No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
 		} else {
-			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -104,7 +104,7 @@
 			echo "</table>";
 
 			if ($total_pages < 2){
-				echo "<br /><br />";
+				echo "<br><br>";
 			} else {
 				echo "<ul>";
 				if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search&dateFrom=".$dateFrom."&dateTo=".$dateTo."&RS=".$RS."&page=1\">First </a><li>";}
@@ -114,12 +114,12 @@
 				echo "</ul>";
 			}
 			if ($total_pages > 0){
-				echo	"RH = Repeat Hits<br />
-						RS = Released Status<br />";
+				echo	"RH = Repeat Hits<br>
+						RS = Released Status<br>";
 			}
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 	echo "</div>";
 ?>
 

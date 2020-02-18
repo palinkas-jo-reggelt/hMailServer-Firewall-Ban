@@ -23,22 +23,21 @@ To search for a date range <a href="./search-date.php">click here</a>.
 	if (isset($_GET['ban_reason'])) {$ban_reason = $_GET['ban_reason'];} else {$ban_reason = "";}
 
 	echo "<div class='section'>";
-	echo "<form action='search.php' method='GET'> ";
-	echo	"<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
-	echo	" ";
-	echo	"<select name='RS'>";
-	echo		"<option value=''>RS</option>";
-	echo		"<option value='YES'>YES</option>";
-	echo		"<option value='NO'>NO</option>";
-	echo		"<option value='NEW'>NEW</option>";
-	echo		"<option value='SAF'>SAF</option>";
-	echo	"</select>";
-	echo	" ";
-	echo	"<input type='submit' name='submit' value='Search' >";
-	echo "</form>";
+	echo "	<form action='search.php' method='GET'>";
+	echo "		<input type='text' size='20' name='search' placeholder='Search...' value='".$search."'>";
+	echo "		<select name='RS'>";
+	echo "			<option value=''>RS</option>";
+	echo "			<option value='YES'>YES</option>";
+	echo "			<option value='NO'>NO</option>";
+	echo "			<option value='NEW'>NEW</option>";
+	echo "			<option value='SAF'>SAF</option>";
+	echo "		</select>";
+	echo "		<input type='submit' name='submit' value='Search' >";
+	echo "	</form>";
 	echo "</div>";
+
 	echo "<div class='section'>";
-  
+
 	$no_of_records_per_page = 20;
 	$offset = ($page-1) * $no_of_records_per_page;
 	
@@ -98,7 +97,6 @@ To search for a date range <a href="./search-date.php">click here</a>.
 				hits AS returnhits, 
 				ipaddress
 			FROM hm_fwban_blocks_ip
-			GROUP BY ipaddress
 		)  b
 		ON a.ipaddress = b.ipaddress
 		".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page)
@@ -125,7 +123,7 @@ To search for a date range <a href="./search-date.php">click here</a>.
 			echo "No results ".$search_res."".$ban_reason_res."";
 		}	
 	} else {
-		echo "Results ".$search_res."".$ban_reason_res.": ".number_format($total_rows)." Hit".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo "Results ".$search_res."".$ban_reason_res.": ".number_format($total_rows)." Hit".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>Timestamp</th>
@@ -167,12 +165,14 @@ To search for a date range <a href="./search-date.php">click here</a>.
 			echo "</ul>";
 		}
 		if ($total_pages > 0){
-			echo "<br />
-			FB = Firewall Blocks<br />
-			RS = Release Status<br /><br />";
+			echo "<br>
+			FB = Firewall Blocks<br>
+			RS = Release Status<br><br>";
 		}
 	}
-	echo "<br />";
-	echo "</div>";
 ?>
+
+<br>
+</div> <!-- end of section -->
+
 <?php include("foot.php") ?>

@@ -20,9 +20,9 @@
 	if (isset($_GET['dateTo'])) {$dateTo = $_GET['dateTo'];} else {$dateFrom = "";}
 
 	if (empty($dateFrom)){
-		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "You did not put in a beginning date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} elseif (empty($dateTo)){
-		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -53,13 +53,13 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No unreleased results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
+			echo "<br><br>No unreleased results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"";
 		} else {
 			echo "<h2>What would you like to release?</h2>";
-			echo "Click \"NO\" under column \"RS\" to release a single address.<br /><br />";
-			echo "<a href=\"./release-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Release\" onclick=\"return confirm('Are you sure you want to release all IPs for date range ".$dateFrom." to ".$dateTo."?')\">Click here</a> to release all.<br />";
-			echo "<br /><br />";
-			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Click \"NO\" under column \"RS\" to release a single address.<br><br>";
+			echo "<a href=\"./release-date.php?dateFrom=".$dateFrom."&dateTo=".$dateTo."&submit=Release\" onclick=\"return confirm('Are you sure you want to release all IPs for date range ".$dateFrom." to ".$dateTo."?')\">Click here</a> to release all.<br>";
+			echo "<br><br>";
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -94,7 +94,7 @@
 			}
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 
 </div>

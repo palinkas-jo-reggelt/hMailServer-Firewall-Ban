@@ -104,6 +104,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.82 bug fixes
 - 0.81 updated installation/upgrade instructions 
 - 0.80 housekeeping 
 - 0.79 mssql changes by lcamilo

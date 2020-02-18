@@ -53,7 +53,7 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$today."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> Today<br />"; 
+			echo "<a href=\"./search.php?search=".$today."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> Today<br>"; 
 		}
 		
 		$sql = $pdo->prepare("
@@ -64,7 +64,7 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$yesterday."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> Yesterday<br />"; 
+			echo "<a href=\"./search.php?search=".$yesterday."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> Yesterday<br>"; 
 		}
 		
 		$sql = $pdo->prepare("
@@ -75,7 +75,7 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$twodaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($twodaysago))."<br />"; 
+			echo "<a href=\"./search.php?search=".$twodaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($twodaysago))."<br>"; 
 		}
 		
 		$sql = $pdo->prepare("
@@ -86,7 +86,7 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$threedaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($threedaysago))."<br />";
+			echo "<a href=\"./search.php?search=".$threedaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($threedaysago))."<br>";
 		}
 		
 		$sql = $pdo->prepare("
@@ -97,10 +97,10 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$fourdaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($fourdaysago))."<br />"; 
+			echo "<a href=\"./search.php?search=".$fourdaysago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> on ".date("l", strtotime($fourdaysago))."<br>"; 
 		}
 
-		echo "<br />";
+		echo "<br>";
 		$mindate_sql = $pdo->prepare("
 			SELECT 
 				MIN(DATE(timestamp)) AS mindate 
@@ -126,7 +126,7 @@
 			");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-				echo "Daily average last 7 days: ".number_format($row['avghits'])." hits<br />"; 
+				echo "Daily average last 7 days: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
 
@@ -148,11 +148,11 @@
 			");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-				echo "Daily average last 30 days: ".number_format($row['avghits'])." hits<br />"; 
+				echo "Daily average last 30 days: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF DAILY HITS -->
 	
@@ -177,7 +177,7 @@
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$thismonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> so far this month<br />"; 
+			echo "<a href=\"./search.php?search=".$thismonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> so far this month<br>"; 
 		}
 		
 		$sql = $pdo->prepare("
@@ -190,7 +190,7 @@
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$lastmonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($lastmonth))."<br />"; 
+			echo "<a href=\"./search.php?search=".$lastmonth."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($lastmonth))."<br>"; 
 		}
 		
 		$sql = $pdo->prepare("
@@ -203,7 +203,7 @@
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$twomonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($twomonthsago))."<br />"; 
+			echo "<a href=\"./search.php?search=".$twomonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($twomonthsago))."<br>"; 
 		}
 
 		$sql = $pdo->prepare("
@@ -216,7 +216,7 @@
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$threemonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($threemonthsago))."<br />";
+			echo "<a href=\"./search.php?search=".$threemonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($threemonthsago))."<br>";
 		}
 		
 		$sql = $pdo->prepare("
@@ -229,10 +229,10 @@
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br />"; 
+			echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br>"; 
 		}
 
-		echo "<br />";
+		echo "<br>";
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -3 month"))){
 			echo "";
 		} else {
@@ -251,7 +251,7 @@
 		");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-				echo "Monthly average last 3 months: ".number_format($row['avghits'])." hits<br />"; 
+				echo "Monthly average last 3 months: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
 
@@ -273,11 +273,11 @@
 			");
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-				echo "Monthly average last 6 months: ".number_format($row['avghits'])." hits<br />"; 
+				echo "Monthly average last 6 months: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<div class="clear"></div>
 	<!-- END OF MONTHLY HITS -->
@@ -304,10 +304,10 @@
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-			echo "<a href=\"./search.php?submit=Search&search=".$row['country']."\">".$row['country']."</a> with ".number_format($row['value_occurrence'])." hit".$singular.".<br />";
+			echo "<a href=\"./search.php?submit=Search&search=".$row['country']."\">".$row['country']."</a> with ".number_format($row['value_occurrence'])." hit".$singular.".<br>";
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF TOP 5 SPAMMER COUNTRIES -->
 	
@@ -334,7 +334,7 @@
 		$num_dups = $num_dups_sql->fetchColumn();
 
 		if ($num_dups == 0){
-			echo "There are no duplicate IPs to report.<br /><br />";
+			echo "There are no duplicate IPs to report.<br><br>";
 		}else{
 			$sql = $pdo->prepare("
 				SELECT 
@@ -349,12 +349,12 @@
 			);
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-				echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br />";
+				echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br>";
 			}
-			if ($num_dups > 5){echo "<br />See all ".$num_dups." <a href=\"./duplicates.php\">Duplicate Entries</a>.<br /><br />";}
+			if ($num_dups > 5){echo "<br>See all ".$num_dups." <a href=\"./duplicates.php\">Duplicate Entries</a>.<br><br>";}
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF LAST 5 DUPLICATES -->
 	<div class="clear"></div>
@@ -381,10 +381,10 @@
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-			echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./search.php?submit=Search&ban_reason=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br />";
+			echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./search.php?submit=Search&ban_reason=".$row['ban_reason']."\">".$row['ban_reason']."</a>.<br>";
 		}
 	?>
-	<br />
+	<br>
 	</div>
 	<!-- END OF BAN REASONS -->
 
@@ -418,13 +418,13 @@
 			$sql->execute();
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-				echo "<a href=\"./search.php?submit=Search&RS=YES&ban_reason=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br />";
+				echo "<a href=\"./search.php?submit=Search&RS=YES&ban_reason=".$row['ban_reason']."\">".number_format($row['value_occurrence'])." IP".$singular."</a> triggered by ".$row['ban_reason']." released.<br>";
 			}
 		} else {
 			echo "There are no released IPs to report.";
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF RELEASED IPS -->
 	<div class="clear"></div>
@@ -459,7 +459,7 @@
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<tr><td style=\"text-align:right\">-".number_format($row['value_occurrence'])."</td><td>Number of IPs released from firewall</td></tr>"; 
+			echo "<tr><td style=\"text-align:right;color:red;\">(".number_format($row['value_occurrence']).")</td><td>Number of IPs released from firewall</td></tr>"; 
 		}
 
 		echo "<tr><td style=\"text-align:right\">--------</td><td></td></tr>";
@@ -477,7 +477,7 @@
 		
 		echo "</table>";
 	?>
-	<br />
+	<br>
 	</div>
 	<!-- END OF BAN ENFORCEMENT -->
 
@@ -485,9 +485,9 @@
 	<!-- START OF BANALYZER -->
 	<div class="secright">
 		<h2>Banalyzer:</h2>
-		Ban Analyzer: How many IPs have unsuccessfully returned to spam and how many times.<br /><br />
-		<a href="./blocks.php">Blocks Analyzer</a><br /><br />
-	<br />
+		Ban Analyzer: How many IPs have unsuccessfully returned to spam and how many times.<br><br>
+		<a href="./blocks.php">Blocks Analyzer</a><br><br>
+	<br>
 	</div> 
 	<!-- END OF BANALYZER -->
 	<div class="clear"></div>
@@ -498,7 +498,7 @@
 	<!-- START OF UNPROCESSED IPS -->
 	<div class="secleft">
 		<h2>Unprocessed IPs:</h2>
-		IPs that have been recently added or marked for release or reban that have not yet been processed by the scheduled task to have their firewall rule added or deleted.<br /><br />
+		IPs that have been recently added or marked for release or reban that have not yet been processed by the scheduled task to have their firewall rule added or deleted.<br><br>
 
 	<?php
 		include_once("config.php");
@@ -513,7 +513,7 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=NEW\">".number_format($total_rows)." IP".$singular."</a> recently added<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=NEW\">".number_format($total_rows)." IP".$singular."</a> recently added<br>";
 
 		$sql = $pdo->prepare("
 			SELECT 
@@ -524,7 +524,7 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=2\">".number_format($total_rows)." IP".$singular."</a> marked for release<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=2\">".number_format($total_rows)." IP".$singular."</a> marked for release<br>";
 
 		$sql = $pdo->prepare("
 			SELECT 
@@ -535,7 +535,7 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=3\">".number_format($total_rows)." IP".$singular."</a> marked for reban<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=3\">".number_format($total_rows)." IP".$singular."</a> marked for reban<br>";
 
 		$sql = $pdo->prepare("
 			SELECT 
@@ -546,7 +546,7 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=5\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=5\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list<br>";
 
 		$sql = $pdo->prepare("
 			SELECT 
@@ -557,9 +557,9 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=7\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list removal<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=7\">".number_format($total_rows)." IP".$singular."</a> marked for SAFE list removal<br>";
 	?>
-	<br />
+	<br>
 	</div>
 	<!-- END OF UNPROCESSED IPS -->
 
@@ -567,7 +567,7 @@
 	<!-- START OF TOP 5 REPEAT SPAMMERS -->
 	<div class="secright">
 		<h2>Top 5 Repeat Spammers:</h2>
-		Parsed from the firewall log dropped connections: IPs that knocked on the door but couldn't get in.<br /><br />
+		Parsed from the firewall log dropped connections: IPs that knocked on the door but couldn't get in.<br><br>
 
 	<?php
 		include_once("config.php");
@@ -588,7 +588,7 @@
 			echo "<br>".number_format($row['countip'])." IPs attempted to connect but were dropped at the firewall a total of ".number_format($row['counthits'])." times since ".$row['mindate']; 
 		}
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF TOP 5 REPEAT SPAMMERS -->
 	<div class="clear"></div>
@@ -613,9 +613,9 @@
 		$sql->execute();
 		$total_rows = $sql->fetchColumn();
 		if ($total_rows==1){$singular="";}else{$singular="s";}
-		echo "<a href=\"./search.php?submit=Search&RS=SAF\">".$total_rows." hit".$singular."</a> for permanently released (SAFE) IPs.<br />";
+		echo "<a href=\"./search.php?submit=Search&RS=SAF\">".$total_rows." hit".$singular."</a> for permanently released (SAFE) IPs.<br>";
 	?>
-	<br />
+	<br>
 	</div> 
 	<!-- END OF IPS MARKED SAFE -->
 	<div class="secright"></div>

@@ -210,3 +210,5 @@
 <?php echo '[new Date(2020, 1, 13), 11491],'?>
 <?php echo '[new Date(2020, 1, 14), 12875],'?>
 <?php echo '[new Date(2020, 1, 15), 15109],'?>
+<?php echo '[new Date(2020, 1, 16), 6858],'?>
+<?php echo '[new Date(2020, 1, 17), 4227],'?>
