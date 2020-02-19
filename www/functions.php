@@ -69,7 +69,7 @@
 		if (IsMySQL()) {
 			$Return = "HOUR(".$fieldName.")";
 		} elseif (IsMSSQL()) {
-			$Return = "DBFormatDate($fieldName, '%H')";
+			$Return = "DATEPART(hour,".$fieldName.")";
 		}
 		return $Return;
 	}
@@ -91,10 +91,21 @@
 		if (IsMySQL()) { 
 			$Return = "YEAR(".$fieldName.")"; 
 		} elseif (IsMSSQL()) { 
-			$Return = DBFormatDate($fieldName, '%Y');
+			$Return = "DATEPART(year,".$fieldName.")";
 		} 
 		return $Return; 
 	}
+
+		Function DBCastDateTimeFieldAsDay($fieldName){
+				global $Database;
+				$Return = "";
+				if (IsMySQL()) {
+					$Return = "DAY(".$fieldName.")";
+				} elseif (IsMSSQL()) {
+					$Return = "DATEPART(day,".$fieldName.")";
+				 }
+				 return $Return;
+			 }
 
 	Function DBFormatDate($fieldName, $formatSpecifier){
 		global $Database;
