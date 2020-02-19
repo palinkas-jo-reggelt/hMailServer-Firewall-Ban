@@ -80,7 +80,7 @@
 		if (IsMySQL()) {
 			$Return = "MONTH(".$fieldName.")";
 		} elseif (IsMSSQL()) {
-			$Return = DBFormatDate($fieldName, '%c');
+			$Return = "DATEPART(month,".$fieldName.")";
 		}
 		return $Return;
 	}
