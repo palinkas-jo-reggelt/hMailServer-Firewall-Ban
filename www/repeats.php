@@ -15,8 +15,9 @@
 <div class="section">
 	<!-- START OF DAILY BLOCKS -->
 	<div class="secleft">
-	<h2>This Week's Daily Blocked IPs:</h2>
-
+		<h2>This Week's Daily Blocked IPs:</h2>
+		Does not include today's data.<br><br>
+	
 <?php
 	include_once("config.php");
 	include_once("functions.php");
@@ -33,6 +34,7 @@
 	<!-- START OF MONTHLY BLOCKS -->
 	<div class="secright">
 		<h2>This Year's Monthly Blocks:</h2>
+		Data up until yesterday. Current month displays "0" on the 1st of the month.<br><br>
 
 <?php
 	include_once("config.php");
