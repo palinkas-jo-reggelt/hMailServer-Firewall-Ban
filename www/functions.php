@@ -112,7 +112,7 @@
 			'%Y/%m/%d %H:%m:%s' => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/MM/dd',
-			'%H'				=> 'HH',
+			'%H'                => 'HH',
 			'%M %D, %Y'         => 'MMMM d, yyyy',
 		);
 
