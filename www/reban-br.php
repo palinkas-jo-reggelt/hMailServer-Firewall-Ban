@@ -17,7 +17,7 @@
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ban_reason'])) {$ban_reason = $_GET['ban_reason'];} else {$ban_reason = "";}
 
-	if (empty($ban_reason)){echo "Error: No IP entries for ban reason ".$ban_reason."<br /><br />";} else {
+	if (empty($ban_reason)){echo "Error: No IP entries for ban reason ".$ban_reason."<br><br>";} else {
 
 		$sqlcount = $pdo->prepare("
 			SELECT 
@@ -28,7 +28,7 @@
 		$sqlcount->execute();
 		$total_rows = $sqlcount->fetchColumn();
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$ban_reason."\">".$ban_reason."</a> have been re-banned to the firewall.<br />";
+			echo "<br>".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$ban_reason."\">".$ban_reason."</a> have been re-banned to the firewall.<br>";
 			$sql = $pdo->prepare("
 				SELECT 
 					id 
@@ -42,7 +42,7 @@
 				);
 			}
 		} else {
-			echo "<br />Error: No previously released records for \"<b>".$ban_reason."</b>\". Try searching for released records for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a>.";
+			echo "<br>Error: No previously released records for \"<b>".$ban_reason."</b>\". Try searching for released records for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a>.";
 		}
 	}
 ?>

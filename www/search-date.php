@@ -18,7 +18,7 @@
   
 	echo "<div class='section'>";
 	echo "<h2>Search a date range:</h2>";
-	echo "Enter start & end dates and click to search.<br /><br />";
+	echo "Enter start & end dates and click to search.<br><br>";
 	echo "<form autocomplete='off' action='search-date.php' method='GET'>";
 	echo "<table>";
 	echo "<tr><td>Starting Date: </td><td><input type='text' id='dateFrom' name='dateFrom' placeholder='Starting Date...' value='".$dateFrom."' /></td></tr>";
@@ -36,9 +36,9 @@
 	echo "<div class='section'>";
 
 	if (empty($dateFrom)){
-		echo "Note: Range can be a single day, but start and end dates must both be filled in.<br /><br />";
+		echo "Note: Range can be a single day, but start and end dates must both be filled in.<br><br>";
 	} elseif (empty($dateTo)){
-		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br /><br />";
+		echo "You did not put in an ending date. Both beginning and ending dates are required for date range release even if the range is a single day.<br><br>";
 	} else {
   
 		$no_of_records_per_page = 20;
@@ -88,7 +88,6 @@
 					COUNT(ipaddress) AS returnhits, 
 					ipaddress
 				FROM hm_fwban_rh
-				GROUP BY ipaddress
 			) AS b
 			ON a.ipaddress = b.ipaddress
 			".DBLimitRowsWithOffset('a.tsf','DESC',0,0,$offset,$no_of_records_per_page)
@@ -100,9 +99,9 @@
 		else {$RSres = "";} 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
+			echo "<br><br>No results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres;
 		} else {
-			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Results for date range \"<b>".$dateFrom."</b>\" to \"<b>".$dateTo."</b>\"".$RSres.": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -142,13 +141,13 @@
 				echo "</ul>";
 			}
 			if ($total_pages > 0){
-				echo "<br />
-				RH = Repeat Hits<br />
-				RS = Release Status<br /><br />";
+				echo "<br>
+				RH = Repeat Hits<br>
+				RS = Release Status<br><br>";
 			}
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 	echo "</div>";
 ?>
 

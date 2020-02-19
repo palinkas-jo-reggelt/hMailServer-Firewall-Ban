@@ -50,12 +50,12 @@
 	if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 	if ($total_rows == 0){
 		if ($search == ""){
-			echo "<br />There are no IDS entries to report.";
+			echo "<br>There are no IDS entries to report.";
 		} else {
-			echo "<br />There are no IDS entries to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
+			echo "<br>There are no IDS entries to report for search term <b>\"".$search."\"</b>. Please enter only IP address or date.";
 		}
 	} else {
-		echo $search_all."".number_format($total_rows)." IP".$singular." hit by IDS".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+		echo $search_all."".number_format($total_rows)." IP".$singular." hit by IDS".$search_list.". (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>Timestamp</th>
@@ -75,7 +75,7 @@
 		echo "</table>";
 
 		if ($total_pages < 2){
-			echo "<br /><br />";
+			echo "<br><br>";
 		} else {
 			echo "<ul>";
 			if($page <= 1){echo "<li>First </li>";} else {echo "<li><a href=\"?submit=Search".$search_page."&page=1\">First </a><li>";}
@@ -86,9 +86,9 @@
 		}
 	}
 
-	echo "<br />
-	IDS = Intrusion Detection System. <br /><br />
-	Records connections that either a) were not rejected and did not successfully send a message or b) were not rejected and did not successfully log in. After 3 such connections within a specified number of hours (declared in Config.ps1), the IP is banned. If an IP is recorded less than 3 times within 48 hours, it is expired from the IDS table.";
+	echo "<br>
+	IDS = Intrusion Detection System. <br><br>
+	Records connections that either a) were not rejected and did not successfully send a message or b) were not rejected and did not successfully log in. After 3 such connections within an interval of a specified number of hours (declared in Config.ps1), the IP is banned. If an IP is recorded less than 3 times within the interval period, it is expired from the IDS table.";
 ?>
 </div>
 

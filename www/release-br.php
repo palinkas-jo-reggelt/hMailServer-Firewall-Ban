@@ -17,7 +17,7 @@
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['ban_reason'])) {$ban_reason = $_GET['ban_reason'];} else {$ban_reason="";}
 
-	if (empty($ban_reason)){echo "Error: No ban reason selected. Please see administrator.".$ban_reason."<br /><br />";} 
+	if (empty($ban_reason)){echo "Error: No ban reason selected. Please see administrator.".$ban_reason."<br><br>";} 
 	else {
 		$sqlcount = $pdo->prepare("
 			SELECT 
@@ -30,7 +30,7 @@
 		if ($total_rows > 0) { 
 			if($total_rows == 1){$singular="";}else{$singular="s";}
 			if($total_rows == 1){$singpos="has";}else{$singpos="have";}
-			echo "<br />".number_format($total_rows)." hit".$singular." for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a> ".$singpos." been released from the firewall.<br />";
+			echo "<br>".number_format($total_rows)." hit".$singular." for <a href=\"search.php?submit=Search&search=".$ban_reason."&RS=YES\">".$ban_reason."</a> ".$singpos." been released from the firewall.<br>";
 			$sql = $pdo->prepare("
 				SELECT 
 					id 
@@ -44,7 +44,7 @@
 				);
 			}
 		} else {
-			echo "<br />Error: No unreleased records for \"<b>".$ban_reason."</b>\". Please <a href=\"search.php?submit=Search&search=".$ban_reason."\">search release status</a> or check the spelling and try again.";
+			echo "<br>Error: No unreleased records for \"<b>".$ban_reason."</b>\". Please <a href=\"search.php?submit=Search&search=".$ban_reason."\">search release status</a> or check the spelling and try again.";
 		}
 	}
 ?>

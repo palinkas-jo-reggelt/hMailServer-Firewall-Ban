@@ -28,7 +28,7 @@
 	}
 
 	if (empty($ipRange)){ 
-		echo "Error: <br />- no IP range specified or <br />- malformed IP range/CIDR or <br />- CIDR outside program bounds of /22 to /32"; 
+		echo "Error: <br>- no IP range specified or <br>- malformed IP range/CIDR or <br>- CIDR outside program bounds of /22 to /32"; 
 	} else {
 
 		$ips = ipRangeFinder($ipRange);
@@ -82,16 +82,16 @@
 				<td style=\"text-align:center;\">".$iphi."</td>
 				<td style=\"text-align:center;\">".$ip_count."</td>
 			</tr>
-			</table><br /><br />";
+			</table><br><br>";
 
 		echo "<h2>What would you like to ban?</h2>";
-		echo "Click \"YES\" under column \"RS\" to reban a single address (if previously released).<br /><br />";
-		echo "<a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Ban\" onclick=\"return confirm('Are you sure you want to ban all ".number_format($ip_count)." IPs in range ".$ipRange."?')\">Click here</a> to ban all <b>".number_format($ip_count)."</b> IPs in range. Duplicates will be deleted from the database prior to adding firewall rules.<br />";
-		echo "<br /><br />";
+		echo "Click \"YES\" under column \"RS\" to reban a single address (if previously released).<br><br>";
+		echo "<a href=\"./reban-ip.php?ipRange=".$ipRange."&submit=Ban\" onclick=\"return confirm('Are you sure you want to ban all ".number_format($ip_count)." IPs in range ".$ipRange."?')\">Click here</a> to ban all <b>".number_format($ip_count)."</b> IPs in range. Duplicates will be deleted from the database prior to adding firewall rules.<br>";
+		echo "<br><br>";
 		if ($total_pages == 0) {
 			echo "No <b>existing</b> results from Firewall Ban found within IP range <b>".$ipRange."</b>";
 		} else {
-			echo "Firewall Ban results for IP range \"<b>".$ipRange."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Firewall Ban results for IP range \"<b>".$ipRange."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>

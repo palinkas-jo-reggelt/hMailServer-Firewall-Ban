@@ -37,15 +37,15 @@
 	$ip_count = 1 << (32 - $rcidr);
 
 	echo "<H2>Ban IP Range</H2>";
-	echo $ipRange." : IP Range<br /><br />";
-	echo $iplo." : Network Address<br />";
-	echo $iphi." : Broadcast Address<br />";
-	echo $ip_count." : Number of IPs in range<br /><br />";
-	echo "Begin Update:<br /><br />";
+	echo $ipRange." : IP Range<br><br>";
+	echo $iplo." : Network Address<br>";
+	echo $iphi." : Broadcast Address<br>";
+	echo $ip_count." : Number of IPs in range<br><br>";
+	echo "Begin Update:<br><br>";
 
 
 	if (empty($ipRange)){
-		echo "Error: IP range empty. Please see administrator.<br /><br />";
+		echo "Error: IP range empty. Please see administrator.<br><br>";
 	} else {
 
 		$start = ip2long($iplo);
@@ -72,17 +72,17 @@
 				$sql_new_cidr_ban = $pdo->exec("
 					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (".DBGetCurrentDateTime().",'".$ip."','Manual')"
 				);
-				echo "IP ".$ip." added to ban list for firewall rule insertion<br />";
+				echo "IP ".$ip." added to ban list for firewall rule insertion<br>";
 			} else {
 				if (($flag==1)||($flag==2)){
 					$sql_update_manban = $pdo->exec("
 						UPDATE hm_fwban SET flag=3 WHERE id=".$id
 					);
-					echo "IP ".$ip." previously released - updating and added to list for firewall rule insertion<br />";
+					echo "IP ".$ip." previously released - updating and added to list for firewall rule insertion<br>";
 				} else if (($flag==5)||($flag==6)){
-					echo "IP ".$ip." marked SAFE - no action taken<br />";
+					echo "IP ".$ip." marked SAFE - no action taken<br>";
 				} else {
-					echo "IP ".$ip." already banned - no action necessary<br />";
+					echo "IP ".$ip." already banned - no action necessary<br>";
 				}
 			}
 			$ipaddressdb = "";

@@ -17,7 +17,7 @@
 	if (isset($_GET['submit'])) {$button = $_GET ['submit'];} else {$button = "";}
 	if (isset($_GET['country'])) {$country = $_GET['country'];} else {$country = "";}
 
-	if (empty($country)){echo "Error: No country selected.<br /><br />";} 
+	if (empty($country)){echo "Error: No country selected.<br><br>";} 
 	else {
 
 		$sqlcount = $pdo->prepare("
@@ -31,7 +31,7 @@
 		if ($total_rows > 0) { 
 			if($total_rows == 1){$singular="";}else{$singular="s";}
 			if($total_rows == 1){$singpos="has";}else{$singpos="have";}
-			echo "<br />".number_format($total_rows)." hit".$singular." for <a href=\"search.php?submit=Search&search=".$country."&RS=YES\">".$country."</a> ".$singpos." been released from the firewall.<br />";
+			echo "<br>".number_format($total_rows)." hit".$singular." for <a href=\"search.php?submit=Search&search=".$country."&RS=YES\">".$country."</a> ".$singpos." been released from the firewall.<br>";
 			$sql = $pdo->prepare("
 				SELECT 
 					id 
@@ -45,7 +45,7 @@
 				);
 			}
 		} else {
-			echo "<br />Error: No unreleased records for \"<b>".$country."</b>\". Please <a href=\"search.php?submit=Search&search=".$country."\">search release status</a> or check the spelling and try again.";
+			echo "<br>Error: No unreleased records for \"<b>".$country."</b>\". Please <a href=\"search.php?submit=Search&search=".$country."\">search release status</a> or check the spelling and try again.";
 		}
 	}
 ?>

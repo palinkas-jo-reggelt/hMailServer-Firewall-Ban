@@ -19,7 +19,7 @@
 	if (isset($_GET['country'])) {$country = $_GET['country'];} else {$country="";}
 
 	if (empty($country)){
-		echo "<br /><br />Error: No country selected. Please see administrator.<br /><br />";
+		echo "<br><br>Error: No country selected. Please see administrator.<br><br>";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -51,13 +51,13 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No previously released results for \"<b>".$country."</b>\"";
+			echo "<br><br>No previously released results for \"<b>".$country."</b>\"";
 		} else {
 			echo "<h2>What would you like to ban?</h2>";
-			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
-			echo "<a href=\"./reban-country.php?country=".$country."&submit=Reban\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$country."?')\">Click here</a> to re-ban all.<br />";
-			echo "<br /><br />";
-			echo "Results for released IPs for \"<b>".$country."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br><br>";
+			echo "<a href=\"./reban-country.php?country=".$country."&submit=Reban\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$country."?')\">Click here</a> to re-ban all.<br>";
+			echo "<br><br>";
+			echo "Results for released IPs for \"<b>".$country."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -88,10 +88,10 @@
 				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".($page + 1)."\">Next </a></li>";}
 				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&country=".$country."&page=".$total_pages."\">Last</a></li>";}
 			echo "</ul>";
-			echo "<br />RS = Released Status (removal from firewall). Clicking on \"YES\" will re-ban the IP.<br /><br />";
+			echo "<br>RS = Released Status (removal from firewall). Clicking on \"YES\" will re-ban the IP.<br><br>";
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 <?php include("foot.php") ?>

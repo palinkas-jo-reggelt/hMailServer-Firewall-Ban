@@ -9,16 +9,16 @@
 
 <?php $dailyblocks = '
 
-<a href="./repeats-view.php?submit=Search&search=2020-02-15">'.number_format(135).' IPs blocked</a> Yesterday attemtpting access '.number_format(15109).' times<br>
+<a href="./repeats-view.php?submit=Search&search=2020-02-17">'.number_format(107).' IPs blocked</a> Yesterday attemtpting access '.number_format(4227).' times<br>
+<a href="./repeats-view.php?submit=Search&search=2020-02-16">'.number_format(155).' IPs blocked</a> Sunday attemtpting access '.number_format(6858).' times<br>
+<a href="./repeats-view.php?submit=Search&search=2020-02-15">'.number_format(135).' IPs blocked</a> Saturday attemtpting access '.number_format(15109).' times<br>
 <a href="./repeats-view.php?submit=Search&search=2020-02-14">'.number_format(187).' IPs blocked</a> Friday attemtpting access '.number_format(12875).' times<br>
 <a href="./repeats-view.php?submit=Search&search=2020-02-13">'.number_format(141).' IPs blocked</a> Thursday attemtpting access '.number_format(11491).' times<br>
-<a href="./repeats-view.php?submit=Search&search=2020-02-12">'.number_format(168).' IPs blocked</a> Wednesday attemtpting access '.number_format(9870).' times<br>
-<a href="./repeats-view.php?submit=Search&search=2020-02-11">'.number_format(131).' IPs blocked</a> Tuesday attemtpting access '.number_format(11212).' times<br>
 ' ?>
 
 <?php $monthlyblocks = '
 
-<a href="./repeats-view.php?submit=Search&search=2020-02">'.number_format(1140).' IPs blocked</a> this month attemtpting access '.number_format(111264).' times<br>
+<a href="./repeats-view.php?submit=Search&search=2020-02">'.number_format(1267).' IPs blocked</a> this month attemtpting access '.number_format(122349).' times<br>
 <a href="./repeats-view.php?submit=Search&search=2020-01">'.number_format(2010).' IPs blocked</a> January attemtpting access '.number_format(97633).' times<br>
 <a href="./repeats-view.php?submit=Search&search=2019-12">'.number_format(1949).' IPs blocked</a> December attemtpting access '.number_format(90972).' times<br>
 <a href="./repeats-view.php?submit=Search&search=2019-11">'.number_format(2911).' IPs blocked</a> November attemtpting access '.number_format(121057).' times<br>

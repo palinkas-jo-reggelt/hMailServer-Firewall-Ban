@@ -18,7 +18,7 @@
 	if (isset($_GET['ban_reason'])) {$ban_reason = $_GET['ban_reason'];} else {$ban_reason = "";}
 
 	if (empty($ban_reason)){
-		echo "<br /><br />Error: No IP entries for ban reason ".$ban_reason."<br /><br />";
+		echo "<br><br>Error: No IP entries for ban reason ".$ban_reason."<br><br>";
 	} else {
 
 		$no_of_records_per_page = 20;
@@ -50,13 +50,13 @@
 
 		if ($total_rows == 1){$singular = '';} else {$singular= 's';}
 		if ($total_rows == 0){
-			echo "<br /><br />No previously released results for ban reason \"<b>".$ban_reason."</b>\"";
+			echo "<br><br>No previously released results for ban reason \"<b>".$ban_reason."</b>\"";
 		} else {
 			echo "<h2>What would you like to ban?</h2>";
-			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br /><br />";
-			echo "<a href=\"./reban-br.php?submit=Reban&ban_reason=".$ban_reason."\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$ban_reason."?')\">Click here</a> to re-ban all.<br />";
-			echo "<br /><br />";
-			echo "Results for released IPs for ban reason \"<b>".$ban_reason."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br />";
+			echo "Click \"YES\" under column \"RS\" to re-ban a single address.<br><br>";
+			echo "<a href=\"./reban-br.php?submit=Reban&ban_reason=".$ban_reason."\" onclick=\"return confirm('Are you sure you want to re-ban all released IPs for ".$ban_reason."?')\">Click here</a> to re-ban all.<br>";
+			echo "<br><br>";
+			echo "Results for released IPs for ban reason \"<b>".$ban_reason."</b>\": ".number_format($total_rows)." IP".$singular." (Page: ".number_format($page)." of ".number_format($total_pages).")<br>";
 			echo "<table class='section'>
 				<tr>
 					<th>Timestamp</th>
@@ -89,7 +89,7 @@
 			echo "</ul>";
 		}
 	}
-	echo "<br />";
+	echo "<br>";
 ?>
 </div>
 

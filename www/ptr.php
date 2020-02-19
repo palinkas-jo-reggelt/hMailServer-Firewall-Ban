@@ -30,11 +30,11 @@
 	");
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "IP: ".$ip."<br />";
-		echo "PTR: ".$row['ptr']."<br />";
-		echo "HELO: ".$row['helo']."<br />";
-		echo "Ban Reason: ".$row['ban_reason']."<br />";
-		echo "Ban Date: ".$row['dateptr']."<br />";
+		echo "IP: ".$ip."<br>";
+		echo "PTR: ".$row['ptr']."<br>";
+		echo "HELO: ".$row['helo']."<br>";
+		echo "Ban Reason: ".$row['ban_reason']."<br>";
+		echo "Ban Date: ".$row['dateptr']."<br>";
 	}
 ?>
 

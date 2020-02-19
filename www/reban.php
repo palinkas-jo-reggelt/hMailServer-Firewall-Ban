@@ -16,7 +16,7 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Re-Ban a date range:</h2>
-		Enter start & end dates and click to review.<br /><br />
+		Enter start & end dates and click to review.<br><br>
 		<form autocomplete="off" action='reban-date-view.php' method='GET'>
 			<table>
 				<tr>
@@ -25,12 +25,12 @@
 				<tr><td><input type='submit' name='submit' value='Review' /></td></tr>
 			</table>
 		</form>
-		<br />Note: Range can be a single day, but start and end dates must both be filled in.<br />
+		<br>Note: Range can be a single day, but start and end dates must both be filled in.<br>
 	</div>
 
 	<div class="secright">
 		<h2>Re-Ban a recent day:</h2>
-		Released IPs over the past five days. Click below to review.<br /><br />
+		Released IPs over the past five days. Click below to review.<br><br>
 		
 <?php
 	include_once("config.php");
@@ -45,7 +45,7 @@
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 	if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./reban-date-view.php?dateFrom=".$today."&dateTo=".$today."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> Today<br />"; 
+	echo "<a href=\"./reban-date-view.php?dateFrom=".$today."&dateTo=".$today."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> Today<br>"; 
 	}
 	
 	$sql = $pdo->prepare("
@@ -57,7 +57,7 @@
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 	if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./reban-date-view.php?dateFrom=".$yesterday."&dateTo=".$yesterday."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> Yesterday<br />"; 
+	echo "<a href=\"./reban-date-view.php?dateFrom=".$yesterday."&dateTo=".$yesterday."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> Yesterday<br>"; 
 	}
 	
 	$sql = $pdo->prepare("
@@ -69,7 +69,7 @@
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 	if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./reban-date-view.php?dateFrom=".$twodaysago."&dateTo=".$twodaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($twodaysago))."<br />"; 
+	echo "<a href=\"./reban-date-view.php?dateFrom=".$twodaysago."&dateTo=".$twodaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($twodaysago))."<br>"; 
 	}
 	
 	$sql = $pdo->prepare("
@@ -81,7 +81,7 @@
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 	if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./reban-date-view.php?dateFrom=".$threedaysago."&dateTo=".$threedaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($threedaysago))."<br />"; 
+	echo "<a href=\"./reban-date-view.php?dateFrom=".$threedaysago."&dateTo=".$threedaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($threedaysago))."<br>"; 
 	}
 	
 	$sql = $pdo->prepare("
@@ -93,7 +93,7 @@
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 	if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-	echo "<a href=\"./reban-date-view.php?dateFrom=".$fourdaysago."&dateTo=".$fourdaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($fourdaysago))."<br />"; 
+	echo "<a href=\"./reban-date-view.php?dateFrom=".$fourdaysago."&dateTo=".$fourdaysago."&submit=Ban\">".number_format($row['value_occurrence'])." Hit".$singular."</a> on ".date("l", strtotime($fourdaysago))."<br>"; 
 	}
 
 ?>
@@ -104,7 +104,7 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Re-Ban a Ban Reason:</h2>
-		Released IPs for the following ban reasons. Click to review.<br /><br />
+		Released IPs for the following ban reasons. Click to review.<br><br>
 <?php
 	include_once("config.php");
 	include_once("functions.php");
@@ -129,7 +129,7 @@
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 		if ($row['value_occurrence'] == 1){$singular="";}else{$singular="s";}
-		echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./reban-br-view.php?submit=Reban&ban_reason=".$row['ban_reason']."\">".$row['ban_reason']."</a><br />"; 
+		echo number_format($row['value_occurrence'])." hit".$singular." for <a href=\"./reban-br-view.php?submit=Reban&ban_reason=".$row['ban_reason']."\">".$row['ban_reason']."</a><br>"; 
 		}
 	} else {
 		echo "No released records for any ban reason.";
@@ -140,12 +140,12 @@
 
 	<div class="secright">
 		<h2>Re-Ban a Country:</h2>
-		Will search for matching released IPs.<br /><br />
+		Will search for matching released IPs.<br><br>
 		<form autocomplete="off" action='reban-country-view.php' method='GET'>
 			<input type="text" id="country" name="country">
 			<input type='submit' name='submit' value='Review' />
 		</form>
-		<br />Note: Only applies to previously released IPs for the selected country.
+		<br>Note: Only applies to previously released IPs for the selected country.
 	</div>
 	<div class="clear"></div>
 </div>
@@ -153,14 +153,14 @@
 <div class="section">
 	<div class="secleft">
 		<h2>Manually ban an IP range:</h2>
-		Enter an IP or IP range. Will search for matches and if found will reban. If no matches found will add IP to firewall ban list with reason "Manual". Not dependent on previous bans/releases.<br /><br />
+		Enter an IP or IP range. Will search for matches and if found will reban. If no matches found will add IP to firewall ban list with reason "Manual". Not dependent on previous bans/releases.<br><br>
 		<form autocomplete="off" action="reban-iprange.php" method="GET">
 			<input type="text" pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(2[2-9]|3[0-2]))?$" title="255.255.255.255 OR 255.255.255.255/23" id="ipRange" name="ipRange">
 			<input type="submit" name="submit" value="Review">
 		</form>
-		<br />IP Ranges MUST be in: <br />
-		<b>255.255.255.255</b> OR <br />
-		<b>255.255.255.255/24</b> format. <br /><br />
+		<br>IP Ranges MUST be in: <br>
+		<b>255.255.255.255</b> OR <br>
+		<b>255.255.255.255/24</b> format. <br><br>
 		Single IPs will be automatically converted to /32 CIDR for insertion as firewall rule. Netmask /22 - /32 only. Click to review options before committing to a network ban.
 	</div>
 

@@ -3,8 +3,8 @@
 <div class="wrapper">
 <div class="section">
 	<h2>Block List Analyzer</h2>
-	Counts the number of Banned IPs that returned and were subsequently blocked by the firewall for a given number of distinct days. <br /><br />
-	Choose the number of days to run out below. Execution time is high, so start with no more than 10 days before attempting to proceed beyond that. If you run into "exceeded max execution time" errors then run BlockCount.ps1 instead.<br /><br />
+	Counts the number of Banned IPs that returned and were subsequently blocked by the firewall for a given number of distinct days. <br><br>
+	Choose the number of days to run out below. Execution time is high, so start with no more than 10 days before attempting to proceed beyond that. If you run into "exceeded max execution time" errors then run BlockCount.ps1 instead.<br><br>
 	How many days to input? 
 	<form autocomplete="off" action="blocks.php" method="GET">
 		<select name='days' onchange='this.form.submit()'>
@@ -49,9 +49,9 @@
 	$NeverIPs = ($TotalIPs - $AllReturnIPs);
 	$PercentNever = sprintf("%.2f%%", ($NeverIPs / $TotalIPs) * 100);
 
-	echo "<br /><br />";
-	echo "Total Number of Firewall Bans: ".number_format($TotalIPs)."<br /><br />";
-	echo "Number of Firewall Bans that have never returned: ".number_format($NeverIPs)." (".$PercentNever.")<br /><br />";
+	echo "<br><br>";
+	echo "Total Number of Firewall Bans: ".number_format($TotalIPs)."<br><br>";
+	echo "Number of Firewall Bans that have never returned: ".number_format($NeverIPs)." (".$PercentNever.")<br><br>";
 
 	echo "<table class='section'>
 		<tr>
@@ -95,5 +95,5 @@
 	echo "</table>";
 
 ?>
-	<br />
+	<br>
 <?php include("foot.php") ?>

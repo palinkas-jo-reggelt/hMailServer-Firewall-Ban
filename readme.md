@@ -11,47 +11,16 @@ ____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _
 Ban Spammers to Windows Defender Firewall. Use of various reject methods in EventHandlers.vbs to call Firewall Ban. Integrated web admin.
 
 
-## !! NEW !! MUST READ !!
-
-Another major update. Due to a full-table-scan situation with hm_fwban_rh that I simply cannot mitigate, I created a new table to store common repeat hit data. The new table is properly keyed so queries are fast. 
-
-For new installations, just follow the instructions.
-
-For UPGRADING, run hmsRetroAddBlocksIPTable.ps1 BEFORE upgrading the other files.
-
-Add hmsUpdateChartTables.ps1 to nightly scheduled task.
-
-
-## !! NEW !! MUST READ !!
-
-Major update. I've overhauled several files in order to eliminate Powershell's NetFirewall commands, which are incompatible with Windows versions before 8.1 Server 2012. Additionally, I've added PTR to the database. Lastly, I made it possible for VERY busy systems to use this project by splitting consolidated firewall rules into groups of 400 IPs each. Therefore, if you are attempting to ban thousands of IPs per day, the firewall won't crash on rule creation.
-
-For NEW installations, just follow the instructions.
-
-For UPGRADING, run hmsRetroAddPTR.ps1 and hmsRetroAddRuleName.ps1 BEFORE upgrading hmsFirewallBan.ps1. Be sure to review EventHandlers.vbs for changes to add PTR.
-
-
-## !! NEW !! MUST READ !!
-
-Recent updates have dramatically changed how firewall rules are created. When an IP gets banned, a firewall rule is created that contains only that IP as the remote address to block. This is how it has been since the beginning of this project. However, I found that too many rules (>10,000) caused issues with mysql connections and probably other things that I did not notice. Therefore, I changed the rule creation to be one rule per day that contains all of that day's banned IPs.
-
-It works as normal for the current day. Therefore, there are no changes to EventHandlers.vbs. A handler script - hmsConsolidateRules.ps1 - should be run daily at 12:01 am. This script consolidates the previous day's firewall rules into a single rule. A scheduled task should be created for this.
-
-For working installations, you will want to retroactively consolidate all of your rules for days previous to yesterday. For this task, use hmsConsolidateRulesRetroactively.ps1. This should only be run once and is NOT required for fresh installs.
-
-Obviously, if you're upgrading, you will want to copy all of the files to your installation, but particularly hmsFirewallBan.ps1 and hmsConsolidateRules.ps1 are required.
-
-
 ## Prerequisites
 
 1) Working hMailServer 5.7.0
 2) Working MySQL OR MSSQL with hmailserver database
-3) Working Apache/IIS
+3) Working Apache/IIS with PHP
 4) *May* require updating Powershell
 5) *May* require MySQL-Connector-Net found here: https://dev.mysql.com/downloads/connector/net/
 
 
-## Instructions
+## Instructions - INSTALLING
 
 1) Copy everything from EventHandlers.vbs into your EventHandlers.vbs (default location: C:\Program Files (x86)\hMailServer\Events\EventHandlers.vbs)
 2) Copy vbsjson.vbs to hMailServer Events folder (default location: C:\Program Files (x86)\hMailServer\Events)
@@ -59,14 +28,14 @@ Obviously, if you're upgrading, you will want to copy all of the files to your i
 4) Copy RvdH's Disconnect.exe to hMailServer Events folder (https://d-fault.nl/files/)
 5) Edit variables in Config.ps1
 6) Run hmsFirewallBanDBSetup.ps1 to setup database tables.
-6) Change group policy for firewall log to log dropped connections. Set log location to match with path in hmsFirewallBan.ps1 (or change path in hmsFirewallBan.ps1). From cmd/administrator:
+6) Change group policy for firewall log to log dropped connections. Set log location Config.ps1. From cmd/administrator:
 ```
 netsh advfirewall set allprofiles logging filename "C:\scripts\hmailserver\fwban\pfirewall.log"
 netsh advfirewall set allprofiles logging droppedconnections enable
 ```
    + You may need to edit this with Group Policy Editor. You may also need to give NT SERVICE\MPSSVC full control permissions on the folder the log resides in or the log may not automatically roll over after reaching maximum size. See here: https://serverfault.com/a/859949
 
-7) Create scheduled task to run every 5 minutes with action: 
+7) Create scheduled task to run every `5 minutes` with action: 
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 8) Create scheduled task to run DAILY AT 12:01 am with actions: 
@@ -74,8 +43,19 @@ netsh advfirewall set allprofiles logging droppedconnections enable
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsUpdateChartTables.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-9) Copy the files in /www/ to your webserver and edit the db info in config.php and edit .htaccess to allow your subnet.
+9) Copy the files in /www/ to your webserver then edit the db info in config.php and edit .htaccess to allow your subnet.
 10) Sit back and watch your firewall rule count grow while your spam logs get quiet.
+
+
+## Instructions - UPGRADING
+
+If you installed or last upgraded before v.0.56 (11/27/19), you will need to run `hmsRetroConsolidateRules.ps1` and `hmsRetroAddRuleName.ps1` before proceeding with any other upgrade.
+
+If you installed or last upgraded before v.0.61 (1/20/20), you will need to run `hmsRetroAddPTR.ps1` before proceeding with any other upgrade.
+
+If you installed or last upgraded before v.0.77 (2/16/20), you will need to run `hmsRetroAddBlocksIPTable.ps1` before proceeding with any other upgrade.
+
+After the above is satisfied, replace your old files with the new ones. Update EventHandlers.vbs accordingly.
 
 
 ## SQL Create Tables
@@ -101,18 +81,18 @@ NULL	Has been added as a firewall rule
 
 ## Security Notes
 
-Security is provided by Apache. You will not want the web admin to be publicly available. The .htaccess restricts access to localhost and your LAN subnet only. If you want to allow access to the WAN, I strongly suggest you password protect the directory or something else that will keep outsiders out as they will have the ability to control your firewall.
+The only security is provided by .htaccess blocking connections outside your LAN. You will not want the web admin to be publicly available for obvious reasons - someone might ban you! The .htaccess restricts access to localhost and your LAN subnet only. If you want to allow access to the WAN, I strongly suggest you password protect the directory or do something else that will keep outsiders out as they will have the ability to control your firewall.
 
 
 ## Other Notes
 
-I ran across an issue where a single IP hammered my server enough times to cause ip-api.com to rate limit me (150/minute). Besides that, since firewall rules get added on an interval (via scheduled task / powershell), many connections between the interval can add redundant IPs to the rule list. To get around both of these issues I setup RvdH's disconnect and SorenR's autoban. On each trigger now, three functions are called:
+I ran across an issue where a single IP hammered my server enough times to cause ip-api.com to rate limit me (150/minute). Besides that, since firewall rules get added on an interval (via scheduled task / powershell), many connections between the interval can add redundant IPs to the rule list. To get around both of these issues I setup RvdH's disconnect and SorenR's autoban. On each trigger now, three functions should be called:
 
 1) Disconnect
-2) Firewall Ban
-3) Autoban
+2) Autoban
+3) Firewall Ban
 
-This way, autoban will prevent the same IP from getting to any of my filters and thereby prevent calling firewall ban multiple times for the same IP. This will drastically reduce the number of redundant IP firewall rules and redundant IP entries in the database. If you setup your EventHandlers.vbs this way from the very beginning, you will only possibly have duplicate IPs in the database after an IP has been released. 
+This way, autoban will temporarily block the IP and thereby prevent calling firewall ban multiple times for the same IP. This will drastically reduce the number of redundant IP entries in the database. Additionally, hmsFirewallBan deletes redundant IPs WITHIN THE 5 MINUTE INTERVAL ONLY. This method allows for duplicate IPs in the database as ban > release > ban would be 3 separate incidents and a bona fide reason to have duplicate entries. 
 
 
 ## Intrusion Dection System (IDS)
@@ -124,6 +104,10 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.82 bug fixes
+- 0.81 updated installation/upgrade instructions 
+- 0.80 housekeeping 
+- 0.79 mssql changes by lcamilo
 - 0.78 added count of blocks to index.php
 - 0.77 added new table, added data caching for charts and other common references to hm_fwban_rh
 - 0.76 cleanup PHP from adding MSSQL changes

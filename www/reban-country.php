@@ -17,7 +17,7 @@
 	if (isset($_GET['submit'])){$button = $_GET['submit'];}else{$button = "";}
 	if (isset($_GET['country'])){$country = $_GET['country'];} else {$country = "";}
 
-	if (empty($country)){echo "Error: No country selected. Please see administrator.<br /><br />";} 
+	if (empty($country)){echo "Error: No country selected. Please see administrator.<br><br>";} 
 	else {
 		$sqlcount = $pdo->prepare("
 			SELECT 
@@ -28,7 +28,7 @@
 		$sqlcount->execute();
 		$total_rows = $sqlcount->fetchColumn();
 		if ($total_rows > 0) { 
-			echo "<br />".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$country."&RS=NO\">".$country."</a> have been re-banned the firewall.<br />";
+			echo "<br>".number_format($total_rows)." hits for <a href=\"search.php?submit=Search&search=".$country."&RS=NO\">".$country."</a> have been re-banned the firewall.<br>";
 			$sql = $pdo->prepare("
 				SELECT id 
 				FROM hm_fwban 
@@ -41,7 +41,7 @@
 				);
 			}
 		} else {
-			echo "<br />Error: No released records for \"<b>".$country."</b>\". Please <a href=\"search.php?submit=Search&search=".$country."\">search release status</a> or check the spelling and try again.";
+			echo "<br>Error: No released records for \"<b>".$country."</b>\". Please <a href=\"search.php?submit=Search&search=".$country."\">search release status</a> or check the spelling and try again.";
 		}
 	}
 ?>

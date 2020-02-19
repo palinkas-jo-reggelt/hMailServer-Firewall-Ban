@@ -62,7 +62,7 @@ If ((get-service hMailServer).Status -ne 'Running') { exit }
 $QueryTime = (get-date).ToString("yyyy-MM-dd HH:mm:00")
 
 #	Pickup entries marked SAFE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=5"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=5"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -73,7 +73,7 @@ RunSQLQuery $Query | foreach {
 }
 
 #	Pickup entries marked for RELEASE through webadmin
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=2"
+$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=2"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -85,15 +85,15 @@ RunSQLQuery $Query | foreach {
 
 #	Look for new entries and add them to firewall
 #	First delete any duplicate IP entries in the database since the last run
-$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
+$Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND t1.timestamp >= $(DBSubtractIntervalFromDate $QueryTime 'minute' $Interval)"
 RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries
-$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag = 4 AND timestamp >= " + $(DBSubtractIntervalFromDate $QueryTime "minute"  $Interval)
+$Query = "SELECT ipaddress, id FROM hm_fwban WHERE flag = 4 AND timestamp >= $(DBSubtractIntervalFromDate $QueryTime 'minute' $Interval)"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
 	#	Check each against previous entries marked safe
-	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP' AND timestamp < " + $(DBSubtractIntervalFromDate $QueryTime "minute" $Interval)
+	$Query = "SELECT flag FROM hm_fwban WHERE ipaddress = '$IP' AND timestamp < $(DBSubtractIntervalFromDate $QueryTime 'minute' $Interval)"
 	RunSQLQuery $Query | foreach {
 		$FlagSafe = $_.flag
 	}
@@ -131,7 +131,7 @@ RunSQLQuery $Query | foreach {
 $Query = "DELETE t1 FROM hm_fwban t1, hm_fwban t2 WHERE t1.id > t2.id AND t1.ipaddress = t2.ipaddress AND (t1.flag=3 OR t1.flag=7)"
 RunSQLQuery $Query
 #	Now find all new (non-duplicated) IP entries and add firewall rule
-$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
+$Query = "SELECT DISTINCT(ipaddress), id, $(DBCastDateTimeFieldAsDate 'timestamp') AS dateip FROM hm_fwban WHERE flag=3 OR flag=7"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -197,7 +197,7 @@ RunSQLQuery $Query | foreach {
 }
 
 #	Expire old IDS entries 
-$Query = "DELETE FROM hm_ids WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) "hour" $IDSExpire)
+$Query = "DELETE FROM hm_ids WHERE timestamp < $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'hour' $IDSExpire)"
 RunSQLQuery $Query
 
 #######################################
@@ -223,7 +223,11 @@ $FirewallLogObjects | foreach-object {
 	If (($_.Action -match 'DROP') -and ($_.DestinationPort -match $MailPorts) -and ($_.SourceIP -notmatch $LSRegex)) {
 		$IP = $_.SourceIP
 		$DateTime = $_.Date + " " + $_.Time
-		$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$DateTime';"
+		If ($DatabaseType -eq "MYSQL"){
+			$Query = "INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ON DUPLICATE KEY UPDATE hits=(hits+1),lasttimestamp='$DateTime';"
+		} ElseIf ($DatabaseType -eq "MSSQL") {
+			$Query = "IF NOT EXISTS (SELECT 1 FROM hm_fwban_blocks_ip WHERE ipaddress='$IP') INSERT INTO hm_fwban_blocks_ip (ipaddress, hits, lasttimestamp) VALUES ('$IP',1,'$DateTime') ELSE UPDATE hm_fwban_blocks_ip SET hits=(hits+1),lasttimestamp='$DateTime'  WHERE ipaddress='$IP';"
+		}
 		RunSQLQuery $Query
 		$Query = "SELECT id FROM hm_fwban_blocks_ip WHERE ipaddress = '$IP'"
 		RunSQLQuery $Query | ForEach {
@@ -246,14 +250,17 @@ $FirewallLogObjects | foreach-object {
 <#
 $Days = "30" 	# <-- Number of days for automatic expiry                   
 $Query = "
-	SELECT id, ipaddress, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip
+	SELECT 
+		id, 
+		ipaddress, 
+		$(DBCastDateTimeFieldAsDate 'timestamp') AS dateip
 	FROM hm_fwban 
 	WHERE hm_fwban.ipaddress NOT IN 
 	(
 		SELECT ipaddress 
 		FROM hm_fwban_rh
 	) 
-	AND timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) "DAY" $Days) + "
+	AND timestamp < $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days)"
 	AND flag IS NULL
 	ORDER BY timestamp DESC
 "
@@ -271,7 +278,14 @@ RunSQLQuery $Query | foreach {
 <#
 $Ban_Reason = "Spamhaus" 	#<-- Needs to match a ban_reason you selected as trigger
 $Days = "30" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL"
+$Query = "
+	SELECT 
+		ipaddress, 
+		id, 
+		$(DBCastDateTimeFieldAsDate 'timestamp') AS dateip 
+	FROM hm_fwban 
+	WHERE timestamp < $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) AND ban_reason LIKE '$Ban_Reason' AND flag IS NULL
+"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -286,7 +300,14 @@ RunSQLQuery $Query | foreach {
 <#
 $Country = "Hungary" 		#<-- Country name (check spelling!)
 $Days = "10" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND country LIKE '$Country' AND flag IS NULL"
+$Query = "
+	SELECT 
+		ipaddress, 
+		id, 
+		$(DBCastDateTimeFieldAsDate 'timestamp') AS dateip 
+	FROM hm_fwban 
+	WHERE timestamp < $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) AND country LIKE '$Country' AND flag IS NULL
+"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress
@@ -300,7 +321,14 @@ RunSQLQuery $Query | foreach {
 <#	EXAMPLE AUTO EXPIRE - Automatic expiration from firewall - All IPs #>
 <#
 $Days = "60" 				#<-- Days until expires
-$Query = "SELECT ipaddress, id, $(DBCastDateTimeFieldAsDate('timestamp')) AS dateip FROM hm_fwban WHERE timestamp < " + $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) + " AND flag IS NULL"
+$Query = "
+	SELECT 
+		ipaddress, 
+		id, 
+		$(DBCastDateTimeFieldAsDate 'timestamp') AS dateip 
+	FROM hm_fwban 
+	WHERE timestamp < $(DBSubtractIntervalFromField $(DBGetCurrentDateTime) 'DAY' $Days) AND flag IS NULL
+"
 RunSQLQuery $Query | foreach {
 	$ID = $_.id
 	$IP = $_.ipaddress

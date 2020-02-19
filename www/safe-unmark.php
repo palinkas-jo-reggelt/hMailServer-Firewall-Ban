@@ -37,15 +37,15 @@
 	$ip_count = 1 << (32 - $rcidr);
 
 	echo "<H2>Ban IP Range</H2>";
-	echo $ipRange." : IP Range<br /><br />";
-	echo $iplo." : Network Address<br />";
-	echo $iphi." : Broadcast Address<br />";
-	echo $ip_count." : Number of IPs in range<br /><br />";
-	echo "Begin Update:<br /><br />";
+	echo $ipRange." : IP Range<br><br>";
+	echo $iplo." : Network Address<br>";
+	echo $iphi." : Broadcast Address<br>";
+	echo $ip_count." : Number of IPs in range<br><br>";
+	echo "Begin Update:<br><br>";
 
 
 	if (empty($ipRange)){
-		echo "Error: IP range empty. Please see administrator.<br /><br />";
+		echo "Error: IP range empty. Please see administrator.<br><br>";
 	} else {
 
 		$start = ip2long($iplo);
@@ -72,12 +72,12 @@
 				$sql_rem_safe_six = $pdo->exec("
 					UPDATE hm_fwban SET flag=1 WHERE id=".$id
 				);
-				echo "IP ".$ip." removed from SAFE list and updated to RELEASED<br />";
+				echo "IP ".$ip." removed from SAFE list and updated to RELEASED<br>";
 			} else if ($flag=5) {
 				$sql_rem_safe_six = $pdo->exec("
 					UPDATE hm_fwban SET flag=2 WHERE id=".$id
 				);
-				echo "IP ".$ip." removed from SAFE list and updated to RELEASED status for firewall rule removal<br />";
+				echo "IP ".$ip." removed from SAFE list and updated to RELEASED status for firewall rule removal<br>";
 			}
 			$ipaddressdb = "";
 			$flag = "";

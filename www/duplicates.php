@@ -42,9 +42,9 @@
 	$sql->execute();
 
 	if ($total_rows == 0){
-		echo "<br />No duplicate entries found.";
+		echo "<br>No duplicate entries found.";
 	} else {
-		echo "<br />".number_format($total_rows)." Duplicate IP Reports (Page: ".number_format($page)." of ".number_format($total_pages) . ")<br />";
+		echo "<br>".number_format($total_rows)." Duplicate IP Reports (Page: ".number_format($page)." of ".number_format($total_pages) . ")<br>";
 		echo "<table class='section'>
 			<tr>
 				<th>Last Seen</th>
@@ -72,7 +72,7 @@
 				if($page >= $total_pages){echo "<li>Next </li>";} else {echo "<li><a href=\"?submit=Search&page=".($page + 1)."\">Next </a></li>";}
 				if($page >= $total_pages){echo "<li>Last</li>";} else {echo "<li><a href=\"?submit=Search&page=".$total_pages."\">Last</a></li>";}
 			echo "</ul>";
-			echo "<br /><br />";
+			echo "<br><br>";
 		}
 	}
 ?>
