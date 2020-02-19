@@ -103,7 +103,7 @@
 		echo "<br>";
 		$mindate_sql = $pdo->prepare("
 			SELECT 
-				MIN(DATE(timestamp)) AS mindate 
+				MIN(".DBCastDateTimeFieldAsDate('timestamp').") AS mindate 
 			FROM hm_fwban
 		");
 		$mindate_sql->execute();
@@ -232,7 +232,7 @@
 			echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br>"; 
 		}
 
-		echo "<br>";
+		echo "</br>";
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -3 month"))){
 			echo "";
 		} else {
@@ -244,7 +244,7 @@
 					COUNT(id) as numhits,
 					".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
 				FROM hm_fwban 
-				WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
 				GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
 				".DBLimitRowsWithOffset(DBCastDateTimeFieldAsMonth('timestamp'),'DESC',0,0,0,3)."
 			) d
@@ -266,7 +266,7 @@
 						COUNT(id) as numhits,
 						".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
 					FROM hm_fwban 
-					WHERE ".DBCastDateTimeFieldAsMonth('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
 					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
 					".DBLimitRowsWithOffset(DBCastDateTimeFieldAsMonth('timestamp'),'DESC',0,0,0,6)."
 				) d
