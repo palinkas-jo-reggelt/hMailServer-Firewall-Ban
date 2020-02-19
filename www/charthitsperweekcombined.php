@@ -1,5 +1,18 @@
-<?php include_once("config.php") ?>
-<?php include_once("functions.php") ?>
+<!DOCTYPE html> 
+<html>
+<head>
+<title>hMailServer Firewall Ban</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" media="all" href="stylesheet.css">
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet"> 
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<?php include("charthitsperdaycombined.php") ?>
+
 <script type="text/javascript">
 google.load("visualization", "1", {packages:["corechart", "line"]});
 google.setOnLoadCallback(drawChart);
@@ -10,6 +23,9 @@ function drawChart() {
 	data.addColumn('number', 'IPs Blocked');
 	data.addRows([
 <?php 
+	include_once("config.php");
+	include_once("functions.php");
+	
 	$sql = $pdo->prepare("
 		SELECT 
 			a.week_beginning,
@@ -49,7 +65,7 @@ function drawChart() {
 ?>
 	]);
 
-	var chart = new google.visualization.LineChart(document.getElementById('chart_combined'));
+	var chart = new google.visualization.LineChart(document.getElementById('chart_combined_week'));
 	  chart.draw(data, {
 		width: 350,
 		height: 200,
@@ -70,3 +86,23 @@ function drawChart() {
 	  });
 }	
 </script>
+
+</head>
+<body>
+<div class="wrapper">
+
+	<div class="section">
+		<div class="secleft">
+			<h2>Hits per day from inception:</h2>
+			<div id="chart_combined_staticdata"></div>
+		</div>
+		<div class="secright">
+			<h2>Hits per week from inception:</h2>
+			<div id="chart_combined_week"></div>
+		</div>
+		<div class="clear"></div>
+
+	</div>
+</div>
+</body>
+</html>
