@@ -102,7 +102,7 @@
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/MM/dd',
 			'%H'				=> 'HH',
-			'%M %D, %Y'         => 'Month D, YYYY',
+			'%M %D, %Y'         => 'MMMM d, yyyy',
 		);
 
 		if (IsMySQL()) {
