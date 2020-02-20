@@ -96,16 +96,16 @@
 		return $Return; 
 	}
 
-		Function DBCastDateTimeFieldAsDay($fieldName){
-				global $Database;
-				$Return = "";
-				if (IsMySQL()) {
-					$Return = "DAY(".$fieldName.")";
-				} elseif (IsMSSQL()) {
-					$Return = "DATEPART(day,".$fieldName.")";
-				 }
-				 return $Return;
-			 }
+	Function DBCastDateTimeFieldAsDay($fieldName){
+		global $Database;
+		$Return = "";
+		if (IsMySQL()) {
+			$Return = "DAY(".$fieldName.")";
+		} elseif (IsMSSQL()) {
+			$Return = "DATEPART(day,".$fieldName.")";
+		}
+		return $Return;
+	}
 
 	Function DBFormatDate($fieldName, $formatSpecifier){
 		global $Database;
@@ -120,11 +120,13 @@
 			'Y-m'               => 'yyyy-MM',
 			'%Y-%m'             => 'yyyy-MM',
 			'%y/%m/%d %T'       => 'yy-MM-dd HH:mm:ss',
-			'%Y/%m/%d %H:%m:%s' => 'yyyy-MM-dd HH:mm:ss',
+			'%Y/%m/%d %H:%i:%s' => 'yyyy-MM-dd HH:mm:ss',
 			'%Y/%m/01'          => 'yyyy-MM-01',
 			'%y/%c/%e'          => 'yy/MM/dd',
 			'%H'                => 'HH',
 			'%M %D, %Y'         => 'MMMM d, yyyy',
+			'%T'                => 'HH:mm:ss',
+			'%H:%i %p'          => 'hh:mm tt',
 		);
 
 		if (IsMySQL()) {
