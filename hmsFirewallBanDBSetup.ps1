@@ -37,7 +37,7 @@ If ($DatabaseType -eq "MSSQL") {
 		BEGIN
 			CREATE TABLE hm_fwban (
 				ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-				ipaddress varchar NOT NULL,
+				ipaddress varchar(15) NOT NULL,
 				timestamp datetime NOT NULL,
 				ban_reason varchar(192) DEFAULT NULL,
 				country varchar(192) DEFAULT NULL,
