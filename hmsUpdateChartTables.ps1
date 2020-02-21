@@ -125,7 +125,7 @@ RunSQLQuery $Query | ForEach {
 $Query = "
 	SELECT 
 		hour, 
-		ROUND(AVG(numhits), 1) AS avghits 
+		ROUND($(If ($(IsMySQL)) { 'AVG(numhits)' } elseIf ($(IsMSSQL)) { 'AVG(CAST(numhits as DECIMAL(6,2)) )' }), 1) AS avghits 
 	FROM (
 		SELECT 
 			$( DBCastDateTimeFieldAsDate 'timestamp') AS day, 
