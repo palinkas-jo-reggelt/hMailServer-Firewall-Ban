@@ -38,10 +38,11 @@ netsh advfirewall set allprofiles logging droppedconnections enable
 7) Create scheduled task to run every `5 minutes` with action: 
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsFirewallBan.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
-8) Create scheduled task to run DAILY AT 12:01 am with actions: 
+8) Create scheduled task to run DAILY AT 12:01 am with actions (in this order): 
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRules.ps1```
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsDuplicateRuleFinder.ps1```
 	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsUpdateChartTables.ps1```
+	+ ```powershell -executionpolicy bypass -File C:\scripts\FirewallBan\hmsConsolidateRulesMonthly.ps1```
 !!! TASK MUST BE RUN WITH HIGHEST PRIVILEGES !!! Or powershell will fail to create/delete firewall rules on grounds of permissions. 
 9) Copy the files in /www/ to your webserver then edit the db info in config.php and edit .htaccess to allow your subnet.
 10) Sit back and watch your firewall rule count grow while your spam logs get quiet.
@@ -104,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.87 added hmsConsolidateRulesMonthly.ps1 which consolidates daily rules from the previous month into a series of rules with max 400 RemoteIPs
 - 0.86 minor tweaks for map mobile view; limit 1 on last ban/drop
 - 0.85 added country to reban-ip.php; added get country from json function 
 - 0.84 added map to php
