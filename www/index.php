@@ -1,6 +1,13 @@
 <?php include("head-g.php") ?>
 
 <div class="section">
+	<div class="secmap">
+		<h2>Spammers around the world:</h2>
+		<div id="map_div"></div>
+	</div>
+</div>
+
+<div class="section">
 	<div class="secleft">
 		<h2>Hits per day from inception:</h2>
 		<div id="chart_combined_staticdata"></div>
@@ -585,7 +592,7 @@
 			");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			echo "<br>".number_format($row['countip'])." IPs attempted to connect but were dropped at the firewall a total of ".number_format($row['counthits'])." times since ".$row['mindate']; 
+			echo "<br>".number_format($row['countip'])." IPs attempted to connect but were dropped at the firewall a total of ".number_format($row['counthits'])." times since ".$row['mindate']."<br>"; 
 		}
 	?>
 	<br>
@@ -618,7 +625,84 @@
 	<br>
 	</div> 
 	<!-- END OF IPS MARKED SAFE -->
-	<div class="secright"></div>
+
+
+	<!-- START OF RECENT ACTIVITY -->
+	<div class="secright">
+		<h2>Most Recent Activity:</h2>
+	
+	<?php
+		include_once("config.php");
+		include_once("functions.php");
+
+		$sql = $pdo->prepare("
+			SELECT	
+				a.ipaddress,
+				a.country,
+				a.lasthit,
+				b.hits
+			FROM
+			(
+			SELECT 
+				ipaddress, 
+				country,
+				".DBFormatDate('timestamp', '%T')." AS lasthit
+			FROM hm_fwban
+			WHERE timestamp IN (
+				SELECT MAX(timestamp) FROM hm_fwban
+				)
+			)  a
+			LEFT JOIN
+			(
+				SELECT 
+					hits, 
+					ipaddress
+				FROM hm_fwban_blocks_ip
+			)  b
+			ON a.ipaddress = b.ipaddress
+		");
+		$sql->execute();
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+			if ($row['hits']===NULL) {$hits=0;} else {$hits=$row['hits'];}
+			if ($row['hits']==1) {$sing="";} else {$sing="s";}
+			echo "<br>Last IP banned: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".$hits." accumulated block".$sing.".<br>"; 
+		}
+
+		$sql = $pdo->prepare("
+			SELECT	
+				a.ipaddress,
+				b.country,
+				a.lasthit,
+				a.hits
+			FROM
+			(
+			SELECT 
+				ipaddress, 
+				hits,
+				".DBFormatDate('lasttimestamp', '%T')." AS lasthit
+			FROM hm_fwban_blocks_ip
+			WHERE lasttimestamp IN (
+				SELECT MAX(lasttimestamp) FROM hm_fwban_blocks_ip
+				)
+			)  a
+			LEFT JOIN
+			(
+				SELECT 
+					country,
+					ipaddress
+				FROM hm_fwban
+			)  b
+			ON a.ipaddress = b.ipaddress
+		");
+		$sql->execute();
+		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+			if ($row['hits']==1) {$sing="";} else {$sing="s";}
+			echo "<br>Last firewall drop: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".$row['hits']." accumulated block".$sing."."; 
+		}
+
+	?>
+	</div>
+	<!-- END OF RECENT ACTIVITY -->
 	<div class="clear"></div>
 </div> <!-- END OF SECTION -->
 

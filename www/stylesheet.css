@@ -104,6 +104,14 @@ a:hover {
 	padding-left: 3px;
 	}
 
+.secmap {
+	float: none;
+	width: 920px;
+	height: 600px;
+	padding: 0 0 10px 0;
+	text-align: center;
+}
+
 table.section {
 	border-collapse: collapse;
 	border: 1px solid black;
@@ -145,5 +153,11 @@ li {
 		float: none ;
 		width: 100% ;
 	}
-
+	.secmap {
+		float: none;
+		width: 380 px;
+		height: 240 px;
+		padding: 0 0 10px 0;
+		text-align: center;
+	}
 }	
