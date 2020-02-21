@@ -144,19 +144,19 @@ li {
 	
 @media only screen and (max-width: 629px) {
 	.secleft {
-		float: none ;
-		width: 100% ;
+		float: none;
+		width: 100%;
 		padding: 0 0 10px 0;
 		text-align: left;
 	}
 	.secright {
-		float: none ;
-		width: 100% ;
+		float: none;
+		width: 100%;
 	}
 	.secmap {
 		float: none;
-		width: 380 px;
-		height: 240 px;
+		width: 95%;
+		height: 220px;
 		padding: 0 0 10px 0;
 		text-align: center;
 	}

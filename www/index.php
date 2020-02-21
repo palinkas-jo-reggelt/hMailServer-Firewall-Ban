@@ -660,12 +660,13 @@
 				FROM hm_fwban_blocks_ip
 			)  b
 			ON a.ipaddress = b.ipaddress
-		");
+			".DBLimitRowsWithOffset(0,0,0,0,0,1)
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			if ($row['hits']===NULL) {$hits=0;} else {$hits=$row['hits'];}
 			if ($row['hits']==1) {$sing="";} else {$sing="s";}
-			echo "<br>Last IP banned: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".$hits." accumulated block".$sing.".<br>"; 
+			echo "<br>Last IP banned: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".number_format($hits)." accumulated block".$sing.".<br>"; 
 		}
 
 		$sql = $pdo->prepare("
@@ -693,11 +694,12 @@
 				FROM hm_fwban
 			)  b
 			ON a.ipaddress = b.ipaddress
-		");
+			".DBLimitRowsWithOffset(0,0,0,0,0,1)
+		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 			if ($row['hits']==1) {$sing="";} else {$sing="s";}
-			echo "<br>Last firewall drop: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".$row['hits']." accumulated block".$sing."."; 
+			echo "<br>Last firewall drop: <a href=\"./search.php?search=".$row['ipaddress']."\">".$row['ipaddress']."</a> at ".$row['lasthit']." from <a href=\"https://ipinfo.io/".$row['ipaddress']."\"  target=\"_blank\">".$row['country']."</a> with ".number_format($row['hits'])." accumulated block".$sing."."; 
 		}
 
 	?>
