@@ -50,10 +50,18 @@ Function EmailResults {
 #                                     #
 #######################################
 
+Function IsMSSQL(){
+	return ($DatabaseType -eq "MSSQL")
+}
+
+Function IsMySQL(){
+	return ($DatabaseType -eq "MYSQL")
+}
+
 Function RunSQLQuery($Query){
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
         MySQLQuery($Query)
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
         MSSQLQuery($Query)
     } Else {
         Out-Null
@@ -107,9 +115,9 @@ Function MSSQLQuery($Query) {
 
 Function DBCastDateTimeFieldAsDate($fieldName){
     $Return = ""
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
         $Return = "DATE($fieldName)"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
         $Return = "CAST($fieldName AS DATE)"
     }
     return $Return
@@ -117,9 +125,9 @@ Function DBCastDateTimeFieldAsDate($fieldName){
 
 Function DBCastDateTimeFieldAsHour($fieldName){
 	$Return = ""
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
 		$Return = "HOUR($fieldName)"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
 		$Return = "DATEPART(hour,$fieldName)"
 	}
 	return $Return;
@@ -134,9 +142,9 @@ Function DBSubtractIntervalFromDate(){
     )
 
     $Return = ""
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
         $Return = "'$dateString' - interval $intervalValue $intervalName"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
         $Return = "DATEADD($intervalName,-$intervalValue, '$dateString')"
     }
     return $Return
@@ -151,9 +159,9 @@ Function DBSubtractIntervalFromField(){
     )
 
     $Return = ""
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
         $Return = "$fieldName - interval $intervalValue $intervalName"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
         $Return = "DATEADD($intervalName,-$intervalValue, $fieldName)"
     }
     return $Return
@@ -161,9 +169,9 @@ Function DBSubtractIntervalFromField(){
 
 Function DBGetCurrentDateTime(){
     $Return = ""
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
         $Return = "NOW()"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
         $Return = "GETDATE()"
     }
     return $Return
@@ -177,9 +185,9 @@ Function DBLimitRowsWithOffset(){
 
 	$QueryLimit = ""
 
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
 		$QueryLimit = "LIMIT $offset, $numRows"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
 		$QueryLimit = "OFFSET $offset ROWS 
 		   	           FETCH NEXT $numRows ROWS ONLY"
 	}
@@ -210,9 +218,9 @@ Function DBFormatDate(){
 		'%H'                   = 'HH'
 	}
 	
-    If ($DatabaseType -eq "MYSQL") {
+    If ($(IsMySQL)) {
 		$Return = "DATE_FORMAT($fieldName, '$formatSpecifier')"
-    } ElseIf ($DatabaseType -eq "MSSQL"){
+    } ElseIf ($(IsMSSQL)){
 		$Return = "FORMAT($fieldName, '$($dateFormatSpecifiers[$formatSpecifier])', 'en-US')"
 	}
 	return $Return
