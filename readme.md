@@ -104,6 +104,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.85 added country to reban-ip.php; added get country from json function 
 - 0.84 added map to php
 - 0.83 reverted changes to functions.php due to accidentally overwriting
 - 0.82 bug fixes

@@ -187,5 +187,14 @@
 		return ($Database['dbtype'] == 'mssql');
 	}
 
+	function ip_country($ip) {
+		$ipdat = @json_decode(file_get_contents("http://ip-api.com/json/" . $ip));
+		if ($ipdat->status == "success"){
+			$output = @$ipdat->country;
+		} else {
+			$output = "NOT FOUND";
+		}
+		return $output;
+	}
 
 ?>

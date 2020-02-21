@@ -69,8 +69,9 @@
 				$id = $row['id'];
 			}
 			if (empty($ipaddressdb)){
+				$country = ip_country($ipaddressdb);
 				$sql_new_cidr_ban = $pdo->exec("
-					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason) VALUES (".DBGetCurrentDateTime().",'".$ip."','Manual')"
+					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country) VALUES (".DBGetCurrentDateTime().",'".$ip."','Manual','".$country."')"
 				);
 				echo "IP ".$ip." added to ban list for firewall rule insertion<br>";
 			} else {
