@@ -150,8 +150,8 @@ li {
 		text-align: left;
 	}
 	.secright {
-		float: none;
-		width: 100%;
+		float: none ;
+		width: 100% ;
 	}
 	.secmap {
 		float: none;
