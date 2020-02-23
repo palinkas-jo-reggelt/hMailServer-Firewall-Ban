@@ -30,4 +30,32 @@ $Database = array (
 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
 );
 
+
+/* 	GeoLite2MySQL - GeoIP Database Using MaxMind Data
+	https://github.com/palinkas-jo-reggelt/GeoLite2MySQL
+	
+	Database Variables follow the same rules as above.
+	
+	If GeoLite2MySQL is in use, set 'use_geoip' to 'true'. 
+	
+	Using a database vs calling ip-api.com for geoip requests will 
+	prevent rate limiting in situations where there are a large number 
+	of calls. Eg. manually banning a /24 IP range with 256 individual 
+	bans - calling 256 geoip requests - exceeding the 150/minute 
+	rate limit at ip-api.com.
+
+*/
+
+$GeoIPDatabase = array (
+	'use_geoip'   => 'false',
+	'dbtype'      => 'mysql',
+	'host'        => 'localhost',
+	'username'    => 'geoip',
+	'password'    => 'supersecretpassword',
+	'dbname'      => 'geoip',
+	'driver'      => 'mysql',
+	'port'        => '3306',
+	'dsn'         => 'MariaDB ODBC 3.0 Driver'
+);
+
 ?>

@@ -24,8 +24,8 @@
 	$sql->execute();
 	$N=0;
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		if (($row['country']=="")||($row['country']=="NOT FOUND")) {
-			echo "data.setValue(".$N.", 0, 'Antarctica');";
+		if (($row['country']===NULL)||($row['country']=="")||($row['country']=="NOT FOUND")) {
+			echo "data.setValue(".$N.", 0, 'Nowhereland".$N."');";
 			echo "data.setValue(".$N.", 1, 0);";
 		} else {
 			echo "data.setValue(".$N.", 0, '".$row['country']."');";

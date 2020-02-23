@@ -89,6 +89,7 @@
 			$ipaddressdb = "";
 			$flag = "";
 			$id = "";
+			$country = "";
 		}
 	}
 ?>

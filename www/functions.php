@@ -10,6 +10,16 @@
 		echo "Configuration Error - No database driver specified";
 	}
 
+	If ($GeoIPDatabase['driver'] == 'mysql') {
+		$geo_pdo = new PDO("mysql:host=".$GeoIPDatabase['host'].";port=".$GeoIPDatabase['port'].";dbname=".$GeoIPDatabase['dbname'], $GeoIPDatabase['username'], $GeoIPDatabase['password']);
+	} ElseIf ($GeoIPDatabase['driver'] == 'mssql') {
+		$geo_pdo = new PDO("sqlsrv:Server=".$GeoIPDatabase['host'].",".$GeoIPDatabase['port'].";Database=".$GeoIPDatabase['dbname'], $GeoIPDatabase['username'], $GeoIPDatabase['password']);
+	} ElseIf ($GeoIPDatabase['driver'] == 'odbc') {
+		$geo_pdo = new PDO("odbc:Driver={".$GeoIPDatabase['dsn']."};Server=".$GeoIPDatabase['host'].";Port=".$GeoIPDatabase['port'].";Database=".$GeoIPDatabase['dbname'].";User=".$GeoIPDatabase['username'].";Password=".$GeoIPDatabase['password'].";");
+	} Else {
+		echo "Configuration Error - No database driver specified";
+	}
+
 	function ipRangeFinder($cidr) {
 	   $range = array();
 	   $cidr = explode('/', $cidr);
@@ -24,7 +34,11 @@
 		$QueryLimit = "";
 		
 		if (($orderBy1 === 0) && ($orderByDir1 === 0) && ($orderBy2 === 0) && ($orderByDir2 === 0)){
-			$orderStmt = " ORDER BY 1";
+			if (IsMySQL()){
+				$orderStmt = "";
+			} elseif (IsMSSQL()){
+				$orderStmt = " ORDER BY 1";
+			}
 		} elseif (($orderBy2 === 0) && ($orderByDir2 === 0)){
 			$orderStmt = " ORDER BY ".$orderBy1." ".$orderByDir1;
 		} else {
@@ -188,13 +202,41 @@
 	}
 
 	function ip_country($ip) {
-		$ipdat = @json_decode(file_get_contents("http://ip-api.com/json/" . $ip));
-		if ($ipdat->status == "success"){
-			$output = @$ipdat->country;
+		global $GeoIPDatabase;
+		global $geo_pdo;
+
+		if ($GeoIPDatabase['use_geoip'] == 'true'){
+			
+			$getcountry_sql = $geo_pdo->prepare("
+				SELECT 
+					countryname 
+				FROM (
+					SELECT * 
+					FROM geo_ip 
+					WHERE ".DBIpStringToIntValue($ip)." <= maxipaton 
+					".DBLimitRowsWithOffset(0,0,0,0,0,1)."
+				) AS A 
+				WHERE minipaton <= ".DBIpStringToIntValue($ip)
+			);
+			$getcountry_sql->execute();
+			$country = $getcountry_sql->fetchColumn();
+			if (empty($country)) {
+				$output = "NOT FOUND";
+			}else {
+				$output = $country;
+			}
+						
 		} else {
-			$output = "NOT FOUND";
+
+			$ipdat = @json_decode(file_get_contents("http://ip-api.com/json/" . $ip));
+			if ($ipdat->status == "success"){
+				$output = @$ipdat->country;
+			} else {
+				$output = "NOT FOUND";
+			}
 		}
 		return $output;
 	}
+
 
 ?>
