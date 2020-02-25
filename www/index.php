@@ -1,11 +1,33 @@
 <?php include("head-g.php") ?>
 
+<!-- START DIALS -->
 <div class="section">
-	<div class="secmap">
-		<h2>Spammers around the world:</h2>
-		<div id="map_div"></div>
+	<h2>Today's Activity:</h2>
+	<div style="float:left;width:67%;">
+		<div style="float:left;width:50%;">
+			<center>
+				<div id="todays_hits_dial"></div>
+				IPs Added
+			</center>
+		</div>
+		<div style="float:right;width:50%;">
+			<center>
+				<div id="todays_repeats_dial"></div>
+				IPs Blocked
+			</center>
+		</div>
+		<div class="clear"></div>
 	</div>
+	<div style="float:right;width:33%;">
+		<center>
+			<div id="todays_blocks_dial"></div>
+			Total Blocks
+		</center>
+	</div>
+	<div class="clear"></div>
 </div>
+<!-- END DIALS -->
+
 
 <div class="section">
 	<div class="secleft">
@@ -29,6 +51,13 @@
 		<div id="chart_blocksperhour_staticdata"></div>
 	</div>
 	<div class="clear"></div>
+</div>
+
+<div class="section">
+	<div class="secmap">
+		<h2>Spammers around the world:</h2>
+		<div id="map_div"></div>
+	</div>
 </div>
 
 <div class="section">

@@ -237,7 +237,7 @@ Function Get-NetshFireWallrule {
 	Param(
 		[String]$RuleName
 	)
-	$Rules = & netsh advfirewall firewall show rule name="$ruleName"
+	$Rules = & netsh advfirewall firewall show rule name="$RuleName"
 	$return = @()
 		$HAsh = [Ordered]@{}
 		foreach ($Rule in $Rules){
