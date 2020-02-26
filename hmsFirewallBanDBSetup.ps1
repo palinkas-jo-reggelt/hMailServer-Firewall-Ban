@@ -109,7 +109,7 @@ If ($DatabaseType -eq "MYSQL") {
 		ptr varchar(192) DEFAULT NULL,
 		rulename varchar(192) DEFAULT NULL,
 		PRIMARY KEY (ID),
-		UNIQUE KEY ID (ID)
+		KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		COMMIT;
 		"
@@ -118,9 +118,12 @@ If ($DatabaseType -eq "MYSQL") {
 	#	Create hm_fwban_rh table if it doesn't exist
 	$Query = "
 		CREATE TABLE IF NOT EXISTS hm_fwban_rh (
+		  id int(24) NOT NULL AUTO_INCREMENT,
 		  ipid INT(22) NULL,
-		  timestamp timestamp NOT NULL,
+		  timestamp datetime NOT NULL,
 		  ipaddress varchar(15) NOT NULL,
+		  PRIMARY KEY (id),
+		  KEY timestamp (timestamp)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		COMMIT;
 	"
@@ -132,8 +135,9 @@ If ($DatabaseType -eq "MYSQL") {
 		  id INT(22) NOT NULL AUTO_INCREMENT,
 		  ipaddress varchar(15) NOT NULL UNIQUE,
 		  hits INT(8),
-		  lasttimestamp timestamp NOT NULL,
+		  lasttimestamp datetime NOT NULL,
 		  PRIMARY KEY (id)
+		  UNIQUE KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		COMMIT;
 	"
@@ -144,9 +148,8 @@ If ($DatabaseType -eq "MYSQL") {
 		CREATE TABLE IF NOT EXISTS hm_ids (
 		  timestamp datetime NOT NULL,
 		  ipaddress varchar(15) NOT NULL,
-		  hits int(1) NOT NULL,
+		  hits int(8) NOT NULL,
 		  country varchar(64) DEFAULT NULL,
-		  helo varchar(128) DEFAULT NULL,
 		  PRIMARY KEY (ipaddress),
 		  UNIQUE KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
