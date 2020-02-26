@@ -23,9 +23,13 @@
 
 	$total_pages_sql = $pdo->prepare("
 		SELECT 
-			COUNT(ipaddress) 
-		FROM hm_fwban_rh 
-		WHERE ipaddress = '{$repeatIP}' AND ".DBCastDateTimeFieldAsDate('timestamp')." = '{$date}'
+			COUNT(DISTINCT(ipaddress)) 
+		FROM (
+			SELECT * 
+			FROM hm_fwban_demo_rh 
+			WHERE '".$dateFrom." 00:00:00' <= timestamp
+		) AS A 
+		WHERE timestamp <= '".$dateTo." 23:59:59' AND ipaddress = '{$repeatIP}'
 	");
 	$total_pages_sql->execute();
 	$total_rows = $total_pages_sql->fetchColumn();
@@ -42,8 +46,12 @@
 			SELECT 
 				ipaddress, 
 				".DBFormatDate('timestamp', '%y/%m/%d %T')." as TimeStamp
-			FROM hm_fwban_rh
-			WHERE ipaddress = '{$repeatIP}' AND ".DBCastDateTimeFieldAsDate('timestamp')." = '{$date}'
+			FROM (
+				SELECT * 
+				FROM hm_fwban_demo_rh 
+				WHERE '".$dateFrom." 00:00:00' <= timestamp
+			) AS X 
+			WHERE timestamp <= '".$dateTo." 23:59:59' AND ipaddress = '{$repeatIP}'
 		) AS a
 		JOIN
 		(
@@ -51,7 +59,7 @@
 				ipaddress, 
 				country, 
 				ban_reason
-			FROM hm_fwban
+			FROM hm_fwban_demo
 		) AS b
 		ON a.ipaddress = b.ipaddress
 		".DBLimitRowsWithOffset('a.TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)

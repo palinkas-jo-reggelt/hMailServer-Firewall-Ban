@@ -46,7 +46,7 @@
 	");
 	$sql->execute();
 	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-		echo "<a href=\"./repeats-view.php?submit=Search&search=".$today."\">".number_format($row['ipsblocked'])." IPs blocked</a> Today attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
+		echo "<a href=\"./repeats-view.php?ipdate=Date&search=".$today."\">".number_format($row['ipsblocked'])." IPs blocked</a> Today attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
 	}
 	echo $dailyblocks;
 ?>
