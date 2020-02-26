@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.91 updated hmsRetroAddBlocksIPTable.ps1 to add indexes; updated hmsUpdateChartTables.ps1
 - 0.90 made queries on repeats pages more efficient, updated hmsFirewallBanDBSetup.ps1 to add indexes on mysql
 - 0.89 added dials on index.php for today's info; dial yellow is 75% - 100% of maximum number of hits in a single day; dial red is 100% - 120%; started making blocks queries more efficient
 - 0.88 added geoip function with 2 options: ip-api.com or GeoLite2MySQL (https://github.com/palinkas-jo-reggelt/GeoLite2MySQL); updated config.php for GeoLite2MySQL database variables

@@ -233,11 +233,10 @@ $Query = "
 	FROM hm_fwban_rh 
 	WHERE timestamp BETWEEN '$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd")) 00:00:00' AND '$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd")) 23:59:59'
 "
-
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> Yesterday attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddDays(-1)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> Yesterday attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	2 days ago
@@ -252,7 +251,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddDays(-2)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-2)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddDays(-2)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-2)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	3 days ago
@@ -266,7 +265,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddDays(-3)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-3)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddDays(-3)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-3)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	4 days ago
@@ -280,7 +279,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddDays(-4)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-4)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddDays(-4)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-4)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	5 days ago
@@ -294,7 +293,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddDays(-5)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-5)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddDays(-5)).ToString("yyyy-MM-dd"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddDays(-5)).DayOfWeek) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 Write-Output "' ?>`n" | Out-File $BlocksData -Encoding ASCII -Append
 
@@ -313,7 +312,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddMonths(-1)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-1)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddMonths(-1)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-1)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	2 months ago
@@ -327,7 +326,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddMonths(-2)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-2)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddMonths(-2)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-2)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	3 months ago
@@ -341,7 +340,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddMonths(-3)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-3)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddMonths(-3)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-3)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 
 #	4 months ago
@@ -355,7 +354,7 @@ $Query = "
 RunSQLQuery $Query | ForEach {
 	$ipsblocked = $_.ipsblocked
 	$totalblocks = $_.totalblocks
-	Write-Output "<a href=`"./repeats-view.php?submit=Search&search=$(((Get-Date).AddMonths(-4)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-4)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "<a href=`"./repeats-view.php?ipdate=Date&submit=Search&search=$(((Get-Date).AddMonths(-4)).ToString("yyyy-MM"))`">'.number_format($ipsblocked).' IPs blocked</a> $(((Get-Date).AddMonths(-4)).ToString("MMMM")) attemtpting access '.number_format($totalblocks).' times<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 Write-Output "' `n?>`n" | Out-File $BlocksData -Encoding ASCII -Append
 
@@ -392,3 +391,29 @@ RunSQLQuery $Query | ForEach {
 	Write-Output "`$redToIP = '$maxblocks';" | Out-File $BlocksData -Encoding ASCII -Append
 }
 Write-Output " `n?>`n" | Out-File $BlocksData -Encoding ASCII -Append
+
+#	List of banned countries 
+Write-Output "<?php `n`$country_list=array(" | Out-File $BlocksData -Encoding ASCII -Append
+$Query = "
+	SELECT	
+		DISTINCT(country) AS country_list
+	FROM hm_fwban
+"
+RunSQLQuery $Query | ForEach {
+	$country_list = $_.country_list
+	Write-Output "   '$country_list'," | Out-File $BlocksData -Encoding ASCII -Append
+}
+Write-Output "); `n?>`n" | Out-File $BlocksData -Encoding ASCII -Append
+
+#	List of ban reasons
+Write-Output "<?php `n`$ban_reason_list=array(" | Out-File $BlocksData -Encoding ASCII -Append
+$Query = "
+	SELECT	
+		DISTINCT(ban_reason) AS ban_reason_list
+	FROM hm_fwban
+"
+RunSQLQuery $Query | ForEach {
+	$ban_reason_list = $_.ban_reason_list
+	Write-Output "   '$ban_reason_list'," | Out-File $BlocksData -Encoding ASCII -Append
+}
+Write-Output "); `n?>`n" | Out-File $BlocksData -Encoding ASCII -Append
