@@ -329,19 +329,25 @@
 		include_once("config.php");
 		include_once("functions.php");
 
+		$sql_total = $pdo->prepare("SELECT count(*) FROM hm_fwban");
+		$sql_total->execute();
+		$all_rows = $sql_total->fetchColumn();
+
 		$sql = $pdo->prepare("
 			SELECT 
 				country, 
-				COUNT(country) AS value_occurrence 
+				COUNT(country) AS hits
 			FROM hm_fwban 
 			GROUP BY country 
-			".DBLimitRowsWithOffset('value_occurrence','DESC',0,0,0,5)."
+			".DBLimitRowsWithOffset('hits','DESC',0,0,0,5)."
 		");
 		$sql->execute();
+		echo "<table style=\"border:none;line-height:14px;\">";
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-			if ($row['value_occurrence']==1){$singular="";}else{$singular="s";}
-			echo "<a href=\"./search.php?submit=Search&search=".$row['country']."\">".$row['country']."</a> with ".number_format($row['value_occurrence'])." hit".$singular.".<br>";
+			if ($row['hits']==1){$singular="";}else{$singular="s";}
+			echo "<tr><td><a href=\"./search.php?search=".$row['country']."\">".$row['country']."</a></td><td style=\"text-align:right;\">".number_format($row['hits'])." hit".$singular." </td><td style=\"text-align:right;\"> ".round(($row['hits'] / $all_rows * 100),2)."%</td></tr>";
 		}
+		echo "</table";
 	?>
 	<br>
 	</div> 
@@ -387,7 +393,7 @@
 			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
 				echo "<a href=\"./search.php?submit=Search&search=".$row['ipaddress']."\">".$row['ipaddress']."</a> with ".$row['dupip']." hits last seen ".$row['dupdate']."<br>";
 			}
-			if ($num_dups > 5){echo "<br>See all ".$num_dups." <a href=\"./duplicates.php\">Duplicate Entries</a>.<br><br>";}
+			if ($num_dups > 5){echo "<br>See all ".$num_dups." <a href=\"./duplicates.php\">Duplicate Entries</a>.";}
 		}
 	?>
 	<br>
