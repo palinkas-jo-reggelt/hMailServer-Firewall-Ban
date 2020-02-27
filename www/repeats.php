@@ -12,44 +12,77 @@
 	<div class="clear"></div>
 </div>
 
+
 <div class="section">
-	<!-- START OF DAILY BLOCKS -->
 	<div class="secleft">
-		<h2>This Week's Daily Blocked IPs:</h2>
-		Does not include today's data.<br><br>
-	
+		<h2>This Week's Daily Blocks:</h2>
+
 <?php
 	include_once("config.php");
 	include_once("functions.php");
 	include_once("blocksdata.php");
 
+	$today = date('Y-m-d');
+	$yesterday = date('Y-m-d', strtotime(date('Y-m-d')." -1 day"));
+	$twodaysago = date('Y-m-d', strtotime(date('Y-m-d')." -2 day"));
+	$threedaysago = date('Y-m-d', strtotime(date('Y-m-d')." -3 day"));
+	$fourdaysago = date('Y-m-d', strtotime(date('Y-m-d')." -4 day"));
+	$thismonth = date('Y-m');
+	$lastmonth = date('Y-m', strtotime(date('Y-m')." -1 month"));
+	$twomonthsago = date('Y-m', strtotime(date('Y-m')." -2 month"));
+	$threemonthsago = date('Y-m', strtotime(date('Y-m')." -3 month"));
+	$fourmonthsago = date('Y-m', strtotime(date('Y-m')." -4 month"));
+
+	$sql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
+			COUNT(*) AS totalblocks 
+		FROM (
+			SELECT * 
+			FROM hm_fwban_rh 
+			WHERE '{$today} 00:00:00' <= timestamp
+		) AS A 
+		WHERE timestamp <= '{$today} 23:59:50'
+	");
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+		echo "<a href=\"./repeats-view.php?ipdate=Date&search=".$today."\">".number_format($row['ipsblocked'])." IPs blocked</a> Today attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
+	}
 	echo $dailyblocks;
-	echo "<br>Clicking count links will take you to \"repeats\" pages which have very high execution time if repeats database has a large number of rows.<br>"
 ?>
-	<br>
+	<br />
 	</div>
-	<!-- END OF DAILY BLOCKS -->
 
-
-	<!-- START OF MONTHLY BLOCKS -->
 	<div class="secright">
 		<h2>This Year's Monthly Blocks:</h2>
-		Data up until yesterday. Current month displays "0" on the 1st of the month.<br><br>
 
 <?php
 	include_once("config.php");
 	include_once("functions.php");
 	include_once("blocksdata.php");
 
+	$sql = $pdo->prepare("
+		SELECT 
+			COUNT(DISTINCT(ipaddress)) AS ipsblocked, 
+			COUNT(*) AS totalblocks 
+		FROM (
+			SELECT * 
+			FROM hm_fwban_rh 
+			WHERE '{$thismonth}-01 00:00:00' <= timestamp
+		) AS A 
+		WHERE timestamp <= ".DBGetCurrentDateTime()
+	);
+	$sql->execute();
+	while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+		echo "<a href=\"./repeats-view.php?submit=Search&search=".$thismonth."\">".number_format($row['ipsblocked'])." IPs blocked</a> in ".date("F", strtotime($thismonth))." attemtpting access ".number_format($row['totalblocks'])." times<br />"; 
+	}
+
 	echo $monthlyblocks;
-	echo "<br>Clicking count links will take you to \"repeats\" pages which have very high execution time if repeats database has a large number of rows.<br>"
 ?>
-	<br>
+	<br />
 	</div>
-	<!-- END OF MONTHLY BLOCKS -->
 	<div class="clear"></div>
 </div>
-
 
 <div class="section">
 	<div class="secleft">

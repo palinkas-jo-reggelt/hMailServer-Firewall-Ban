@@ -206,7 +206,7 @@
 		global $geo_pdo;
 
 		if ($GeoIPDatabase['use_geoip'] == 'true'){
-			
+
 			$getcountry_sql = $geo_pdo->prepare("
 				SELECT 
 					countryname 
@@ -225,7 +225,7 @@
 			}else {
 				$output = $country;
 			}
-						
+			
 		} else {
 
 			$ipdat = @json_decode(file_get_contents("http://ip-api.com/json/" . $ip));

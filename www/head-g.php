@@ -16,6 +16,9 @@
 <?php include("charttotalblocksperday.php") ?>
 <?php include("charthitsperhour.php") ?>
 <?php include("chartblocksperhour.php") ?>
+<?php include("dialtodayhits.php") ?>
+<?php include("dialtodayrepeats.php") ?>
+<?php include("dialtodayblocks.php") ?>
 </head>
 <body>
 <?php include("header.php") ?>

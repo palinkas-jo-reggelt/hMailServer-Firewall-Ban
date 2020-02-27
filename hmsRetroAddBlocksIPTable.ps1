@@ -37,9 +37,11 @@ if ($DatabaseType -eq "MYSQL"){
 		  id INT(22) NOT NULL AUTO_INCREMENT,
 		  ipaddress varchar(15) NOT NULL UNIQUE,
 		  hits INT(8),
-		  lasttimestamp timestamp NOT NULL,
+		  lasttimestamp datetime NOT NULL,
 		  PRIMARY KEY (id)
+		  UNIQUE KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+		COMMIT;
 	"
 } elseif ($DatabaseType -eq "MSSQL") {
 	$Query = "

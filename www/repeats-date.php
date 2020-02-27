@@ -41,8 +41,12 @@
 		$total_pages_sql = $pdo->prepare("
 			SELECT 
 				COUNT(DISTINCT(ipaddress)) 
-			FROM hm_fwban_rh 
-			WHERE ".DBCastDateTimeFieldAsDate('timestamp')." BETWEEN '{$dateFrom}%' AND '{$dateTo}%'
+			FROM (
+				SELECT * 
+				FROM hm_fwban_rh 
+				WHERE '".$dateFrom." 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '".$dateTo." 23:59:59'
 		");
 		$total_pages_sql->execute();
 		$total_rows = $total_pages_sql->fetchColumn();
@@ -61,8 +65,12 @@
 					ipaddress, 
 					COUNT(ipaddress) AS countip, 
 					".DBFormatDate('timestamp', '%y/%m/%d')." as TimeStamp
-				FROM hm_fwban_rh
-				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." BETWEEN '".$dateFrom."%' AND '".$dateTo."%' 
+				FROM (
+					SELECT * 
+					FROM hm_fwban_rh 
+					WHERE '".$dateFrom." 00:00:00' <= timestamp
+				) AS A 
+				WHERE timestamp <= '".$dateTo." 23:59:59'
 				GROUP BY ipaddress
 			) AS a
 			JOIN
