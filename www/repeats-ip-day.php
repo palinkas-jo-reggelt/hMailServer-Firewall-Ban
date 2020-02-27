@@ -23,7 +23,7 @@
 
 	$total_pages_sql = $pdo->prepare("
 		SELECT 
-			COUNT(DISTINCT(ipaddress)) 
+			COUNT(ipaddress)
 		FROM (
 			SELECT * 
 			FROM hm_fwban_rh 
