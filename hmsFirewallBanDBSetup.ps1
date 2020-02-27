@@ -99,19 +99,18 @@ If ($DatabaseType -eq "MYSQL") {
 	#	Create hm_fwban table if it doesn't exist
 	$Query = "
 		CREATE TABLE IF NOT EXISTS hm_fwban (
-		ID int(11) NOT NULL AUTO_INCREMENT,
-		ipaddress varchar(192) NOT NULL,
-		timestamp datetime NOT NULL,
-		ban_reason varchar(192) DEFAULT NULL,
-		country varchar(192) DEFAULT NULL,
-		flag int(1) DEFAULT NULL,
-		helo varchar(192) DEFAULT NULL,
-		ptr varchar(192) DEFAULT NULL,
-		rulename varchar(192) DEFAULT NULL,
-		PRIMARY KEY (ID),
-		KEY ipaddress (ipaddress)
+		  ID int(11) NOT NULL AUTO_INCREMENT,
+		  ipaddress varchar(192) NOT NULL,
+		  timestamp datetime NOT NULL,
+		  ban_reason varchar(192) DEFAULT NULL,
+		  country varchar(192) DEFAULT NULL,
+		  flag int(1) DEFAULT NULL,
+		  helo varchar(192) DEFAULT NULL,
+		  ptr varchar(192) DEFAULT NULL,
+		  rulename varchar(28) DEFAULT NULL,
+		  PRIMARY KEY (ID),
+		  KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		COMMIT;
 		"
 	RunSQLQuery $Query
 
@@ -119,27 +118,25 @@ If ($DatabaseType -eq "MYSQL") {
 	$Query = "
 		CREATE TABLE IF NOT EXISTS hm_fwban_rh (
 		  id int(24) NOT NULL AUTO_INCREMENT,
-		  ipid INT(22) NULL,
 		  timestamp datetime NOT NULL,
 		  ipaddress varchar(15) NOT NULL,
+		  ipid int(22) DEFAULT NULL,
 		  PRIMARY KEY (id),
 		  KEY timestamp (timestamp)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		COMMIT;
 	"
 	RunSQLQuery $Query
 
 	#	Create hm_fwban_blocks_ip table if it doesn't exist
 	$Query = "
 		CREATE TABLE IF NOT EXISTS hm_fwban_blocks_ip (
-		  id INT(22) NOT NULL AUTO_INCREMENT,
-		  ipaddress varchar(15) NOT NULL UNIQUE,
-		  hits INT(8),
+		  id int(22) NOT NULL AUTO_INCREMENT,
+		  ipaddress varchar(15) NOT NULL,
+		  hits int(8) DEFAULT NULL,
 		  lasttimestamp datetime NOT NULL,
-		  PRIMARY KEY (id)
+		  PRIMARY KEY (id),
 		  UNIQUE KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		COMMIT;
 	"
 	RunSQLQuery $Query
 
@@ -148,12 +145,12 @@ If ($DatabaseType -eq "MYSQL") {
 		CREATE TABLE IF NOT EXISTS hm_ids (
 		  timestamp datetime NOT NULL,
 		  ipaddress varchar(15) NOT NULL,
-		  hits int(8) NOT NULL,
+		  hits int(1) NOT NULL,
 		  country varchar(64) DEFAULT NULL,
+		  helo varchar(128) DEFAULT NULL,
 		  PRIMARY KEY (ipaddress),
 		  UNIQUE KEY ipaddress (ipaddress)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		COMMIT;
 	"
 	RunSQLQuery $Query
 }
