@@ -55,10 +55,11 @@ If ($DatabaseType -eq "MSSQL") {
 		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban_rh')
 		BEGIN
 			CREATE TABLE hm_fwban_rh (
-				ipid INT(22) NULL,
-				timestamp timestamp NOT NULL,
+				id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+				timestamp datetime NOT NULL,
 				ipaddress varchar(15) NOT NULL
-			)
+				ipid int DEFAULT NULL,
+				)
 		END;
 		"
 	RunSQLQuery $Query
@@ -67,11 +68,11 @@ If ($DatabaseType -eq "MSSQL") {
 	$Query = "
 		IF NOT EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'hm_fwban_blocks_ip')
 		BEGIN
-			CREATE TABLE IF NOT EXISTS hm_fwban_blocks_ip (
-			  id INT(22) NOT NULL AUTO_INCREMENT,
+			CREATE TABLE hm_fwban_blocks_ip (
+			  id INT IDENTITY(1,1) NOT NULL,
 			  ipaddress varchar(15) NOT NULL UNIQUE,
-			  hits INT(8),
-			  lasttimestamp timestamp NOT NULL,
+			  hits INT,
+			  lasttimestamp datetime NOT NULL,
 			  PRIMARY KEY (id)
 			)
 		END;
