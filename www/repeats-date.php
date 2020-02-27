@@ -43,7 +43,7 @@
 				COUNT(DISTINCT(ipaddress)) 
 			FROM (
 				SELECT * 
-				FROM hm_fwban_demo_rh 
+				FROM hm_fwban_rh 
 				WHERE '".$dateFrom." 00:00:00' <= timestamp
 			) AS A 
 			WHERE timestamp <= '".$dateTo." 23:59:59'
@@ -67,7 +67,7 @@
 					".DBFormatDate('timestamp', '%y/%m/%d')." as TimeStamp
 				FROM (
 					SELECT * 
-					FROM hm_fwban_demo_rh 
+					FROM hm_fwban_rh 
 					WHERE '".$dateFrom." 00:00:00' <= timestamp
 				) AS A 
 				WHERE timestamp <= '".$dateTo." 23:59:59'
@@ -79,7 +79,7 @@
 					ipaddress, 
 					country, 
 					ban_reason
-				FROM hm_fwban_demo
+				FROM hm_fwban
 			) AS b
 			ON a.ipaddress = b.ipaddress
 			GROUP BY a.ipaddress

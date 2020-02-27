@@ -22,7 +22,7 @@
 	$total_pages_sql = $pdo->prepare("
 		SELECT 
 			COUNT(DISTINCT(".DBCastDateTimeFieldAsDate('timestamp').")) 
-		FROM hm_fwban_demo_rh 
+		FROM hm_fwban_rh 
 		WHERE ipaddress='{$repeatIP}'
 	");
 	$total_pages_sql->execute();
@@ -32,7 +32,7 @@
 	$total_hits_sql = $pdo->prepare("
 		SELECT 
 			COUNT(ipaddress) 
-		FROM hm_fwban_demo_rh 
+		FROM hm_fwban_rh 
 		WHERE ipaddress='{$repeatIP}'
 	");
 	$total_hits_sql->execute();
@@ -51,7 +51,7 @@
 				ipaddress, 
 				COUNT(ipaddress) AS countip, 
 				".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%y/%m/%d')." AS day
-			FROM hm_fwban_demo_rh
+			FROM hm_fwban_rh
 			WHERE ipaddress = '{$repeatIP}'
 			GROUP BY ".DBFormatDate(DBCastDateTimeFieldAsDate('timestamp'), '%y/%m/%d').", ipaddress
 		) AS a
@@ -61,7 +61,7 @@
 				ipaddress, 
 				country, 
 				ban_reason
-			FROM hm_fwban_demo
+			FROM hm_fwban
 		) AS b
 		ON a.ipaddress = b.ipaddress
 		GROUP BY a.day, a.ipaddress, b.ban_reason, b.country, a.countip 

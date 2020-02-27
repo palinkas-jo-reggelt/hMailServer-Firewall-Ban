@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.92 fixed typos on some queries calling my demo database (wrong table names)
 - 0.91 updated hmsRetroAddBlocksIPTable.ps1 to add indexes; updated hmsUpdateChartTables.ps1
 - 0.90 made queries on repeats pages more efficient, updated hmsFirewallBanDBSetup.ps1 to add indexes on mysql
 - 0.89 added dials on index.php for today's info; dial yellow is 75% - 100% of maximum number of hits in a single day; dial red is 100% - 120%; started making blocks queries more efficient

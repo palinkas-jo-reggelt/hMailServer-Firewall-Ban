@@ -24,11 +24,11 @@
 	if (isset($_GET['ipdate'])) {$ipdate = $_GET['ipdate'];} else {$ipdate = "";}
 
 	if ((empty($search)) && (empty($ipdate))) {
-		$search_sql = "FROM hm_fwban_demo_rh";
+		$search_sql = "FROM hm_fwban_rh";
 		$search_list = "";
 	} elseif (preg_match("/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/", $search)) {
 		$search_sql = "
-			FROM hm_fwban_demo_rh
+			FROM hm_fwban_rh
 			WHERE ipaddress = '{$search}'
 		";
 		$search_list = "matching IP: <b>".$search."</b>";
@@ -37,7 +37,7 @@
 			$search_sql = "
 				FROM (
 					SELECT * 
-					FROM hm_fwban_demo_rh 
+					FROM hm_fwban_rh 
 					WHERE '".date('Y-m-d',(strtotime($search)))." 00:00:00' <= timestamp
 				) AS x
 				WHERE timestamp <= '".date('Y-m-t',(strtotime($search)))." 23:59:59'
@@ -48,7 +48,7 @@
 			$search_sql = "
 				FROM (
 					SELECT * 
-					FROM hm_fwban_demo_rh 
+					FROM hm_fwban_rh 
 					WHERE '".date('Y-m-d',(strtotime($search)))." 00:00:00' <= timestamp
 				) AS x
 				WHERE timestamp <= '".date('Y-m-d',(strtotime($search)))." 23:59:59'
@@ -57,10 +57,10 @@
 			$ipdate = "Date";
 	} elseif ((!empty($search)) && (empty($ipdate))) {
 		echo "You must enter a valid IP or date (format: YYYY-MM or YYYY-MM-DD). Showing all results.";
-		$search_sql = "FROM hm_fwban_demo_rh";
+		$search_sql = "FROM hm_fwban_rh";
 		$search_list = "";
 	} else {
-		$search_sql = "FROM hm_fwban_demo_rh";
+		$search_sql = "FROM hm_fwban_rh";
 		$search_list = "";
 	}
 
@@ -110,7 +110,7 @@
 				ipaddress, 
 				country, 
 				ban_reason
-			FROM hm_fwban_demo
+			FROM hm_fwban
 		) AS b
 		ON a.ipaddress = b.ipaddress
 		".DBLimitRowsWithOffset('a.TimeStamp','DESC',0,0,$offset,$no_of_records_per_page)
