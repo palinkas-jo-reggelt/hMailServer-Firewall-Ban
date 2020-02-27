@@ -92,6 +92,53 @@ If ($DatabaseType -eq "MSSQL") {
 	END;
 	"
 	RunSQLQuery $Query
+
+	#Create MSSQL Function equivalent to INET_ATON() from MySQL
+	#first drop if exists
+	$Query = "
+	IF EXISTS (SELECT 1 FROM SYSOBJECTS WHERE NAME = 'ipStringToInt')
+		DROP FUNCTION dbo.ipStringToInt 
+	"
+	RunSQLQuery $Query
+	#then create
+	$Query = "
+		CREATE FUNCTION dbo.ipStringToInt 
+		( 
+			@ip CHAR(15) 
+		) 
+		RETURNS BIGINT 
+		AS 
+		BEGIN 
+			DECLARE @rv BIGINT, 
+				@o1 BIGINT, 
+				@o2 BIGINT, 
+				@o3 BIGINT, 
+				@o4 BIGINT, 
+				@base BIGINT 
+		
+			SELECT 
+				@o1 = CONVERT(INT, PARSENAME(@ip, 4)), 
+				@o2 = CONVERT(INT, PARSENAME(@ip, 3)), 
+				@o3 = CONVERT(INT, PARSENAME(@ip, 2)), 
+				@o4 = CONVERT(INT, PARSENAME(@ip, 1)) 
+		
+			IF (@o1 BETWEEN 0 AND 255) 
+				AND (@o2 BETWEEN 0 AND 255) 
+				AND (@o3 BETWEEN 0 AND 255) 
+				AND (@o4 BETWEEN 0 AND 255) 
+			BEGIN      
+				SET @rv = (@o1 * 16777216)+
+					(@o2 * 65536) +  
+					(@o3 * 256) + 
+					(@o4) 
+			END 
+			ELSE 
+				SET @rv = -1 
+			RETURN @rv 
+		END
+	"
+	RunSQLQuery $Query
+
 }
 
 If ($DatabaseType -eq "MYSQL") {
