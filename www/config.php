@@ -58,4 +58,9 @@ $GeoIPDatabase = array (
 	'dsn'         => 'MariaDB ODBC 3.0 Driver'
 );
 
+
+/*	PowershellScriptDir - Location of project powershell files.  */
+
+$PowershellScriptDir = "C:\\scripts\\hmailserver\\FWBan\\";
+
 ?>

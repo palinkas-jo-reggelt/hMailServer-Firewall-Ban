@@ -35,13 +35,15 @@ Catch {
 #                                     #
 #######################################
 
-Function EmailResults {
+Function EmailResults($HTML) {
 	$Subject = "hMS Firewall Ban Notification" 
 	$Body = (Get-Content -Path $EmailBody | Out-String )
-	$SMTPClient = New-Object Net.Mail.SmtpClient($SMTPServer, $SMTPPort) 
-	$SMTPClient.EnableSsl = [System.Convert]::ToBoolean($SSL)
-	$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPAuthUser, $SMTPAuthPass); 
-	$SMTPClient.Send($FromAddress, $Recipient, $Subject, $Body)
+	$Message = New-Object System.Net.Mail.Mailmessage $FromAddress, $Recipient, $Subject, $Body
+	$Message.IsBodyHTML = [System.Convert]::ToBoolean($HTML)
+	$SMTP = New-Object System.Net.Mail.SMTPClient $SMTPServer,$SMTPPort
+	$SMTP.EnableSsl = [System.Convert]::ToBoolean($SSL)
+	$SMTP.Credentials = New-Object System.Net.NetworkCredential($SMTPAuthUser, $SMTPAuthPass); 
+	$SMTP.Send($Message)
 }
 
 #######################################
