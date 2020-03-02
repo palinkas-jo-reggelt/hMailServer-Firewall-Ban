@@ -84,8 +84,12 @@
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$today} 00:00:00' AND '{$today} 23:59:59'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$today} 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '{$today} 23:59:50'
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -95,8 +99,12 @@
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$yesterday} 00:00:00' AND '{$yesterday} 23:59:59'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$yesterday} 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '{$yesterday} 23:59:50'
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -106,8 +114,12 @@
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$twodaysago} 00:00:00' AND '{$twodaysago} 23:59:59'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$twodaysago} 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '{$twodaysago} 23:59:50'
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -117,8 +129,12 @@
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$threedaysago} 00:00:00' AND '{$threedaysago} 23:59:59'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$threedaysago} 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '{$threedaysago} 23:59:50'
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -128,8 +144,12 @@
 		$sql = $pdo->prepare("
 			SELECT 
 				COUNT(id) AS value_occurrence 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$fourdaysago} 00:00:00' AND '{$fourdaysago} 23:59:59'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$fourdaysago} 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= '{$fourdaysago} 23:59:50'
 		");
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -144,6 +164,8 @@
 		");
 		$mindate_sql->execute();
 		$mindate = $mindate_sql->fetchColumn();
+
+		// 7 day daily average
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -7 day"))){
 			echo "";
 		} else {
@@ -166,6 +188,7 @@
 			}
 		}
 
+		// 30 day daily average
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -30 day"))){
 			echo "";
 		} else {
@@ -187,6 +210,53 @@
 				echo "Daily average last 30 days: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
+		
+		// 90 day daily average
+		if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -90 day"))){
+			echo "";
+		} else {
+			$sql = $pdo->prepare("
+			SELECT 
+				ROUND(AVG(numhits), 0) AS avghits 
+			FROM (
+				SELECT 
+					COUNT(id) as numhits,
+					".DBCastDateTimeFieldAsDate('timestamp')."
+				FROM hm_fwban 
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
+				GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
+				".DBLimitRowsWithOffset(DBCastDateTimeFieldAsDate('timestamp'),'DESC',0,0,0,90)."
+			) d
+			");
+			$sql->execute();
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+				echo "Daily average last 90 days: ".number_format($row['avghits'])." hits<br>"; 
+			}
+		}
+
+		// 180 day daily average
+		if ($mindate > date('Y-m-d', strtotime(date('Y-m-d')." -180 day"))){
+			echo "";
+		} else {
+			$sql = $pdo->prepare("
+			SELECT 
+				ROUND(AVG(numhits), 0) AS avghits 
+			FROM (
+				SELECT 
+					COUNT(id) as numhits,
+					".DBCastDateTimeFieldAsDate('timestamp')."
+				FROM hm_fwban 
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBCastDateTimeFieldAsDate(DBGetCurrentDateTime())."
+				GROUP BY ".DBCastDateTimeFieldAsDate('timestamp')."
+				".DBLimitRowsWithOffset(DBCastDateTimeFieldAsDate('timestamp'),'DESC',0,0,0,180)."
+			) d
+			");
+			$sql->execute();
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+				echo "Daily average last 180 days: ".number_format($row['avghits'])." hits<br>"; 
+			}
+		}
+
 	?>
 	<br>
 	</div> 
@@ -205,11 +275,13 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM 
-				hm_fwban 
-			WHERE 
-				timestamp BETWEEN '{$thismonth}-01 00:00:00' AND ".DBGetCurrentDateTime()."
-			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$thismonth}-01 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp <= ".DBGetCurrentDateTime()
+			.(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
 		while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -220,8 +292,12 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$lastmonth}-01 00:00:00' AND '{$thismonth}-01 00:00:00'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$lastmonth}-01 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp < '{$thismonth}-01 00:00:00'
 			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
@@ -233,8 +309,12 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$twomonthsago}-01 00:00:00' AND '{$lastmonth}-01 00:00:00'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$twomonthsago}-01 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp < '{$lastmonth}-01 00:00:00'
 			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
@@ -246,8 +326,12 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$threemonthsago}-01 00:00:00' AND '{$twomonthsago}-01 00:00:00'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$threemonthsago}-01 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp < '{$twomonthsago}-01 00:00:00'
 			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
@@ -259,8 +343,12 @@
 			SELECT 
 				COUNT(id) AS value_occurrence, 
 				".DBFormatDate('timestamp', '%Y-%m')." AS month 
-			FROM hm_fwban 
-			WHERE timestamp BETWEEN '{$fourmonthsago}-01 00:00:00' AND '{$threemonthsago}-01 00:00:00'
+			FROM (
+				SELECT * 
+				FROM hm_fwban
+				WHERE '{$fourmonthsago}-01 00:00:00' <= timestamp
+			) AS A 
+			WHERE timestamp < '{$threemonthsago}-01 00:00:00'
 			".(IsMSSQL() ? "GROUP BY ".DBFormatDate('timestamp', '%Y-%m')."" : "")
 		);
 		$sql->execute();
@@ -268,6 +356,7 @@
 			echo "<a href=\"./search.php?search=".$fourmonthsago."&submit=Search\">".number_format($row['value_occurrence'])." Hits</a> in ".date("F", strtotime($fourmonthsago))."<br>"; 
 		}
 
+		// Monthly average last 3 months
 		echo "</br>";
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -3 month"))){
 			echo "";
@@ -291,6 +380,7 @@
 			}
 		}
 
+		// Monthly average last 6 months
 		if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -6 month"))){
 			echo "";
 		} else {
@@ -312,6 +402,30 @@
 				echo "Monthly average last 6 months: ".number_format($row['avghits'])." hits<br>"; 
 			}
 		}
+
+		// Monthly average last 12 months
+		if ($mindate > date('Y-m-d', strtotime(date('Y-m-1')." -12 month"))){
+			echo "";
+		} else {
+			$sql = $pdo->prepare("
+				SELECT 
+					ROUND(AVG(numhits), 0) AS avghits 
+				FROM (
+					SELECT 
+						COUNT(id) as numhits,
+						".DBCastDateTimeFieldAsMonth('timestamp')." AS timestamp
+					FROM hm_fwban 
+				WHERE ".DBCastDateTimeFieldAsDate('timestamp')." < ".DBFormatDate(DBGetCurrentDateTime(), '%Y/%m/01')."
+					GROUP BY ".DBCastDateTimeFieldAsMonth('timestamp')."
+					".DBLimitRowsWithOffset(DBCastDateTimeFieldAsMonth('timestamp'),'DESC',0,0,0,12)."
+				) d
+			");
+			$sql->execute();
+			while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+				echo "Monthly average last 12 months: ".number_format($row['avghits'])." hits<br>"; 
+			}
+		}
+
 	?>
 	<br>
 	</div> 

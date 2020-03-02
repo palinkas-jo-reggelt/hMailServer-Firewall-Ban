@@ -17,7 +17,7 @@
 		$script_command = "Powershell.exe -ExecutionPolicy Bypass -File ".$PowershellScriptDir."BlockCount.ps1";
 		pclose(popen("start /B ". $script_command, "r")); 
 
-		echo "Script is running. You will receive an email with the results shortly.<br><br>";
+		echo "Script execution initiated. You may browse to another page. You will receive an email with the results shortly.<br><br>";
 		echo "Script Location: ".$PowershellScriptDir."BlockCount.ps1";
 	} else {
 		echo "Script running. Please check your email in a few minutes.";
