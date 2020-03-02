@@ -218,7 +218,7 @@ RunSQLQuery $Query | ForEach {
 	$TopFiveIP = $_.ipaddress
 	$TopFiveCount = $_.countip
 	$TopFiveCountry = $_.country
-	Write-Output "'.number_format($TopFiveCount).' in knocks by <a href=`"./repeats-ip.php?submit=Search&repeatIP=$TopFiveIP`">$TopFiveIP</a> from $TopFiveCountry<br>" | Out-File $BlocksData -Encoding ASCII -Append
+	Write-Output "'.number_format($TopFiveCount).' knocks by <a href=`"./repeats-ip.php?submit=Search&repeatIP=$TopFiveIP`">$TopFiveIP</a> from $TopFiveCountry<br>" | Out-File $BlocksData -Encoding ASCII -Append
 }
 Write-Output "' ?>`n" | Out-File $BlocksData -Encoding ASCII -Append
 

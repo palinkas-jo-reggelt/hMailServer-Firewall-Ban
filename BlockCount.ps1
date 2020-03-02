@@ -94,7 +94,7 @@ Write-Output ("{0,7} : {1,6} : Number of banned IPs that never returned<br><br>"
 $a = 0
 Write-Output "
 	<table cellpadding='5'>
-	<tr><td colspan='3'>Number of banned IPs that returned at least: </td></tr>" | out-file $EmailBody -append
+	<tr style='text-align:center;'><td>No. of banned IPs</td><td>Percent Returns</td><td>Returned at least</td></tr>" | out-file $EmailBody -append
 Do {
 	$Query = "SELECT COUNT(*) AS countips FROM (SELECT ipaddress, COUNT(DISTINCT(DATE(timestamp))) AS countdate FROM hm_fwban_rh GROUP BY ipaddress HAVING countdate > $a) AS returnhits"
 	MySQLQuery($Query) | ForEach {
@@ -102,14 +102,14 @@ Do {
 	}
 	$PercentReturns = ($ReturnIPs / $TotalRules)
 	If ($ReturnIPs -lt 1) {
-		Write-Output "<tr><td colspan='3'>No more results</td></tr>" | out-file $EmailBody -append
+		Write-Output "</table><br>No more results<br><br>" | out-file $EmailBody -append
 		$TimeElapsed = (New-TimeSpan $StartTime $(get-date))
 		If (($TimeElapsed).Minutes -eq 1) {$sm = ""} Else {$sm = "s"}
 		If (($TimeElapsed).Seconds -eq 1) {$ss = ""} Else {$ss = "s"}
-		Write-Output ("<tr><td colspan='3'>Time Elapsed: {0:%m} minute$sm {0:%s} second$ss</td></tr>" -f $TimeElapsed) | out-file $EmailBody -append
+		Write-Output ("Time Elapsed: {0:%m} minute$sm {0:%s} second$ss" -f $TimeElapsed) | out-file $EmailBody -append
 	} Else {
 		If ($a -eq 0) {$sd = ""} Else {$sd = "s"}
-		Write-Output ("<tr><td style='text-align:right;'> {0,7} </td><td style='text-align:right;'> {1,6} </td><td><a href='$wwwURI/blocks-view.php?submit=Search&days=$($a + 1)'>$($a + 1) day$sd</a></td></tr>" -f ($ReturnIPs).ToString("#,###"), $PercentReturns.ToString("P")) | out-file $EmailBody -append
+		Write-Output ("<tr style='text-align:center;'><td> {0,7} </td><td> {1,6} </td><td><a href='$wwwURI/blocks-view.php?submit=Search&days=$($a + 1)'>$($a + 1) day$sd</a></td></tr>" -f ($ReturnIPs).ToString("#,###"), $PercentReturns.ToString("P")) | out-file $EmailBody -append
 	}
 	$a++
 } Until ($ReturnIPs -lt 1)

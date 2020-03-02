@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.95 formatting on on BlockCount.ps1, hmsUpdateChartTables.ps1, blocks-ps.php
 - 0.94 housekeeping on BlockCount.ps1, index.php, blocks-ps.php
 - 0.93 added blocks-ps.php to launch BlockCount.ps1 which emails results (for use when blocks.php runs into execution time errors); changed EmailResults function to send HTML messages; added HTML with links back to webadmin in BlockCount.ps1; changes to config files for new variables
 - 0.92 fixed typos on some queries calling my demo database (wrong table names)
