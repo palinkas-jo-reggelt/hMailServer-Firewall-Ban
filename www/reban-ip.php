@@ -31,6 +31,7 @@
 	$ips = ipRangeFinder($ipRange);
 	$iplo = $ips[0];
 	$iphi = $ips[1];
+	$country = ip_country($iplo);
 
 	$range = explode("/", $ipRange);
 	$rcidr = $range[1]; 
@@ -69,7 +70,6 @@
 				$id = $row['id'];
 			}
 			if (empty($ipaddressdb)){
-				$country = ip_country($ipaddressdb);
 				$sql_new_cidr_ban = $pdo->exec("
 					INSERT INTO hm_fwban (timestamp,ipaddress,ban_reason,country) VALUES (".DBGetCurrentDateTime().",'".$ip."','Manual','".$country."')"
 				);
