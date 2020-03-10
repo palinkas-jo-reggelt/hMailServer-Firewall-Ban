@@ -10,6 +10,9 @@ ____ _ ____ ____ _ _ _  __  _    _       ___   __  _  _
 
 Ban Spammers to Windows Defender Firewall. Use of various reject methods in EventHandlers.vbs to call Firewall Ban. Integrated web admin.
 
+Demo here: https://firewallban.dynu.net/
+
+The demo is a fully functioning PHP web admin so you can how to administer hMailServer-triggered bans.
 
 ## Prerequisites
 
