@@ -28,6 +28,17 @@ $SQLAdminPassword = 'supersecretpassword'                                       
 $SQLDatabase      = 'hmailserver'                                                      #
 $SQLHost          = '127.0.0.1'                                                        #
 $SQLPort          = 3306                                                               #
+$SQLSSL           = 'none'                                                             #
+#                                                                                      #
+###   MySQL SSL OPTIONS   ##############################################################
+#                                                                                      #
+#   Set to 'none' if Powershell and MySQL on same machine (seems to be MySQL bug)      #
+#                                                                                      #
+#	None       - Do not use SSL.                                                       #
+#	Preferred  - Use SSL if the server supports it, but allow connection in all cases. #
+#	Required   - Always use SSL. Deny connection if server does not support SSL.       #
+#	VerifyCA   - Always use SSL. Validate the CA but tolerate name mismatch.           #
+#	VerifyFull - Always use SSL. Fail if the host name is not correct.                 #
 #                                                                                      #
 ###   FIREWALL VARIABLES   #############################################################
 #                                                                                      #

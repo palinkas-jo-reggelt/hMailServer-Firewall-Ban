@@ -73,7 +73,7 @@ Function RunSQLQuery($Query){
 Function MySQLQuery($Query) {
 	$Today = (Get-Date).ToString("yyyyMMdd")
 	$DBErrorLog = "$PSScriptRoot\$Today-DBError.log"
-	$ConnectionString = "server=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";pwd=" + $SQLAdminPassword + ";database=" + $SQLDatabase
+	$ConnectionString = "server=" + $SQLHost + ";port=" + $SQLPort + ";uid=" + $SQLAdminUserName + ";pwd=" + $SQLAdminPassword + ";database=" + $SQLDatabase + ";SslMode=" + $SQLSSL + ";"
 	Try {
 		[void][System.Reflection.Assembly]::LoadWithPartialName("MySql.Data")
 		$Connection = New-Object MySql.Data.MySqlClient.MySqlConnection

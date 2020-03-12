@@ -105,6 +105,7 @@ IDS is very simple, but pure genius. It counts the number of connections that di
 
 ## Changelog
 
+- 0.97 Fix for apparent MySQL bug timeout on first connection due to SSL - more info here: http://www.voidcn.com/article/p-phfoefri-bpr.html
 - 0.96 fixed reban-ip.php to not cause ip-api.com to rate limit
 - 0.95 formatting on on BlockCount.ps1, hmsUpdateChartTables.ps1, blocks-ps.php
 - 0.94 housekeeping on BlockCount.ps1, index.php, blocks-ps.php
