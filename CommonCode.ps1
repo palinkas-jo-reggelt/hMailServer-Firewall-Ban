@@ -252,15 +252,17 @@ Function Get-NetshFireWallrule {
 }
 
 Function RemRuleIP($IP) {
+	[regex]$RegexIP = '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
 	$Query = "SELECT rulename FROM hm_fwban WHERE ipaddress = '$IP'"
 	RunSQLQuery $Query | ForEach {
 		$RuleName = $_.rulename
 	}
 
 	If (-not($RuleName)) {
-		& netsh advfirewall firewall delete rule name=`"$IP`"
-	}
-	Else {
+		& netsh advfirewall firewall delete rule name="$IP"
+	} ElseIf ($RuleName -match $RegexIP) {
+		& netsh advfirewall firewall delete rule name="$IP"
+	} Else {
 		$RuleList = "$PSScriptRoot\fwrulelist.txt"
 		$NewLine = [System.Environment]::NewLine
 
@@ -277,7 +279,10 @@ Function RemRuleIP($IP) {
 		$Content.Replace($NL, ",") | Out-File "$RuleList.rule.txt"
 		(Get-Content -Path "$RuleList.rule.txt") -Replace ',$', '' | Set-Content -Path "$RuleList.rule.txt"
 
-		& netsh advfirewall firewall delete rule name=`"$RuleName`"
-		& netsh advfirewall firewall add rule name=`"$RuleName`" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
+		& netsh advfirewall firewall delete rule name="$RuleName"
+		
+		If ((Get-Content "$RuleList.rule.txt") -match $RegexIP){
+			& netsh advfirewall firewall add rule name="$RuleName" description="FWB Rules for $DateIP" dir=in interface=any action=block remoteip=$(Get-Content "$RuleList.rule.txt")
+		}
 	}
 }
